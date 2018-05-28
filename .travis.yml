@@ -15,7 +15,7 @@ jobs:
     - stage: deploy
       if: tag =~ ^\d+\.\d+\.\d+$
       install: skip
-      before_script: openssl aes-256-cbc -K $encrypted_25e25e985c51_key -iv $encrypted_25e25e985c51_iv -in secring.gpg.enc -out secring.gpg -d
+      before_script: openssl aes-256-cbc -K $encrypted_01979cd038ed_key -iv $encrypted_01979cd038ed_iv -in secring.gpg.enc -out secring.gpg -d
       script: ./gradlew clean build uploadArchives
 env:
   global:
