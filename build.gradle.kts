@@ -8,6 +8,7 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.artifacts.dsl.*
 import org.gradle.kotlin.dsl.extra
 import org.gradle.api.publication.maven.internal.action.MavenInstallAction
+import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.gradle.internal.authentication.DefaultBasicAuthentication
 import org.gradle.kotlin.dsl.repositories
 import org.gradle.kotlin.dsl.version
@@ -28,7 +29,7 @@ buildscript {
         classpath(Libs.gradleReleasePlugin)
         classpath(Libs.dokkaGradlePlugin)
         classpath(Libs.kotlin_stdlib)
-        classpath(Libs.kotlin_jre8)
+        classpath(Libs.kotlin_jdk8)
         classpath(Libs.kotlin_reflect)
     }
 }
@@ -183,6 +184,14 @@ subprojects {
 
         withType<KotlinCompile> {
             kotlinOptions.jvmTarget = "1.8"
+        }
+
+        withType<Test> {
+            useJUnitPlatform()
+
+            testLogging {
+                events(TestLogEvent.PASSED, TestLogEvent.FAILED, TestLogEvent.SKIPPED)
+            }
         }
     }
 }
