@@ -32,4 +32,22 @@ class DynamicPropertyTest {
         assertEquals(123, property.get())
         assertEquals(123, listenerAceptedValue.get())
     }
+
+    @Test
+    fun mapped_property() {
+
+        val stringProperty = AtomicProperty("159")
+
+        val intProperty = stringProperty.map { str -> str.toInt() }
+
+        assertEquals(159, intProperty.get())
+
+        val captor = AtomicReference(0)
+        intProperty.addListener { captor.set(it) }
+
+
+        stringProperty.set("305")
+
+        assertEquals(305, captor.get())
+    }
 }
