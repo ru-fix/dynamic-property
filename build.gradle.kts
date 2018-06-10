@@ -191,6 +191,8 @@ subprojects {
 
             testLogging {
                 events(TestLogEvent.PASSED, TestLogEvent.FAILED, TestLogEvent.SKIPPED)
+                showStandardStreams = true
+                exceptionFormat = TestExceptionFormat.FULL
             }
         }
     }

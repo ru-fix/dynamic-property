@@ -1,6 +1,7 @@
 package ru.fix.dynamic.property.api;
 
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * Holds property value and notify listener when value is changed.
@@ -19,10 +20,15 @@ public interface DynamicProperty<T> {
      * @param listener Listener runs whenever property value changes.
      *                 It is implementation specific in what thread listener will be invoked.
      */
-    void addListener(DynamicPropertyListener<T> listener);
+    default void addListener(DynamicPropertyListener<T> listener) {
+    }
 
     static <T> DynamicProperty<T> of(T value) {
         return new ConstantProperty<>(value);
+    }
+
+    static <T> DynamicProperty<T> of(Supplier<T> supplier) {
+        return supplier::get;
     }
 
     default <R> DynamicProperty<R> map(Function<T, R> map) {
