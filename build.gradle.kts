@@ -12,12 +12,11 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.gradle.internal.authentication.DefaultBasicAuthentication
 import org.gradle.kotlin.dsl.repositories
 import org.gradle.kotlin.dsl.version
+import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import kotlin.properties.Delegates
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
-
-val groupId = "ru.fix"
 
 buildscript {
     repositories {
@@ -63,6 +62,7 @@ repositories {
 plugins {
     kotlin("jvm") version "${Vers.kotlin}" apply false
     signing
+    `maven-publish`
 }
 
 apply {
@@ -73,9 +73,10 @@ subprojects {
     group = "ru.fix"
 
     apply {
-        plugin("maven")
+        plugin("maven-publish")
         plugin("signing")
         plugin("java")
+        plugin("org.jetbrains.dokka")
     }
 
     repositories {
@@ -90,97 +91,85 @@ subprojects {
         from("src/main/kotlin")
     }
 
-    val javadocJar by tasks.creating(Jar::class) {
+    val dokkaTask by tasks.creating(DokkaTask::class){
+        outputFormat = "javadoc"
+        outputDirectory = "$buildDir/dokka"
+    }
+
+    val dokkaJar by tasks.creating(Jar::class) {
         classifier = "javadoc"
 
-        val javadoc = tasks.getByPath("javadoc") as Javadoc
-        from(javadoc.destinationDir)
-
-        dependsOn(tasks.getByName("javadoc"))
+        from(dokkaTask.outputDirectory)
+        dependsOn(dokkaTask)
     }
 
-    artifacts {
-        add("archives", sourcesJar)
-        add("archives", javadocJar)
-    }
-
-    configure<SigningExtension> {
-
-        if (!signingKeyId.isNullOrEmpty()) {
-            ext["signing.keyId"] = signingKeyId
-            ext["signing.password"] = signingPassword
-            ext["signing.secretKeyRingFile"] = signingSecretKeyRingFile
-            isRequired = true
-        } else {
-            logger.warn("${project.name}: Signing key not provided. Disable signing.")
-            isRequired = false
-        }
-
-        sign(configurations.archives)
-    }
-
-    tasks {
-
-        "uploadArchives"(Upload::class) {
-
-            dependsOn(javadocJar, sourcesJar)
-
-            repositories {
-                withConvention(MavenRepositoryHandlerConvention::class) {
-                    mavenDeployer {
-
-                        withGroovyBuilder {
-                            //Sign pom.xml file
-                            "beforeDeployment" {
-                                signing.signPom(delegate as MavenDeployment)
-                            }
-
-                            "repository"(
-                                    "url" to URI("$repositoryUrl")) {
-                                "authentication"(
-                                        "userName" to "$repositoryUser",
-                                        "password" to "$repositoryPassword"
-                                )
-                            }
-                        }
-
-                        pom.project {
-                            withGroovyBuilder {
-                                "artifactId"("${project.name}")
-                                "groupId"("$groupId")
-                                "version"("$version")
-
-                                "name"("${groupId}:${project.name}")
-                                "description"("Commons Profiler provide basic API" +
-                                        " for application metrics measurement.")
-
-                                "url"("https://github.com/ru-fix/dynamic-property")
-
-                                "licenses" {
-                                    "license" {
-                                        "name"("The Apache License, Version 2.0")
-                                        "url"("http://www.apache.org/licenses/LICENSE-2.0.txt")
-                                    }
-                                }
-
-                                "developers" {
-                                    "developer"{
-                                        "id"("swarmshine")
-                                        "name"("Kamil Asfandiyarov")
-                                        "url"("https://github.com/swarmshine")
-                                    }
-                                }
-                                "scm" {
-                                    "url"("https://github.com/ru-fix/dynamic-property")
-                                    "connection"("https://github.com/ru-fix/dynamic-property.git")
-                                    "developerConnection"("https://github.com/ru-fix/dynamic-property.git")
-                                }
-                            }
-                        }
+    publishing {
+        repositories {
+            maven {
+                url = uri("$repositoryUrl")
+                if (url.scheme.startsWith("http", true)) {
+                    credentials {
+                        username = "$repositoryUser"
+                        password = "$repositoryPassword"
                     }
                 }
             }
         }
+        (publications) {
+            "maven"(MavenPublication::class) {
+                from(components["java"])
+
+                artifact(sourcesJar)
+                artifact(dokkaJar)
+
+                pom {
+                    name.set("${project.group}:${project.name}")
+                    description.set("Provides easy way to change application configuration at runtime.")
+                    url.set("https://github.com/ru-fix/dynamic-property")
+                    licenses {
+                        license {
+                            name.set("The Apache License, Version 2.0")
+                            url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+                        }
+                    }
+                    developers {
+                        developer {
+                            id.set("swarmshine")
+                            name.set("Kamil Asfandiyarov")
+                            url.set("https://github.com/swarmshine")
+                        }
+                    }
+                    scm {
+                        url.set("https://github.com/ru-fix/dynamic-property")
+                        connection.set("https://github.com/ru-fix/dynamic-property.git")
+                        developerConnection.set("https://github.com/ru-fix/dynamic-property.git")
+                    }
+                }
+            }
+        }
+    }
+
+
+    configure<SigningExtension> {
+
+        if (!signingKeyId.isNullOrEmpty()) {
+            project.ext["signing.keyId"] = signingKeyId
+            project.ext["signing.password"] = signingPassword
+            project.ext["signing.secretKeyRingFile"] = signingSecretKeyRingFile
+
+            logger.info("Signing key id provided. Sign artifacts for $project.")
+
+            isRequired = true
+        } else {
+            logger.warn("${project.name}: Signing key not provided. Disable signing for  $project.")
+            isRequired = false
+        }
+
+        sign(publishing.publications)
+    }
+
+    tasks {
+
 
         withType<KotlinCompile> {
             kotlinOptions.jvmTarget = "1.8"
@@ -188,6 +177,8 @@ subprojects {
 
         withType<Test> {
             useJUnitPlatform()
+
+            maxParallelForks = 10
 
             testLogging {
                 events(TestLogEvent.PASSED, TestLogEvent.FAILED, TestLogEvent.SKIPPED)
