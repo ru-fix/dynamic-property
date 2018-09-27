@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import ru.fix.dynamic.property.api.AtomicProperty
 import ru.fix.dynamic.property.api.DynamicProperty
+import ru.fix.dynamic.property.polling.DynamicPropertyPoller
 import java.util.concurrent.atomic.AtomicReference
 
 class DynamicPropertyTest {
@@ -49,5 +50,22 @@ class DynamicPropertyTest {
         stringProperty.set("305")
 
         assertEquals(305, captor.get())
+    }
+
+     @Test
+    fun polled_property() {
+        var value = "start"
+        val poller = DynamicPropertyPoller()
+        val property = poller.createProperty{value} 
+        assertEquals("start", property.get())
+
+        value = "work"
+        poller.run()
+        assertEquals("work", property.get())
+
+        poller.deleteProperty(property)
+        value = "end"
+        poller.run()
+        assertEquals("work", property.get())
     }
 }

@@ -1,4 +1,4 @@
-package ru.fix.cpapsm.commons.poll;
+package ru.fix.dynamic.property.polling;
 
 /**
  *

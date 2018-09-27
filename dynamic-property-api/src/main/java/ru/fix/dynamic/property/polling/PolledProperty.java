@@ -1,4 +1,4 @@
-package ru.fix.cpapsm.commons.poll;
+package ru.fix.dynamic.property.polling;
 
 /**
  *
@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
- import ru.fix.dynamic.property.api.DynamicProperty;
+import ru.fix.dynamic.property.api.DynamicProperty;
 import ru.fix.dynamic.property.api.AtomicProperty;
 import ru.fix.dynamic.property.api.DynamicPropertyListener;
 
