@@ -8,7 +8,14 @@ import ru.fix.dynamic.property.api.DynamicProperty
 import ru.fix.aggregating.profiler.NoopProfiler;
 import ru.fix.stdlib.concurrency.threads.NamedExecutors;
 
+/**
+ * test for DynamicPropertyPoller
+ */
 class DynamicPropertyTest {
+
+    /**
+     * basic test
+     */
     @Test
     fun polled_property() {
         var value = "start"

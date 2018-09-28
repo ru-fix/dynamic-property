@@ -5,15 +5,14 @@ package ru.fix.dynamic.property.polling;
  * @author Andrey Kiselev
  */
 
-import java.util.function.Supplier;
 import java.util.WeakHashMap;
+import java.util.function.Supplier;
 import javax.annotation.PostConstruct;
 
-import ru.fix.stdlib.concurrency.threads.NamedExecutors;
-import ru.fix.stdlib.concurrency.threads.ReschedulableScheduler;
-import ru.fix.stdlib.concurrency.threads.Schedule;
 import ru.fix.aggregating.profiler.Profiler;
 import ru.fix.dynamic.property.api.DynamicProperty;
+import ru.fix.stdlib.concurrency.threads.ReschedulableScheduler;
+import ru.fix.stdlib.concurrency.threads.Schedule;
 
 public class DynamicPropertyPoller {
     private WeakHashMap<PolledProperty, Supplier> properties = new WeakHashMap<>();
