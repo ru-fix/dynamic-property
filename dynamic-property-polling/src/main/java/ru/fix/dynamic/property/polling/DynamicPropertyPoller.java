@@ -9,7 +9,6 @@ import java.util.WeakHashMap;
 import java.util.function.Supplier;
 import javax.annotation.PostConstruct;
 
-import ru.fix.aggregating.profiler.Profiler;
 import ru.fix.dynamic.property.api.DynamicProperty;
 import ru.fix.stdlib.concurrency.threads.ReschedulableScheduler;
 import ru.fix.stdlib.concurrency.threads.Schedule;
