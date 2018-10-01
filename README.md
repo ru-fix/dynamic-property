@@ -49,7 +49,9 @@ atomicProperty.set(512)
 ```
 
 Polled values.
-init poller.
+at begin we must create DynamicPropertyPoller.
+it need for periodically polling of variable state and create new
+instances of PolledProperty.  
 ```java
 DynamicPropertyPoller poller = new DynamicPropertyPoller(...);
 ```

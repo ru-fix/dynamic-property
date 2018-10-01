@@ -4,6 +4,7 @@ object Vers {
     val dokkav = "0.9.16"
     val gradleReleasePlugin = "1.2.18"
     val junit = "5.2.0"
+    val jfixStdlibConcurrency = "1.0.13"
 }
 
 object Libs {
@@ -24,4 +25,5 @@ object Libs {
     val junit_api = "org.junit.jupiter:junit-jupiter-api:${Vers.junit}"
     val junit_engine = "org.junit.jupiter:junit-jupiter-engine:${Vers.junit}"
 
+    val jfix_stdlib_concurrency = "ru.fix:jfix-stdlib-concurrency:${Vers.jfixStdlibConcurrency}"
 }

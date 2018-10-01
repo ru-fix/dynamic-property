@@ -16,17 +16,17 @@ import ru.fix.stdlib.concurrency.threads.Schedule;
 public class DynamicPropertyPoller {
     private WeakHashMap<PolledProperty, Supplier> properties = new WeakHashMap<>();
     private ReschedulableScheduler scheduler;
-    private DynamicProperty<Integer> rate;
+    private DynamicProperty<Schedule> delay;
 
     public DynamicPropertyPoller(ReschedulableScheduler scheduler,
-                                 DynamicProperty<Integer> rate) {
+                                 DynamicProperty<Schedule> delay) {
         this.scheduler = scheduler;
-        this.rate = rate;
+        this.delay = delay;
         
-        this.rate.addListener(newRate -> {
-                this.scheduler.shutdownNow();
+        this.delay.addListener(newRate -> {
+                this.scheduler.shutdown();
                 this.scheduler.schedule(
-                    () -> Schedule.withRate(newRate),
+                    () -> newRate,
                     0,
                     this::pollAll);
             });
@@ -35,7 +35,7 @@ public class DynamicPropertyPoller {
     @PostConstruct
     public void init() {
         this.scheduler.schedule(
-            () -> Schedule.withRate(rate.get()),
+            () -> delay.get(),
             0,
             this::pollAll);
     }

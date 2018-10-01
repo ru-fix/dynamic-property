@@ -12,8 +12,8 @@ dependencies {
     testCompile(Libs.kotlin_jdk8)
     testCompile(Libs.kotlin_stdlib)
     testCompile(Libs.kotlin_reflect)
+    compile(Libs.jfix_stdlib_concurrency)
     compile(project(":dynamic-property-api"))
-    compile("ru.fix:jfix-stdlib-concurrency:1.0.13")
 }
 
 

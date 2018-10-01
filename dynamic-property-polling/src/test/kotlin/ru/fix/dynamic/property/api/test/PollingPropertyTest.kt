@@ -7,6 +7,7 @@ import ru.fix.dynamic.property.polling.DynamicPropertyPoller
 import ru.fix.dynamic.property.api.DynamicProperty
 import ru.fix.aggregating.profiler.NoopProfiler;
 import ru.fix.stdlib.concurrency.threads.NamedExecutors;
+import ru.fix.stdlib.concurrency.threads.Schedule;
 
 /**
  * test for DynamicPropertyPoller
@@ -20,9 +21,13 @@ class DynamicPropertyTest {
     fun polled_property() {
         var value = "start"
         val poller = DynamicPropertyPoller(
-            NamedExecutors.newSingleThreadScheduler("Polling",
-                                                    NoopProfiler()),
-                                           DynamicProperty.of(1))
+            NamedExecutors.newSingleThreadScheduler(
+                "Polling",
+                NoopProfiler()),
+            DynamicProperty.of(
+                Schedule(Schedule.Type.RATE,
+                         1L)))
+        
         poller.init()
         val property = poller.createProperty{value} 
         assertEquals("start", property.get())
