@@ -47,3 +47,34 @@ val atomicProperty = AtomicProperty(122)
 //... inject properties to service
 atomicProperty.set(512)
 ```
+
+Polled values.
+at begin we must create DynamicPropertyPoller.
+it need for periodically polling of variable state and create new
+instances of PolledProperty.  
+```java
+DynamicPropertyPoller poller = new DynamicPropertyPoller(...);
+```
+
+usage
+```java
+class UserClassWithDBDynamicParameters {
+  DynamicProperty myProperty;
+
+  //one way
+  public UserClass(DynamicPropertyPoller poller){
+     myProperty = poller.createProperty(()->{myBatisMapper.selectValue(...)})
+     myProperty.addListener(()->{...})
+  }
+  
+  //another way  
+  @Autowired
+  DynamicPropertyPoller poller;
+
+  @PostConstruct
+  public init(){
+     myProperty = poller.createProperty(()->{myBatisMapper.selectValue(...)})
+     myProperty.addListener(()->{...})
+  }
+}
+```
