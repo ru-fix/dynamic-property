@@ -5,7 +5,8 @@ package ru.fix.dynamic.property.polling;
  * @author Andrey Kiselev
  */
 
-import java.util.WeakHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import javax.annotation.PostConstruct;
 
@@ -13,8 +14,8 @@ import ru.fix.dynamic.property.api.DynamicProperty;
 import ru.fix.stdlib.concurrency.threads.ReschedulableScheduler;
 import ru.fix.stdlib.concurrency.threads.Schedule;
 
-public class DynamicPropertyPoller {
-    private WeakHashMap<PolledProperty, Supplier> properties = new WeakHashMap<>();
+public class DynamicPropertyPoller implements AutoCloseable {
+    private ConcurrentMap<PolledProperty, Supplier> properties = new ConcurrentHashMap<>();
     private ReschedulableScheduler scheduler;
     private DynamicProperty<Schedule> delay;
 
@@ -40,8 +41,10 @@ public class DynamicPropertyPoller {
             this::pollAll);
     }
 
+    @Override
     public void close() {
         this.scheduler.shutdown();
+        this.properties.clear();
     }
     
     private void pollAll() {
@@ -52,7 +55,6 @@ public class DynamicPropertyPoller {
         PolledProperty<DType> property = new PolledProperty<>(retriever);
         property.poll();
         properties.put(property, retriever);
-        
         return property;
     }
 
