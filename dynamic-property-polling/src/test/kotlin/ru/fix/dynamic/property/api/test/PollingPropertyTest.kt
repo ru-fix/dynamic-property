@@ -28,7 +28,6 @@ class DynamicPropertyTest {
                 Schedule(Schedule.Type.RATE,
                          1L)))
         
-        poller.init()
         val property = poller.createProperty{value} 
         assertEquals("start", property.get())
 
