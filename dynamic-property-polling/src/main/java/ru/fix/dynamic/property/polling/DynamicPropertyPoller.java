@@ -5,6 +5,7 @@ package ru.fix.dynamic.property.polling;
  * @author Andrey Kiselev
  */
 
+import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.function.Supplier;
 import javax.annotation.PostConstruct;
@@ -13,8 +14,8 @@ import ru.fix.dynamic.property.api.DynamicProperty;
 import ru.fix.stdlib.concurrency.threads.ReschedulableScheduler;
 import ru.fix.stdlib.concurrency.threads.Schedule;
 
-public class DynamicPropertyPoller {
-    private WeakHashMap<PolledProperty, Supplier> properties = new WeakHashMap<>();
+public class DynamicPropertyPoller implements AutoCloseable {
+    private Map<PolledProperty, Supplier> properties = new WeakHashMap<>();
     private ReschedulableScheduler scheduler;
     private DynamicProperty<Schedule> delay;
 
@@ -30,33 +31,39 @@ public class DynamicPropertyPoller {
                     0,
                     this::pollAll);
             });
-    }
 
-    @PostConstruct
-    public void init() {
         this.scheduler.schedule(
             () -> delay.get(),
             0,
             this::pollAll);
     }
 
+    @Override
     public void close() {
         this.scheduler.shutdown();
+        synchronized(properties) {
+            this.properties.clear();
+        }
     }
     
     private void pollAll() {
-        properties.forEach((k, v) ->  k.poll());
+        synchronized(properties) {
+            properties.forEach((k, v) ->  k.poll());
+        }
     }
     
     public <DType> PolledProperty<DType> createProperty(Supplier<DType> retriever) {
         PolledProperty<DType> property = new PolledProperty<>(retriever);
         property.poll();
-        properties.put(property, retriever);
-        
+        synchronized(properties) {
+            properties.put(property, retriever);
+        }
         return property;
     }
 
     public void deleteProperty(PolledProperty pp) {
-        properties.remove(pp);
+        synchronized(properties) {
+            properties.remove(pp);
+        }
     }
 }
