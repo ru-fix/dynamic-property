@@ -32,7 +32,7 @@ public class DynamicPropertyPoller implements AutoCloseable {
             });
 
         this.scheduler.schedule(
-            () -> delay.get(),
+            delay,
             0,
             this::pollAll);
     }
