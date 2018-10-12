@@ -21,23 +21,22 @@ class DynamicPropertyTest {
     fun polled_property() {
         var value = "start"
         val poller = DynamicPropertyPoller(
-            NamedExecutors.newSingleThreadScheduler(
-                "Polling",
-                NoopProfiler()),
-            DynamicProperty.of(
-                Schedule(Schedule.Type.RATE,
-                         1L)))
-        
-        val property = poller.createProperty{value} 
+                NamedExecutors.newSingleThreadScheduler(
+                        "Polling",
+                        NoopProfiler()),
+                DynamicProperty.of(
+                        Schedule.withRate(1L)))
+
+        val property = poller.createProperty { value }
         assertEquals("start", property.get())
 
         value = "work"
-        Thread.sleep(100) 
+        Thread.sleep(100)
         assertEquals("work", property.get())
 
         poller.deleteProperty(property)
         value = "end"
-        Thread.sleep(100)         
+        Thread.sleep(100)
         assertEquals("work", property.get())
 
         poller.close()

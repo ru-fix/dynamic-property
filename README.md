@@ -48,33 +48,27 @@ val atomicProperty = AtomicProperty(122)
 atomicProperty.set(512)
 ```
 
-Polled values.
-at begin we must create DynamicPropertyPoller.
-it need for periodically polling of variable state and create new
-instances of PolledProperty.  
+## Polled values
+DynamicPropertyPoller regularly invoke user defined supplier function that returns current value of DynamicProperty
+that backed by custom user defined data source.
 ```java
-DynamicPropertyPoller poller = new DynamicPropertyPoller(...);
-```
+DynamicPropertyPoller poller = DynamicPropertyPoller(
+        NamedExecutors.newSingleThreadScheduler(
+            "polling",
+            profiler
+        ),
+        DynamicProperty.of(Schedule.withRate(1000L)));
 
-usage
-```java
-class UserClassWithDBDynamicParameters {
+
+class UserClassWithDynamicPropertiesBackedByCustomDataSource {
   DynamicProperty myProperty;
 
-  //one way
   public UserClass(DynamicPropertyPoller poller){
-     myProperty = poller.createProperty(()->{myBatisMapper.selectValue(...)})
-     myProperty.addListener(()->{...})
-  }
-  
-  //another way  
-  @Autowired
-  DynamicPropertyPoller poller;
-
-  @PostConstruct
-  public init(){
-     myProperty = poller.createProperty(()->{myBatisMapper.selectValue(...)})
-     myProperty.addListener(()->{...})
+     myProperty = poller.createProperty(()-> myBattsDatabaseMapper.selectValue(...));
+     myProperty.addListener(()->{
+         //on property changed
+         ...
+     });
   }
 }
 ```
