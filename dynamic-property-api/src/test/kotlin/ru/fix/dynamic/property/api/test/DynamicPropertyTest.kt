@@ -4,8 +4,10 @@ package ru.fix.dynamic.property.api.test
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import ru.fix.dynamic.property.api.AtomicProperty
+import ru.fix.dynamic.property.api.CombinedProperty
 import ru.fix.dynamic.property.api.DynamicProperty
 import java.util.concurrent.atomic.AtomicReference
+import java.util.function.Supplier
 
 class DynamicPropertyTest {
 
@@ -49,5 +51,22 @@ class DynamicPropertyTest {
         stringProperty.set("305")
 
         assertEquals(305, captor.get())
+    }
+
+    @Test
+    fun `combine properties`() {
+        val first = AtomicProperty("hello")
+        val second = AtomicProperty("123")
+
+        val combine = CombinedProperty(Supplier { first.get() + second.get() }, first, second)
+        assertEquals("hello123", combine.get())
+
+        first.set("hi")
+        assertEquals("hi123", combine.get())
+
+        second.set("42")
+        assertEquals("hi42", combine.get())
+
+
     }
 }
