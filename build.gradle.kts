@@ -115,8 +115,9 @@ subprojects {
                 }
             }
         }
-        (publications) {
-            "maven"(MavenPublication::class) {
+
+        publications {
+            register("maven", MavenPublication::class) {
                 from(components["java"])
 
                 artifact(sourcesJar)
