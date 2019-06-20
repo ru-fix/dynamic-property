@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.fix.dynamic.property.api.DynamicPropertyChangeListener;
 import ru.fix.dynamic.property.api.DynamicPropertySource;
-import ru.fix.dynamic.property.api.converter.DefaultDynamicPropertyMarshaller;
 import ru.fix.dynamic.property.api.converter.DynamicPropertyMarshaller;
 
 import java.io.InputStream;

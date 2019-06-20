@@ -5,7 +5,6 @@ import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.curator.test.InstanceSpec;
 import org.apache.curator.test.TestingServer;
-//import org.junit.;
 import org.junit.jupiter.api.extension.BeforeTestExecutionCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
@@ -66,18 +65,6 @@ public class ZKTestingServer implements BeforeTestExecutionCallback /*extends Ex
             }
         }));
     }
-
-//    @Override
-//    protected void before() throws Throwable {
-//        init();
-//        uuid = UUID.randomUUID().toString();
-//
-//        CuratorFramework client = createClient("");
-//        client.create().forPath("/" + uuid);
-//        client.close();
-//
-//        curatorFramework = createClient();
-//    }
 
     public int getPort() {
         return port;
