@@ -9,6 +9,7 @@ import ru.fix.dynamic.property.api.DefaultDynamicProperty;
 import ru.fix.dynamic.property.api.DynamicProperty;
 import ru.fix.dynamic.property.api.DynamicPropertySource;
 import ru.fix.dynamic.property.api.annotation.PropertyId;
+import ru.fix.dynamic.property.spring.exception.PropertyNotFoundException;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -71,7 +72,7 @@ public class DynamicPropertyAwareBeanPostProcessor implements BeanPostProcessor 
                                 "DynamicProperty type annotated by @PropertyId must have default value other than null",
                         field.getName(), beanName
                 );
-                throw new IllegalStateException(errorMessage);
+                throw new PropertyNotFoundException(errorMessage);
             }
 
             addDefaultValueIfAbsent(propertyId, propertyDefaultValue);

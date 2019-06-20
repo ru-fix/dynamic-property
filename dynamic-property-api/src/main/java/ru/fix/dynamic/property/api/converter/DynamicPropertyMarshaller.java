@@ -1,5 +1,8 @@
 package ru.fix.dynamic.property.api.converter;
 
+import ru.fix.dynamic.property.api.converter.exception.DynamicPropertyDeserializationException;
+import ru.fix.dynamic.property.api.converter.exception.DynamicPropertySerializationException;
+
 /**
  * @author Ayrat Zulkarnyaev
  */

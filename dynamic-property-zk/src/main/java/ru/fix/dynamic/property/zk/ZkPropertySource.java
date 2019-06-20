@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 import ru.fix.dynamic.property.api.DynamicPropertyChangeListener;
 import ru.fix.dynamic.property.api.DynamicPropertySource;
 import ru.fix.dynamic.property.api.converter.DynamicPropertyMarshaller;
-import ru.fix.dynamic.property.api.converter.JSonPropertyMarshaller;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -34,14 +33,21 @@ public class ZkPropertySource implements DynamicPropertySource {
 
     private final String configLocation;
     private CuratorFramework curatorFramework;
-    private final DynamicPropertyMarshaller marshaller = new JSonPropertyMarshaller();
+    private final DynamicPropertyMarshaller marshaller;
 
     private Map<String, Collection<DynamicPropertyChangeListener<String>>> listeners = new ConcurrentHashMap<>();
 
     private TreeCache treeCache;
 
-    public ZkPropertySource(String zookeeperQuorum, String configLocation) throws Exception {
-        this(CuratorFrameworkFactory.newClient(zookeeperQuorum, new ExponentialBackoffRetry(1000, 10)), configLocation);
+    public ZkPropertySource(String zookeeperQuorum, String configLocation, DynamicPropertyMarshaller marshaller) throws Exception {
+        this(
+                CuratorFrameworkFactory.newClient(
+                        zookeeperQuorum,
+                        new ExponentialBackoffRetry(1000, 10)
+                ),
+                configLocation,
+                marshaller
+        );
     }
 
     /**
@@ -49,9 +55,10 @@ public class ZkPropertySource implements DynamicPropertySource {
      * @param configLocation   Root path where ZkPropertySource will store properties. E.g.
      *                         '/cpapsm/config/SWS'
      */
-    public ZkPropertySource(CuratorFramework curatorFramework, String configLocation) throws Exception {
+    public ZkPropertySource(CuratorFramework curatorFramework, String configLocation, DynamicPropertyMarshaller marshaller) throws Exception {
         this.curatorFramework = curatorFramework;
         this.configLocation = configLocation;
+        this.marshaller = marshaller;
         init();
     }
 
@@ -181,8 +188,7 @@ public class ZkPropertySource implements DynamicPropertySource {
     public <T> T getProperty(String key, Class<T> type, T defaultValue) {
         String value = getProperty(key);
         if (value != null) {
-//            return marshaller.unmarshall(value, type);
-            return ValueConverter.convert(type, value, defaultValue);
+            return marshaller.unmarshall(value, type);
         }
         return defaultValue;
     }
@@ -247,8 +253,7 @@ public class ZkPropertySource implements DynamicPropertySource {
     public <T> void addPropertyChangeListener(String propertyName, Class<T> type,
                                               DynamicPropertyChangeListener<T> typedListener) {
         addPropertyChangeListener(propertyName, value -> {
-            T convertedValue = ValueConverter.convert(type, value, null);
-//            T convertedValue = marshaller.unmarshall(value, type);
+            T convertedValue = marshaller.unmarshall(value, type);
             typedListener.onPropertyChanged(convertedValue);
         });
     }

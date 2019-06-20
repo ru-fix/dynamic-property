@@ -3,7 +3,6 @@ package ru.fix.dynamic.property.api;
 import java.util.Map;
 import java.util.Properties;
 
-//TODO: параметры zk
 public interface DynamicPropertySource extends AutoCloseable {
 
     /**

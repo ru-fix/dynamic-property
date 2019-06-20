@@ -1,4 +1,4 @@
-package ru.fix.dynamic.property.api.converter;
+package ru.fix.dynamic.property.api.converter.exception;
 
 /**
  * @author Ayrat Zulkarnyaev

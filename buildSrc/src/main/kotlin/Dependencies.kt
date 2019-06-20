@@ -3,7 +3,7 @@ object Vers {
     const val sl4j = "1.7.25"
     const val dokkav = "0.9.16"
     const val gradleReleasePlugin = "1.2.18"
-    const val junit = "5.2.0"
+    const val junit = "5.4.2"
     const val curator_recipes = "4.2.0"
     const val curator_test = "4.2.0"
     const val spring = "5.1.8.RELEASE"
@@ -41,5 +41,6 @@ object Libs {
 
     const val junit_api = "org.junit.jupiter:junit-jupiter-api:${Vers.junit}"
     const val junit_engine = "org.junit.jupiter:junit-jupiter-engine:${Vers.junit}"
+    const val junit_params = "org.junit.jupiter:junit-jupiter-params:${Vers.junit}"
 
 }

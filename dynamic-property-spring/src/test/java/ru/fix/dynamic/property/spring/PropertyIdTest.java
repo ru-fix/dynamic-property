@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import ru.fix.dynamic.property.api.DynamicPropertySource;
+import ru.fix.dynamic.property.api.converter.DefaultDynamicPropertyMarshaller;
 import ru.fix.dynamic.property.spring.config.DynamicPropertyConfig;
 
 import java.util.Properties;
@@ -32,7 +33,9 @@ public class PropertyIdTest {
 
         @Bean
         public DynamicPropertySource dynamicPropertySource() {
-            return new TestPropertySource(new Properties());
+            Properties properties = new Properties();
+            properties.put("property.city", "Biribidjan");
+            return new TestPropertySource(properties, new DefaultDynamicPropertyMarshaller());
         }
 
         @Bean
@@ -46,7 +49,7 @@ public class PropertyIdTest {
 
     @Test
     public void addDynamicPropertyListener() {
-        assertEquals("kazan", propertyContainer.getDefaultCity().get());
+        assertEquals("Biribidjan", propertyContainer.getCity().get());
     }
 
 }

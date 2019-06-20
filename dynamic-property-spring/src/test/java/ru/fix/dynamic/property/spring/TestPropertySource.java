@@ -4,7 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.fix.dynamic.property.api.DynamicPropertyChangeListener;
 import ru.fix.dynamic.property.api.DynamicPropertySource;
-import ru.fix.dynamic.property.zk.ValueConverter;
+import ru.fix.dynamic.property.api.converter.DefaultDynamicPropertyMarshaller;
+import ru.fix.dynamic.property.api.converter.DynamicPropertyMarshaller;
 
 import java.io.InputStream;
 import java.util.Collection;
@@ -19,15 +20,13 @@ public class TestPropertySource implements DynamicPropertySource {
     private static final Logger logger = LoggerFactory.getLogger(TestPropertySource.class);
 
     final Properties properties;
+    private final DynamicPropertyMarshaller marshaller;
 
     private Map<String, Collection<DynamicPropertyChangeListener<String>>> listeners = new ConcurrentHashMap<>();
 
-    public TestPropertySource(Properties properties) {
+    public TestPropertySource(Properties properties, DynamicPropertyMarshaller marshaller) {
         this.properties = properties;
-    }
-
-    public TestPropertySource() {
-        this.properties = new Properties();
+        this.marshaller = marshaller;
     }
 
     public String getProperty(String key) {
@@ -46,7 +45,7 @@ public class TestPropertySource implements DynamicPropertySource {
     @Override
     public <T> T getProperty(String key, Class<T> type, T defaultValue) {
         String value = getProperty(key);
-        return ValueConverter.convert(type, value, defaultValue);
+        return marshaller.unmarshall(value, type);
     }
 
     @Override
@@ -90,12 +89,11 @@ public class TestPropertySource implements DynamicPropertySource {
     public <T> void addPropertyChangeListener(String propertyName, Class<T> type, DynamicPropertyChangeListener<T>
             typedListener) {
         addPropertyChangeListener(propertyName, value -> {
-            T convertedValue = ValueConverter.convert(type, value, null);
+            T convertedValue = marshaller.unmarshall(value, type);
             typedListener.onPropertyChanged(convertedValue);
         });
     }
 
-//    @Override
     private void addPropertyChangeListener(String propertyName, DynamicPropertyChangeListener<String> listener) {
         listeners.computeIfAbsent(propertyName, key -> new CopyOnWriteArrayList<>()).add(listener);
     }
