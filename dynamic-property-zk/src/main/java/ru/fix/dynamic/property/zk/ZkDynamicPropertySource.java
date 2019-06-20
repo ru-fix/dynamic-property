@@ -25,9 +25,9 @@ import java.util.function.Function;
  * Implementation of {@link DynamicPropertyChangeListener} which uses {@link TreeCache} inside and
  * provides subscriptions to property change events
  */
-public class ZkPropertySource implements DynamicPropertySource {
+public class ZkDynamicPropertySource implements DynamicPropertySource {
 
-    private static final Logger log = LoggerFactory.getLogger(ZkPropertySource.class);
+    private static final Logger log = LoggerFactory.getLogger(ZkDynamicPropertySource.class);
 
     private static final int UPSERT_PROPERTY_RETRY_COUNT = 10;
 
@@ -39,7 +39,7 @@ public class ZkPropertySource implements DynamicPropertySource {
 
     private TreeCache treeCache;
 
-    public ZkPropertySource(String zookeeperQuorum, String configLocation, DynamicPropertyMarshaller marshaller) throws Exception {
+    public ZkDynamicPropertySource(String zookeeperQuorum, String configLocation, DynamicPropertyMarshaller marshaller) throws Exception {
         this(
                 CuratorFrameworkFactory.newClient(
                         zookeeperQuorum,
@@ -52,10 +52,10 @@ public class ZkPropertySource implements DynamicPropertySource {
 
     /**
      * @param curatorFramework Ready to use curator framework
-     * @param configLocation   Root path where ZkPropertySource will store properties. E.g.
+     * @param configLocation   Root path where ZkDynamicPropertySource will store properties. E.g.
      *                         '/cpapsm/config/SWS'
      */
-    public ZkPropertySource(CuratorFramework curatorFramework, String configLocation, DynamicPropertyMarshaller marshaller) throws Exception {
+    public ZkDynamicPropertySource(CuratorFramework curatorFramework, String configLocation, DynamicPropertyMarshaller marshaller) throws Exception {
         this.curatorFramework = curatorFramework;
         this.configLocation = configLocation;
         this.marshaller = marshaller;
@@ -115,7 +115,7 @@ public class ZkPropertySource implements DynamicPropertySource {
         Properties currentProperties = getAllProperties();
 
         Properties initialProperties = new Properties();
-        InputStream input = ZkPropertySource.class.getClassLoader().getResourceAsStream(defaultPropertiesFileName);
+        InputStream input = ZkDynamicPropertySource.class.getClassLoader().getResourceAsStream(defaultPropertiesFileName);
         initialProperties.load(input);
 
         for (String property : initialProperties.stringPropertyNames()) {

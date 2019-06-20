@@ -6,14 +6,11 @@ import java.util.Properties;
 public interface DynamicPropertySource extends AutoCloseable {
 
     /**
-     * Returns property value for specified key in required type. Currently
-     * supported only {@link String},{@link Integer},{@link Long},
-     * {@link Boolean} types.
+     * Returns property value for specified key in required type.
      * <p>
      * There are no guarantees of accuracy. This is merely the most recent view
      * of the data.
      * </p>
-     *
      * @param key  property name
      * @param type property type
      * @return property value, converted to the required type or {@code null} if
@@ -25,8 +22,7 @@ public interface DynamicPropertySource extends AutoCloseable {
     <T> T getProperty(String key, Class<T> type);
 
     /**
-     * Works as combination of {@link #getProperty(String, Class)} and
-     * {@link #getProperty(String, String)}
+     * Returns property value for specified key or default.
      * <p>
      * There are no guarantees of accuracy. This is merely the most recent view
      * of the data.
@@ -44,7 +40,6 @@ public interface DynamicPropertySource extends AutoCloseable {
      * Reads up all existing properties
      *
      * @return properties with values
-     * @throws Exception
      */
     Properties getAllProperties() throws Exception;
 
@@ -53,17 +48,14 @@ public interface DynamicPropertySource extends AutoCloseable {
      *
      * @param root node of subtree, if {@code null} then default config location will be used.
      * @return key-value entries
-     * @throws Exception
      */
     Map<String, String> getAllSubtreeProperties(String root) throws Exception;
 
     /**
-     * Uploads to the ZooKeeper cluster initial properties. Wouldn't update node
-     * value if it already exists.
+     * Uploads initial properties.
      *
      * @param propertiesPath initial properties
      * @return actual set of properties
-     * @throws Exception
      */
     Properties uploadInitialProperties(String propertiesPath) throws Exception;
 
@@ -72,7 +64,6 @@ public interface DynamicPropertySource extends AutoCloseable {
      *
      * @param key     key
      * @param propVal value
-     * @throws Exception
      * @see #updateProperty(String, String)
      */
     void upsertProperty(String key, String propVal) throws Exception;

@@ -20,7 +20,7 @@ class DefaultDynamicPropertyMarshallerTest {
         Long someLong = 1L;
         Byte someByte = 1;
         BigDecimal someBigDecimal = new BigDecimal("1.1");
-        BigInteger someBigIngeger = new BigInteger("32");
+        BigInteger someBigInteger = BigInteger.valueOf(11L);
         Boolean someBoolean = false;
         Double someDouble = 1.1D;
         Float someFloat = 1.1F;
@@ -30,7 +30,7 @@ class DefaultDynamicPropertyMarshallerTest {
         assertPrimitives(someLong, Long.class);
         assertPrimitives(someByte, Byte.class);
         assertPrimitives(someBigDecimal, BigDecimal.class);
-        assertPrimitives(someBigIngeger, BigInteger.class);
+        assertPrimitives(someBigInteger, BigInteger.class);
         assertPrimitives(someBoolean, Boolean.class);
         assertPrimitives(someDouble, Double.class);
         assertPrimitives(someFloat, Float.class);
@@ -46,8 +46,8 @@ class DefaultDynamicPropertyMarshallerTest {
     @Test
     public void marshallAndUnmarshallComplexObject_shouldBeEqual() {
         List<BigInteger> phones = new ArrayList<>();
-        phones.add(new BigInteger("88005553535"));
-        phones.add(new BigInteger("11111111111"));
+        phones.add(BigInteger.valueOf(88005553535L));
+        phones.add(BigInteger.valueOf(11111111111L));
 
         User user = new User("pretty name", new Email("test@mail.ua"), phones);
 

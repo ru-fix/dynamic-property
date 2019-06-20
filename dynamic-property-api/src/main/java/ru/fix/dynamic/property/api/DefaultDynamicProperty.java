@@ -8,8 +8,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static org.slf4j.LoggerFactory.getLogger;
-
 /**
  * Contain property initial value. Automatically register property change listener.
  */
@@ -17,9 +15,9 @@ public class DefaultDynamicProperty<T> implements DynamicProperty<T> {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultDynamicProperty.class);
 
-    private static final ExecutorService executor = Executors.newFixedThreadPool(4);
+    private static final ExecutorService executor = Executors.newCachedThreadPool();
 
-    private DynamicPropertySource zkConfig;
+    private DynamicPropertySource propertySource;
     private Class<T> type;
     private String name;
     private T defaultValue;
@@ -27,12 +25,12 @@ public class DefaultDynamicProperty<T> implements DynamicProperty<T> {
 
     private List<DynamicPropertyChangeListener<T>> listeners = new CopyOnWriteArrayList<>();
 
-    public DefaultDynamicProperty(DynamicPropertySource zkConfig, String name, Class<T> type) {
-        this(zkConfig, name, type, null);
+    public DefaultDynamicProperty(DynamicPropertySource propertySource, String name, Class<T> type) {
+        this(propertySource, name, type, null);
     }
 
-    public DefaultDynamicProperty(DynamicPropertySource zkConfig, String name, Class<T> type, T defaultValue) {
-        this.zkConfig = zkConfig;
+    public DefaultDynamicProperty(DynamicPropertySource propertySource, String name, Class<T> type, T defaultValue) {
+        this.propertySource = propertySource;
         this.name = name;
         this.type = type;
         this.defaultValue = defaultValue;
@@ -41,7 +39,7 @@ public class DefaultDynamicProperty<T> implements DynamicProperty<T> {
     }
 
     private void init() {
-        zkConfig.addPropertyChangeListener(
+        propertySource.addPropertyChangeListener(
                 name,
                 type,
                 newValue -> {
@@ -55,7 +53,7 @@ public class DefaultDynamicProperty<T> implements DynamicProperty<T> {
                     }));
                 }
         );
-        currentValue = zkConfig.getProperty(name, type, defaultValue);
+        currentValue = propertySource.getProperty(name, type, defaultValue);
     }
 
     @Override
@@ -63,13 +61,6 @@ public class DefaultDynamicProperty<T> implements DynamicProperty<T> {
         return currentValue;
     }
 
-    /**
-     * WARNING
-     * Listener runs in internal zookeeper thread. It should be very light, run very fast and so not use locks.
-     *
-     * @param listener
-     * @return
-     */
     @Override
     public void addListener(DynamicPropertyChangeListener<T> listener) {
         listeners.add(listener);
@@ -77,7 +68,7 @@ public class DefaultDynamicProperty<T> implements DynamicProperty<T> {
 
     @Override
     public String toString() {
-        return "ZKConfigPropertyHolder{" +
+        return "DefaultDynamicProperty{" +
                 "type=" + type +
                 ", name='" + name + '\'' +
                 ", currentValue=" + currentValue +

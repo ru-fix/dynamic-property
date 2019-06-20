@@ -20,9 +20,9 @@ import java.util.function.Supplier;
 import static org.junit.jupiter.api.Assertions.*;
 
 
-public class ZkPropertySourceTest {
+public class ZkDynamicPropertySourceTest {
 
-    private static final Logger log = LoggerFactory.getLogger(ZkPropertySourceTest.class);
+    private static final Logger log = LoggerFactory.getLogger(ZkDynamicPropertySourceTest.class);
 
     private static final String TEST_PROP_KEY = "test_prop_key";
     private static final String TEST_PROP_KEY_1 = "test_prop_key_1";
@@ -198,7 +198,7 @@ public class ZkPropertySourceTest {
 
     @Test
     public void shouldGetActualValueFromHolder() throws Exception {
-        ZkPropertySource zkConfig = createPropertySource(PROPERTIES_LOCATION);
+        ZkDynamicPropertySource zkConfig = createPropertySource(PROPERTIES_LOCATION);
         zkConfig.uploadInitialProperties("default.test.properties");
 
         String propertyNewValue = "some Value 2";
@@ -229,7 +229,7 @@ public class ZkPropertySourceTest {
 
     @Test
     public void shouldGetDefaultValueFromHolder() throws Exception {
-        ZkPropertySource zkConfig = createPropertySource(PROPERTIES_LOCATION);
+        ZkDynamicPropertySource zkConfig = createPropertySource(PROPERTIES_LOCATION);
 
         DefaultDynamicProperty<String> holder1 = new DefaultDynamicProperty<>(
                 zkConfig, "unknown.property", String.class, "default Value"
@@ -237,8 +237,8 @@ public class ZkPropertySourceTest {
         assertEquals("default Value", holder1.get());
     }
 
-    private ZkPropertySource createPropertySource(String propertyLocation) throws Exception {
-        return new ZkPropertySource(zkTestingServer.getClient(), propertyLocation, new DefaultDynamicPropertyMarshaller());
+    private ZkDynamicPropertySource createPropertySource(String propertyLocation) throws Exception {
+        return new ZkDynamicPropertySource(zkTestingServer.getClient(), propertyLocation, new DefaultDynamicPropertyMarshaller());
     }
 
     private void setServerProperty(String propertyKey, String value) throws Exception {

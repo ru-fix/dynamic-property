@@ -12,7 +12,6 @@ import ru.fix.dynamic.property.api.converter.exception.DynamicPropertySerializat
 import ru.fix.dynamic.property.api.converter.exception.DynamicPropertyDeserializationException;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
