@@ -30,12 +30,10 @@ public class TestPropertySource implements DynamicPropertySource {
         this.properties = new Properties();
     }
 
-    @Override
     public String getProperty(String key) {
         return properties.get(key).toString();
     }
 
-    @Override
     public String getProperty(String key, String defaulValue) {
         return properties.get(key) == null ? defaulValue : properties.get(key).toString();
     }
@@ -76,7 +74,7 @@ public class TestPropertySource implements DynamicPropertySource {
     }
 
     @Override
-    public void putIfAbsent(String key, String propVal) {
+    public <T> void putIfAbsent(String key, T propVal) throws Exception {
         if (!properties.containsKey(key)) {
             properties.put(key, propVal);
         }
@@ -97,8 +95,8 @@ public class TestPropertySource implements DynamicPropertySource {
         });
     }
 
-    @Override
-    public void addPropertyChangeListener(String propertyName, DynamicPropertyChangeListener<String> listener) {
+//    @Override
+    private void addPropertyChangeListener(String propertyName, DynamicPropertyChangeListener<String> listener) {
         listeners.computeIfAbsent(propertyName, key -> new CopyOnWriteArrayList<>()).add(listener);
     }
 
@@ -116,7 +114,6 @@ public class TestPropertySource implements DynamicPropertySource {
                 } catch (Exception e) {
                     logger.error("Failed to update property {}", propName, e);
                 }
-
             });
         }
     }

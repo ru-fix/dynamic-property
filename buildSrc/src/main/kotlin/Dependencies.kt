@@ -8,6 +8,7 @@ object Vers {
     const val curator_test = "4.2.0"
     const val spring = "5.1.8.RELEASE"
     const val spring_boot_auto_configure = "2.1.5.RELEASE"
+    const val jackson = "2.9.9"
 }
 
 object Libs {
@@ -27,6 +28,12 @@ object Libs {
     const val spring_beans = "org.springframework:spring-beans:${Vers.spring}"
     const val spring_boot_auto_configure = "org.springframework.boot:spring-boot-autoconfigure:${Vers.spring_boot_auto_configure}"
     const val spring_test = "org.springframework:spring-test:${Vers.spring}"
+
+    const val jackson_core = "com.fasterxml.jackson.core:jackson-core:${Vers.jackson}"
+    const val jackson_databind = "com.fasterxml.jackson.core:jackson-databind:${Vers.jackson}"
+    const val jackson_jsr310 = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${Vers.jackson}"
+    const val jackson_module_kotlin = "com.fasterxml.jackson.module:jackson-module-kotlin:${Vers.jackson}"
+
 
     const val mockito = "org.mockito:mockito-all:1.10.19"
     const val mockito_kotiln = "com.nhaarman:mockito-kotlin-kt1.1:1.5.0"

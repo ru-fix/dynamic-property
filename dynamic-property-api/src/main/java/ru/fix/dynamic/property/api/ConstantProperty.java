@@ -13,6 +13,6 @@ public class ConstantProperty<T> implements DynamicProperty<T> {
     }
 
     @Override
-    public void addListener(DynamicPropertyListener<T> listener) {
+    public void addListener(DynamicPropertyChangeListener<T> listener) {
     }
 }

@@ -1,11 +1,7 @@
-package ru.fix.dynamic.property.zk;
+package ru.fix.dynamic.property.api;
 
 import org.slf4j.Logger;
-//import ru.fix.aggregating.profiler.NoopProfiler;
-import ru.fix.dynamic.property.api.DynamicProperty;
-import ru.fix.dynamic.property.api.DynamicPropertyChangeListener;
-import ru.fix.dynamic.property.api.DynamicPropertySource;
-//import ru.fix.stdlib.concurrency.threads.NamedExecutors;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -15,16 +11,12 @@ import java.util.concurrent.Executors;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
- * Holder class to keep property value
+ * Contain property initial value. Automatically register property change listener.
  */
-public class ZKConfigPropertyHolder<T> implements DynamicProperty<T> {
+public class DefaultDynamicProperty<T> implements DynamicProperty<T> {
 
-    private static final Logger log = getLogger(ZKConfigPropertyHolder.class);
-//    private static final ExecutorService executor = Executors.newDynamicPool(
-//            //Temp solution, will be replaced by https://jira.fix.ru/browse/CPAPSM-9317
-//            "zk_property-holder-thread-pool", DynamicProperty.of(4), new NoopProfiler());
+    private static final Logger log = LoggerFactory.getLogger(DefaultDynamicProperty.class);
 
-    //TODO: что будем использовать для получения
     private static final ExecutorService executor = Executors.newFixedThreadPool(4);
 
     private DynamicPropertySource zkConfig;
@@ -35,11 +27,11 @@ public class ZKConfigPropertyHolder<T> implements DynamicProperty<T> {
 
     private List<DynamicPropertyChangeListener<T>> listeners = new CopyOnWriteArrayList<>();
 
-    public ZKConfigPropertyHolder(ZkPropertySource zkConfig, String name, Class<T> type) {
+    public DefaultDynamicProperty(DynamicPropertySource zkConfig, String name, Class<T> type) {
         this(zkConfig, name, type, null);
     }
 
-    public ZKConfigPropertyHolder(DynamicPropertySource zkConfig, String name, Class<T> type, T defaultValue) {
+    public DefaultDynamicProperty(DynamicPropertySource zkConfig, String name, Class<T> type, T defaultValue) {
         this.zkConfig = zkConfig;
         this.name = name;
         this.type = type;

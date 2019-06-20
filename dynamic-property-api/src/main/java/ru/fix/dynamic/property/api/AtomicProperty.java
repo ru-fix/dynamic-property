@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class AtomicProperty<T> implements DynamicProperty<T> {
 
     private final AtomicReference<T> holder = new AtomicReference<>();
-    private final List<DynamicPropertyListener<T>> listeners = new CopyOnWriteArrayList<>();
+    private final List<DynamicPropertyChangeListener<T>> listeners = new CopyOnWriteArrayList<>();
 
     public AtomicProperty(T value) {
         this.holder.set(value);
@@ -30,7 +30,7 @@ public class AtomicProperty<T> implements DynamicProperty<T> {
     }
 
     @Override
-    public void addListener(DynamicPropertyListener<T> listener) {
+    public void addListener(DynamicPropertyChangeListener<T> listener) {
         listeners.add(listener);
     }
 }

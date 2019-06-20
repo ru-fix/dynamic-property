@@ -18,7 +18,7 @@ public class MappedProperty<T, R> implements DynamicProperty<R> {
     }
 
     @Override
-    public void addListener(DynamicPropertyListener<R> listener) {
+    public void addListener(DynamicPropertyChangeListener<R> listener) {
         dynamicProperty.addListener(newValue -> listener.onPropertyChanged(map.apply(newValue)));
     }
 

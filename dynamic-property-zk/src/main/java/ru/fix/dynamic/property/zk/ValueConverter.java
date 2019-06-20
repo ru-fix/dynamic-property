@@ -2,6 +2,8 @@ package ru.fix.dynamic.property.zk;
 
 //import ru.fix.cpapsm.commons.lang.marshall.Marshaller;
 
+import ru.fix.dynamic.property.api.converter.JSonPropertyMarshaller;
+
 import java.math.BigDecimal;
 
 public class ValueConverter {
@@ -29,11 +31,7 @@ public class ValueConverter {
         } else if (String.class.equals(type)) {
             return (T) value;
         } else {
-            //List.class
-            //Any custom class
-//            return Marshaller.unmarshall(value, type);
-            //TODO: решить вопрос с конвертером
-            throw new IllegalStateException("Could not map type, source type is " + type);
+            return new JSonPropertyMarshaller().unmarshall(value, type);
         }
    }
 }

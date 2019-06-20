@@ -7,32 +7,6 @@ import java.util.Properties;
 public interface DynamicPropertySource extends AutoCloseable {
 
     /**
-     * Returns property value for specified key.
-     * <p>
-     * There are no guarantees of accuracy. This is merely the most recent view
-     * of the data.
-     * </p>
-     *
-     * @param key property name
-     * @return property value or {@code null} if there is no such property
-     */
-    String getProperty(String key);
-
-    /**
-     * Returns property value for specified key.
-     * <p>
-     * There are no guarantees of accuracy. This is merely the most recent view
-     * of the data.
-     * </p>
-     *
-     * @param key         property name
-     * @param defaulValue default value for key
-     * @return property value or {@code defaultValue} if there is no such
-     * property
-     */
-    String getProperty(String key, String defaulValue);
-
-    /**
      * Returns property value for specified key in required type. Currently
      * supported only {@link String},{@link Integer},{@link Long},
      * {@link Boolean} types.
@@ -112,7 +86,7 @@ public interface DynamicPropertySource extends AutoCloseable {
      * @param key     key
      * @param propVal value
      */
-    void putIfAbsent(String key, String propVal) throws Exception;
+    <T> void putIfAbsent(String key, T propVal) throws Exception;
 
     /**
      * Updates property value
@@ -123,15 +97,6 @@ public interface DynamicPropertySource extends AutoCloseable {
      * @see #upsertProperty(String, String)
      */
     void updateProperty(String key, String value) throws Exception;
-
-    /**
-     * Registers property change listener. Listener will trigger for
-     * add/update/remove actions on specified property.
-     *
-     * @param propertyName property name
-     * @param listener     listener
-     */
-    void addPropertyChangeListener(String propertyName, DynamicPropertyChangeListener<String> listener);
 
     /**
      * Registers property change listener. Listener will trigger for

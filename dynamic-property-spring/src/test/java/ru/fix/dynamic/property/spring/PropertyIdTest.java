@@ -32,7 +32,7 @@ public class PropertyIdTest {
 
         @Bean
         public DynamicPropertySource dynamicPropertySource() {
-            return new TestPropertySource();
+            return new TestPropertySource(new Properties());
         }
 
         @Bean
@@ -46,7 +46,7 @@ public class PropertyIdTest {
 
     @Test
     public void addDynamicPropertyListener() {
-        assertEquals("Kazan", propertyContainer.getDefaultCity().get());
+        assertEquals("kazan", propertyContainer.getDefaultCity().get());
     }
 
 }

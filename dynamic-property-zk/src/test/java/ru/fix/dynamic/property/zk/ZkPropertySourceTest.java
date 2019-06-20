@@ -2,10 +2,13 @@ package ru.fix.dynamic.property.zk;
 
 import org.apache.zookeeper.data.Stat;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.fix.dynamic.property.api.DynamicPropertySource;
+import ru.fix.dynamic.property.api.converter.DynamicPropertyMarshaller;
+import ru.fix.dynamic.property.api.converter.JSonPropertyMarshaller;
 import ru.fix.dynamic.property.zk.test.ZKTestingServer;
 
 import java.nio.charset.StandardCharsets;
@@ -39,14 +42,14 @@ public class ZkPropertySourceTest {
         DynamicPropertySource zkConfig = new ZkPropertySource(zkTestingServer.getClient(), PROPERTIES_LOCATION);
 
         CountDownLatch propertyChanged = new CountDownLatch(1);
-        zkConfig.addPropertyChangeListener(TEST_PROP_KEY, (newValue) -> propertyChanged.countDown());
+        zkConfig.addPropertyChangeListener(TEST_PROP_KEY, String.class, (newValue) -> propertyChanged.countDown());
 
         setServerProperty(PROPERTIES_LOCATION + "/" + TEST_PROP_KEY, "some Value");
 
         propertyChanged.await();
-        assertEquals("some Value", zkConfig.getProperty(TEST_PROP_KEY, "def value"));
+        assertEquals("some Value", zkConfig.getProperty(TEST_PROP_KEY, String.class));
 
-        String property = zkConfig.getProperty(TEST_PROP_KEY, (String) null);
+        String property = zkConfig.getProperty(TEST_PROP_KEY, String.class);
         assertEquals("some Value", property);
     }
 
@@ -58,7 +61,7 @@ public class ZkPropertySourceTest {
 
         CountDownLatch firstChange = new CountDownLatch(1);
         CountDownLatch secondChange = new CountDownLatch(1);
-        zkConfig.addPropertyChangeListener(TEST_PROP_KEY, (value) -> {
+        zkConfig.addPropertyChangeListener(TEST_PROP_KEY, String.class, (value) -> {
             if (1 == firstChange.getCount()) {
                 firstChange.countDown();
             } else {
@@ -67,14 +70,14 @@ public class ZkPropertySourceTest {
         });
 
         firstChange.await();
-        assertEquals("some Value", zkConfig.getProperty(TEST_PROP_KEY, (String) null));
+        assertEquals("some Value", zkConfig.getProperty(TEST_PROP_KEY, String.class));
 
         changeServerProperty(PROPERTIES_LOCATION + "/" + TEST_PROP_KEY, "some Value 2");
 
         secondChange.await();
-        assertEquals("some Value 2", zkConfig.getProperty(TEST_PROP_KEY, (String) null));
+        assertEquals("some Value 2", zkConfig.getProperty(TEST_PROP_KEY, String.class));
 
-        String property = zkConfig.getProperty(TEST_PROP_KEY, (String) null);
+        String property = zkConfig.getProperty(TEST_PROP_KEY, String.class);
         assertEquals("some Value 2", property);
     }
 
@@ -84,8 +87,7 @@ public class ZkPropertySourceTest {
 
         CountDownLatch propertyAdd = new CountDownLatch(1);
         CountDownLatch propertyChanged = new CountDownLatch(1);
-        zkConfig.addPropertyChangeListener(TEST_PROP_KEY_1, value -> {
-            assertEquals("some Value", value);
+        zkConfig.addPropertyChangeListener(TEST_PROP_KEY_1, String.class, value -> {
             if (1 == propertyAdd.getCount()) {
                 propertyAdd.countDown();
             }
@@ -107,7 +109,7 @@ public class ZkPropertySourceTest {
 
         CountDownLatch propertyAdd = new CountDownLatch(1);
         CountDownLatch propertyRemoved = new CountDownLatch(1);
-        zkConfig.addPropertyChangeListener(TEST_PROP_KEY_1, value -> {
+        zkConfig.addPropertyChangeListener(TEST_PROP_KEY_1, String.class, value -> {
             if (null == value) {
                 propertyRemoved.countDown();
             } else {
@@ -129,9 +131,9 @@ public class ZkPropertySourceTest {
         setServerProperty(PROPERTIES_LOCATION + "/" + TEST_PROP_KEY, "some Value 1");
         setServerProperty(PROPERTIES_LOCATION + "/" + TEST_PROP_KEY_1, "some Value 2");
 
-        zkConfig.addPropertyChangeListener(TEST_PROP_KEY, value -> assertEquals("new some Value 1", value));
+        zkConfig.addPropertyChangeListener(TEST_PROP_KEY, String.class, value -> assertEquals("new some Value 1", value));
 
-        zkConfig.addPropertyChangeListener(TEST_PROP_KEY_1, value -> assertEquals("new some Value 2", value));
+        zkConfig.addPropertyChangeListener(TEST_PROP_KEY_1, String.class, value -> assertEquals("new some Value 2", value));
 
         changeServerProperty(PROPERTIES_LOCATION + "/" + TEST_PROP_KEY, "new some Value 1");
         changeServerProperty(PROPERTIES_LOCATION + "/" + TEST_PROP_KEY_1, "new some Value 2");
@@ -193,21 +195,19 @@ public class ZkPropertySourceTest {
         assertEquals("propName2 default", allProperties.getProperty("propName2"));
     }
 
-    @Test
+    @RepeatedTest(5)
     public void shouldGetActualValueFromHolder() throws Exception {
         ZkPropertySource zkConfig = new ZkPropertySource(zkTestingServer.getClient(), PROPERTIES_LOCATION);
-        String propertyValue = "some Value 1";
+        zkConfig.uploadInitialProperties("default.test.properties");
+
         String propertyNewValue = "some Value 2";
-
-        setServerProperty(PROPERTIES_LOCATION + "/" + TEST_PROP_KEY, propertyValue);
-
-        ZKConfigPropertyHolder<String> propertyHolder = new ZKConfigPropertyHolder<>(zkConfig, TEST_PROP_KEY, String.class);
 
         CountDownLatch propertyAdded = new CountDownLatch(1);
         CountDownLatch propertyChanged = new CountDownLatch(1);
         CountDownLatch propertyRemoved = new CountDownLatch(1);
 
-        zkConfig.addPropertyChangeListener(TEST_PROP_KEY, value -> {
+        zkConfig.addPropertyChangeListener("propName1", String.class, value -> {
+
             if (1 == propertyAdded.getCount()) {
                 propertyAdded.countDown();
                 return;
@@ -221,15 +221,19 @@ public class ZkPropertySourceTest {
             }
         });
 
-        propertyAdded.await();
-        assertEquals(propertyValue, propertyHolder.get());
+        ZKConfigPropertyHolder<String> propertyHolder = new ZKConfigPropertyHolder<>(zkConfig, "propName1", String.class);
+//        propertyAdded.await();
+        Thread.sleep(300);
+        assertEquals("propName1 default", propertyHolder.get());
 
-        updateServerProperty(PROPERTIES_LOCATION + "/" + TEST_PROP_KEY, propertyNewValue);
-        propertyChanged.await();
+        updateServerProperty(PROPERTIES_LOCATION + "/propName1", propertyNewValue);
+//        propertyChanged.await();
+        Thread.sleep(300);
         assertEquals(propertyNewValue, propertyHolder.get());
 
-        removeServerProperty(PROPERTIES_LOCATION + "/" + TEST_PROP_KEY);
-        propertyRemoved.await();
+        removeServerProperty(PROPERTIES_LOCATION + "/propName1");
+//        propertyRemoved.await();
+        Thread.sleep(300);
         assertNull(propertyHolder.get());
     }
 

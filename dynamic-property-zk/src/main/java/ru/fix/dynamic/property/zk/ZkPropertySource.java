@@ -13,6 +13,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.fix.dynamic.property.api.DynamicPropertyChangeListener;
 import ru.fix.dynamic.property.api.DynamicPropertySource;
+import ru.fix.dynamic.property.api.converter.DynamicPropertyMarshaller;
+import ru.fix.dynamic.property.api.converter.JSonPropertyMarshaller;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -32,6 +34,7 @@ public class ZkPropertySource implements DynamicPropertySource {
 
     private final String configLocation;
     private CuratorFramework curatorFramework;
+    private final DynamicPropertyMarshaller marshaller = new JSonPropertyMarshaller();
 
     private Map<String, Collection<DynamicPropertyChangeListener<String>>> listeners = new ConcurrentHashMap<>();
 
@@ -148,32 +151,25 @@ public class ZkPropertySource implements DynamicPropertySource {
     }
 
     @Override
-    public void putIfAbsent(String key, String propVal) throws Exception {
+    public <T> void putIfAbsent(String key, T propVal) throws Exception {
         String propPath = getAbsolutePath(key);
         ChildData currentData = treeCache.getCurrentData(propPath);
         if (currentData == null) {
-            try {
-                curatorFramework.create()
-                        .creatingParentsIfNeeded()
-                        .forPath(propPath, propVal.getBytes(StandardCharsets.UTF_8));
-            } catch (KeeperException.NodeExistsException e) { //NOSONAR
-                // somebody already have created the node, nothing to do
-            }
+            curatorFramework.create()
+                    .creatingParentsIfNeeded()
+                    .forPath(propPath,
+                            marshaller.marshall(propVal).getBytes(StandardCharsets.UTF_8));
         }
     }
 
-    @Override
-    public String getProperty(String key) {
+    private String getProperty(String key) {
         return getProperty(key, (String) null);
     }
 
-    @Override
-    public String getProperty(String key, String defaulValue) {
+    private String getProperty(String key, String defaulValue) {
         String path = getAbsolutePath(key);
         ChildData currentData = treeCache.getCurrentData(path);
-        return currentData == null
-                ? defaulValue
-                : new String(currentData.getData(), StandardCharsets.UTF_8);
+        return currentData == null ? defaulValue : new String(currentData.getData(), StandardCharsets.UTF_8);
     }
 
     @Override
@@ -184,7 +180,11 @@ public class ZkPropertySource implements DynamicPropertySource {
     @Override
     public <T> T getProperty(String key, Class<T> type, T defaultValue) {
         String value = getProperty(key);
-        return ValueConverter.convert(type, value, defaultValue);
+        if (value != null) {
+//            return marshaller.unmarshall(value, type);
+            return ValueConverter.convert(type, value, defaultValue);
+        }
+        return defaultValue;
     }
 
     /**
@@ -248,12 +248,12 @@ public class ZkPropertySource implements DynamicPropertySource {
                                               DynamicPropertyChangeListener<T> typedListener) {
         addPropertyChangeListener(propertyName, value -> {
             T convertedValue = ValueConverter.convert(type, value, null);
+//            T convertedValue = marshaller.unmarshall(value, type);
             typedListener.onPropertyChanged(convertedValue);
         });
     }
 
-    @Override
-    public void addPropertyChangeListener(String propertyName, DynamicPropertyChangeListener<String> listener) {
+    private void addPropertyChangeListener(String propertyName, DynamicPropertyChangeListener<String> listener) {
         listeners.computeIfAbsent(getAbsolutePath(propertyName), key -> new CopyOnWriteArrayList<>()).add(listener);
     }
 
@@ -263,8 +263,7 @@ public class ZkPropertySource implements DynamicPropertySource {
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
         treeCache.close();
     }
-
 }
