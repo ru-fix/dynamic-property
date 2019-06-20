@@ -8,7 +8,6 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.util.concurrent.ThreadLocalRandom;
 
-//TODO: щас просто скопипасти, думаю надо будет посмотреть может подключить дополнительное значение
 public class SocketChecker {
 
     private static final Logger log = LoggerFactory.getLogger(SocketChecker.class);

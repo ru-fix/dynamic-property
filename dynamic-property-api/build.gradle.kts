@@ -15,7 +15,6 @@ dependencies {
 
     testImplementation(Libs.junit_api)
     testRuntimeOnly(Libs.junit_engine)
-    testRuntimeOnly(Libs.junit_params)
     testCompile(Libs.kotlin_jdk8)
     testCompile(Libs.kotlin_stdlib)
     testCompile(Libs.kotlin_reflect)
