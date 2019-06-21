@@ -5,7 +5,7 @@ import ru.fix.dynamic.property.api.DynamicProperty;
 import ru.fix.dynamic.property.api.DynamicPropertySource;
 import ru.fix.dynamic.property.api.annotation.PropertyId;
 import ru.fix.dynamic.property.api.converter.DefaultDynamicPropertyMarshaller;
-import ru.fix.dynamic.property.spring.exception.PropertyNotFoundException;
+import ru.fix.dynamic.property.spring.exception.DynamicPropertyDefaultValueNotFoundException;
 
 import java.util.Properties;
 
@@ -51,7 +51,7 @@ class DynamicPropertyAwareBeanPostProcessorTest {
 
         PropertyWithoutDefaultValue bean = new PropertyWithoutDefaultValue();
 
-        assertThrows(PropertyNotFoundException.class, () ->
+        assertThrows(DynamicPropertyDefaultValueNotFoundException.class, () ->
                 processor.postProcessBeforeInitialization(bean, "propertyWithoutDefaultValue")
         );
     }
