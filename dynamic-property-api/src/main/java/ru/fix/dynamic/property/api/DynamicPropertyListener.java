@@ -2,7 +2,7 @@ package ru.fix.dynamic.property.api;
 
 
 @FunctionalInterface
-public interface DynamicPropertyChangeListener<T> {
+public interface DynamicPropertyListener<T> {
 
     /**
      * @param value new value

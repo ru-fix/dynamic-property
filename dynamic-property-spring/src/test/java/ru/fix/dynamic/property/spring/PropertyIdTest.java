@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import ru.fix.dynamic.property.api.DynamicPropertySource;
-import ru.fix.dynamic.property.api.converter.DefaultDynamicPropertyMarshaller;
+import ru.fix.dynamic.property.api.marshaller.DefaultDynamicPropertyMarshaller;
 import ru.fix.dynamic.property.spring.config.DynamicPropertyConfig;
 
 import java.util.Properties;

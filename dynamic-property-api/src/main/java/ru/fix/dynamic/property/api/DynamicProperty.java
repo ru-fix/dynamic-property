@@ -20,7 +20,7 @@ public interface DynamicProperty<T> {
      * @param listener Listener runs whenever property value changes.
      *                 It is implementation specific in what thread listener will be invoked.
      */
-    default void addListener(DynamicPropertyChangeListener<T> listener) {
+    default void addListener(DynamicPropertyListener<T> listener) {
     }
 
     static <T> DynamicProperty<T> of(T value) {

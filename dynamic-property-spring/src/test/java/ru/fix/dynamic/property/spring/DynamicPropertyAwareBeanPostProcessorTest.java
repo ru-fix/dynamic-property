@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import ru.fix.dynamic.property.api.DynamicProperty;
 import ru.fix.dynamic.property.api.DynamicPropertySource;
 import ru.fix.dynamic.property.api.annotation.PropertyId;
-import ru.fix.dynamic.property.api.converter.DefaultDynamicPropertyMarshaller;
+import ru.fix.dynamic.property.api.marshaller.DefaultDynamicPropertyMarshaller;
 import ru.fix.dynamic.property.spring.exception.DynamicPropertyDefaultValueNotFoundException;
 
 import java.util.Properties;

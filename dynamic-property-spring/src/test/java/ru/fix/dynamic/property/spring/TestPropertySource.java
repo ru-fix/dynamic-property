@@ -2,9 +2,9 @@ package ru.fix.dynamic.property.spring;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.fix.dynamic.property.api.DynamicPropertyChangeListener;
+import ru.fix.dynamic.property.api.DynamicPropertyListener;
 import ru.fix.dynamic.property.api.DynamicPropertySource;
-import ru.fix.dynamic.property.api.converter.DynamicPropertyMarshaller;
+import ru.fix.dynamic.property.api.marshaller.DynamicPropertyMarshaller;
 
 import java.io.InputStream;
 import java.util.Collection;
@@ -21,7 +21,7 @@ public class TestPropertySource implements DynamicPropertySource {
     final Properties properties;
     private final DynamicPropertyMarshaller marshaller;
 
-    private Map<String, Collection<DynamicPropertyChangeListener<String>>> listeners = new ConcurrentHashMap<>();
+    private Map<String, Collection<DynamicPropertyListener<String>>> listeners = new ConcurrentHashMap<>();
 
     public TestPropertySource(Properties properties, DynamicPropertyMarshaller marshaller) {
         this.properties = properties;
@@ -53,11 +53,6 @@ public class TestPropertySource implements DynamicPropertySource {
     }
 
     @Override
-    public Map<String, String> getAllSubtreeProperties(String root) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public Properties uploadInitialProperties(String propertiesPath) throws Exception {
         try (InputStream resourceAsStream = getClass().getResourceAsStream(propertiesPath)) {
             properties.load(resourceAsStream);
@@ -72,7 +67,7 @@ public class TestPropertySource implements DynamicPropertySource {
     }
 
     @Override
-    public <T> void putIfAbsent(String key, T propVal) throws Exception {
+    public <T> void putIfAbsent(String key, T propVal) {
         if (!properties.containsKey(key)) {
             properties.put(key, propVal);
         }
@@ -85,7 +80,7 @@ public class TestPropertySource implements DynamicPropertySource {
     }
 
     @Override
-    public <T> void addPropertyChangeListener(String propertyName, Class<T> type, DynamicPropertyChangeListener<T>
+    public <T> void addPropertyChangeListener(String propertyName, Class<T> type, DynamicPropertyListener<T>
             typedListener) {
         addPropertyChangeListener(propertyName, value -> {
             T convertedValue = marshaller.unmarshall(value, type);
@@ -93,7 +88,7 @@ public class TestPropertySource implements DynamicPropertySource {
         });
     }
 
-    private void addPropertyChangeListener(String propertyName, DynamicPropertyChangeListener<String> listener) {
+    private void addPropertyChangeListener(String propertyName, DynamicPropertyListener<String> listener) {
         listeners.computeIfAbsent(propertyName, key -> new CopyOnWriteArrayList<>()).add(listener);
     }
 
@@ -103,7 +98,7 @@ public class TestPropertySource implements DynamicPropertySource {
     }
 
     private void firePropertyChanged(String propName, String value) {
-        Collection<DynamicPropertyChangeListener<String>> zkPropertyChangeListeners = listeners.get(propName);
+        Collection<DynamicPropertyListener<String>> zkPropertyChangeListeners = listeners.get(propName);
         if (zkPropertyChangeListeners != null) {
             zkPropertyChangeListeners.forEach(listener -> {
                 try {

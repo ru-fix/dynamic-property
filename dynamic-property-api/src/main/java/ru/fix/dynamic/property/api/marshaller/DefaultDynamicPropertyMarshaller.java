@@ -1,4 +1,4 @@
-package ru.fix.dynamic.property.api.converter;
+package ru.fix.dynamic.property.api.marshaller;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -8,8 +8,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import com.fasterxml.jackson.module.kotlin.KotlinModule;
-import ru.fix.dynamic.property.api.converter.exception.DynamicPropertySerializationException;
-import ru.fix.dynamic.property.api.converter.exception.DynamicPropertyDeserializationException;
+import ru.fix.dynamic.property.api.marshaller.exception.DynamicPropertySerializationException;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -57,7 +56,7 @@ public class DefaultDynamicPropertyMarshaller implements DynamicPropertyMarshall
         try {
             return mapper.readValue(rawString, clazz);
         } catch (IOException e) {
-            throw new DynamicPropertyDeserializationException(
+            throw new DynamicPropertySerializationException(
                     String.format("Failed to unmarshall json text to type %s. JSon: %s", clazz, rawString), e);
         }
     }

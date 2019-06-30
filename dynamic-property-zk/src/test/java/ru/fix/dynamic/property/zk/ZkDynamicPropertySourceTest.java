@@ -5,9 +5,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.fix.dynamic.property.api.DefaultDynamicProperty;
+import ru.fix.dynamic.property.source.DynamicSourceProperty;
 import ru.fix.dynamic.property.api.DynamicPropertySource;
-import ru.fix.dynamic.property.api.converter.DefaultDynamicPropertyMarshaller;
+import ru.fix.dynamic.property.api.marshaller.DefaultDynamicPropertyMarshaller;
 import ru.fix.dynamic.property.zk.test.ZKTestingServer;
 
 import java.nio.charset.StandardCharsets;
@@ -203,7 +203,7 @@ public class ZkDynamicPropertySourceTest {
 
         String propertyNewValue = "some Value 2";
 
-        DefaultDynamicProperty<String> propertyHolder = new DefaultDynamicProperty<>(zkConfig, "propName1", String.class);
+        DynamicSourceProperty<String> propertyHolder = new DynamicSourceProperty<>(zkConfig, "propName1", String.class);
         retryAssert("propName1 default", propertyHolder::get);
 
         updateServerProperty(PROPERTIES_LOCATION + "/propName1", propertyNewValue);
@@ -231,7 +231,7 @@ public class ZkDynamicPropertySourceTest {
     public void shouldGetDefaultValueFromHolder() throws Exception {
         ZkDynamicPropertySource zkConfig = createPropertySource(PROPERTIES_LOCATION);
 
-        DefaultDynamicProperty<String> holder1 = new DefaultDynamicProperty<>(
+        DynamicSourceProperty<String> holder1 = new DynamicSourceProperty<>(
                 zkConfig, "unknown.property", String.class, "default Value"
         );
         assertEquals("default Value", holder1.get());

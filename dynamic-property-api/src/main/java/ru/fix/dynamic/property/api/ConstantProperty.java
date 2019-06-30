@@ -1,7 +1,7 @@
 package ru.fix.dynamic.property.api;
 
 public class ConstantProperty<T> implements DynamicProperty<T> {
-    final T value;
+    private final T value;
 
     public ConstantProperty(T value) {
         this.value = value;
@@ -13,6 +13,7 @@ public class ConstantProperty<T> implements DynamicProperty<T> {
     }
 
     @Override
-    public void addListener(DynamicPropertyChangeListener<T> listener) {
+    public void addListener(DynamicPropertyListener<T> listener) {
+        //Constant property that never changes
     }
 }

@@ -1,7 +1,10 @@
-package ru.fix.dynamic.property.api;
+package ru.fix.dynamic.property.source;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.fix.dynamic.property.api.DynamicProperty;
+import ru.fix.dynamic.property.api.DynamicPropertyListener;
+import ru.fix.dynamic.property.api.DynamicPropertySource;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -11,9 +14,9 @@ import java.util.concurrent.Executors;
 /**
  * Contain property initial value. Automatically register property change listener.
  */
-public class DefaultDynamicProperty<T> implements DynamicProperty<T> {
+public class DynamicSourceProperty<T> implements DynamicProperty<T> {
 
-    private static final Logger log = LoggerFactory.getLogger(DefaultDynamicProperty.class);
+    private static final Logger log = LoggerFactory.getLogger(DynamicSourceProperty.class);
 
     private static final ExecutorService executor = Executors.newCachedThreadPool();
 
@@ -23,13 +26,13 @@ public class DefaultDynamicProperty<T> implements DynamicProperty<T> {
     private T defaultValue;
     private volatile T currentValue;
 
-    private List<DynamicPropertyChangeListener<T>> listeners = new CopyOnWriteArrayList<>();
+    private List<DynamicPropertyListener<T>> listeners = new CopyOnWriteArrayList<>();
 
-    public DefaultDynamicProperty(DynamicPropertySource propertySource, String name, Class<T> type) {
+    public DynamicSourceProperty(DynamicPropertySource propertySource, String name, Class<T> type) {
         this(propertySource, name, type, null);
     }
 
-    public DefaultDynamicProperty(DynamicPropertySource propertySource, String name, Class<T> type, T defaultValue) {
+    public DynamicSourceProperty(DynamicPropertySource propertySource, String name, Class<T> type, T defaultValue) {
         this.propertySource = propertySource;
         this.name = name;
         this.type = type;
@@ -62,13 +65,13 @@ public class DefaultDynamicProperty<T> implements DynamicProperty<T> {
     }
 
     @Override
-    public void addListener(DynamicPropertyChangeListener<T> listener) {
+    public void addListener(DynamicPropertyListener<T> listener) {
         listeners.add(listener);
     }
 
     @Override
     public String toString() {
-        return "DefaultDynamicProperty{" +
+        return "DynamicSourceProperty{" +
                 "type=" + type +
                 ", name='" + name + '\'' +
                 ", currentValue=" + currentValue +

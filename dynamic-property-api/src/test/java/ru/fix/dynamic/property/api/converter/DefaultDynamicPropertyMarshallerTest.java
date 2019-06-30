@@ -1,6 +1,7 @@
 package ru.fix.dynamic.property.api.converter;
 
 import org.junit.jupiter.api.Test;
+import ru.fix.dynamic.property.api.marshaller.DefaultDynamicPropertyMarshaller;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;

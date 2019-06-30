@@ -1,6 +1,5 @@
 package ru.fix.dynamic.property.api;
 
-import java.util.Map;
 import java.util.Properties;
 
 public interface DynamicPropertySource extends AutoCloseable {
@@ -43,13 +42,6 @@ public interface DynamicPropertySource extends AutoCloseable {
      */
     Properties getAllProperties() throws Exception;
 
-    /**
-     * Read subtree of properties with optional root node.
-     *
-     * @param root node of subtree, if {@code null} then default config location will be used.
-     * @return key-value entries
-     */
-    Map<String, String> getAllSubtreeProperties(String root) throws Exception;
 
     /**
      * Uploads initial properties.
@@ -83,7 +75,6 @@ public interface DynamicPropertySource extends AutoCloseable {
      *
      * @param key   key name
      * @param value new value
-     * @throws Exception
      * @see #upsertProperty(String, String)
      */
     void updateProperty(String key, String value) throws Exception;
@@ -95,5 +86,5 @@ public interface DynamicPropertySource extends AutoCloseable {
      * @param propertyName property name
      * @param listener     listener
      */
-    <T> void addPropertyChangeListener(String propertyName, Class<T> type, DynamicPropertyChangeListener<T> listener);
+    <T> void addPropertyChangeListener(String propertyName, Class<T> type, DynamicPropertyListener<T> listener);
 }

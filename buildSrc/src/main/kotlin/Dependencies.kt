@@ -1,6 +1,6 @@
 object Vers {
     const val kotlin = "1.2.41"
-    const val sl4j = "1.7.25"
+    const val sl4j = "1.7.26"
     const val dokkav = "0.9.16"
     const val gradleReleasePlugin = "1.2.18"
     const val junit = "5.4.2"
