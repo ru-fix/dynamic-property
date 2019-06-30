@@ -1,4 +1,4 @@
-package ru.fix.dynamic.property.api.marshaller;
+package ru.fix.dynamic.property.jackson;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -8,6 +8,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import com.fasterxml.jackson.module.kotlin.KotlinModule;
+import ru.fix.dynamic.property.api.marshaller.DynamicPropertyMarshaller;
 import ru.fix.dynamic.property.api.marshaller.exception.DynamicPropertySerializationException;
 
 import java.io.IOException;
@@ -16,16 +17,18 @@ import java.time.format.DateTimeFormatter;
 
 
 /**
+ * Implementation of {@link DynamicPropertyMarshaller} which provides serialization and deserialization by Jacskon.
+ *
  * @author Ayrat Zulkarnyaev
  */
-public class DefaultDynamicPropertyMarshaller implements DynamicPropertyMarshaller {
+public class JacksonDynamicPropertyMarshaller implements DynamicPropertyMarshaller {
 
     private final ObjectMapper mapper = new ObjectMapper()
             .setSerializationInclusion(JsonInclude.Include.NON_NULL)
             .registerModule(new JavaTimeModule())
             .registerModule(new KotlinModule());
 
-    public DefaultDynamicPropertyMarshaller() {
+    public JacksonDynamicPropertyMarshaller() {
         SimpleModule localDatetimeModule = new SimpleModule();
         localDatetimeModule.addSerializer(LocalDateTime.class, new LocalDateTimeSerializer(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
         localDatetimeModule.addDeserializer(LocalDateTime.class, new LocalDateTimeDeserializer(DateTimeFormatter.ISO_LOCAL_DATE_TIME));

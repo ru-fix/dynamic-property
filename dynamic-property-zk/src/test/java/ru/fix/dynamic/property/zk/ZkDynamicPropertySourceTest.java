@@ -5,9 +5,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.fix.dynamic.property.jackson.JacksonDynamicPropertyMarshaller;
 import ru.fix.dynamic.property.source.DynamicSourceProperty;
 import ru.fix.dynamic.property.api.DynamicPropertySource;
-import ru.fix.dynamic.property.api.marshaller.DefaultDynamicPropertyMarshaller;
 import ru.fix.dynamic.property.zk.test.ZKTestingServer;
 
 import java.nio.charset.StandardCharsets;
@@ -238,7 +238,7 @@ public class ZkDynamicPropertySourceTest {
     }
 
     private ZkDynamicPropertySource createPropertySource(String propertyLocation) throws Exception {
-        return new ZkDynamicPropertySource(zkTestingServer.getClient(), propertyLocation, new DefaultDynamicPropertyMarshaller());
+        return new ZkDynamicPropertySource(zkTestingServer.getClient(), propertyLocation, new JacksonDynamicPropertyMarshaller());
     }
 
     private void setServerProperty(String propertyKey, String value) throws Exception {
