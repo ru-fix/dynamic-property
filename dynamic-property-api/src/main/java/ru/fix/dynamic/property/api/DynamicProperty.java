@@ -1,5 +1,8 @@
 package ru.fix.dynamic.property.api;
 
+import ru.fix.dynamic.property.source.ConstantProperty;
+import ru.fix.dynamic.property.source.MappedProperty;
+
 import java.util.function.Function;
 import java.util.function.Supplier;
 

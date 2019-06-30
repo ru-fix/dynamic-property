@@ -1,4 +1,7 @@
-package ru.fix.dynamic.property.api;
+package ru.fix.dynamic.property.source;
+
+import ru.fix.dynamic.property.api.DynamicProperty;
+import ru.fix.dynamic.property.api.DynamicPropertyListener;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;

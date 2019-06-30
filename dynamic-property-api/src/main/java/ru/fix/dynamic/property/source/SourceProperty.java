@@ -14,9 +14,9 @@ import java.util.concurrent.Executors;
 /**
  * Contain property initial value. Automatically register property change listener.
  */
-public class DynamicSourceProperty<T> implements DynamicProperty<T> {
+public class SourceProperty<T> implements DynamicProperty<T> {
 
-    private static final Logger log = LoggerFactory.getLogger(DynamicSourceProperty.class);
+    private static final Logger log = LoggerFactory.getLogger(SourceProperty.class);
 
     private static final ExecutorService executor = Executors.newCachedThreadPool();
 
@@ -28,11 +28,11 @@ public class DynamicSourceProperty<T> implements DynamicProperty<T> {
 
     private List<DynamicPropertyListener<T>> listeners = new CopyOnWriteArrayList<>();
 
-    public DynamicSourceProperty(DynamicPropertySource propertySource, String name, Class<T> type) {
+    public SourceProperty(DynamicPropertySource propertySource, String name, Class<T> type) {
         this(propertySource, name, type, null);
     }
 
-    public DynamicSourceProperty(DynamicPropertySource propertySource, String name, Class<T> type, T defaultValue) {
+    public SourceProperty(DynamicPropertySource propertySource, String name, Class<T> type, T defaultValue) {
         this.propertySource = propertySource;
         this.name = name;
         this.type = type;
@@ -71,7 +71,7 @@ public class DynamicSourceProperty<T> implements DynamicProperty<T> {
 
     @Override
     public String toString() {
-        return "DynamicSourceProperty{" +
+        return "SourceProperty{" +
                 "type=" + type +
                 ", name='" + name + '\'' +
                 ", currentValue=" + currentValue +
