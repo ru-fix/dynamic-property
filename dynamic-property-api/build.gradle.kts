@@ -7,10 +7,6 @@ plugins {
 }
 
 dependencies {
-    compile(Libs.jackson_core)
-    compile(Libs.jackson_databind)
-    compile(Libs.jackson_jsr310)
-    compile(Libs.jackson_module_kotlin)
     compile(Libs.slf4j_api)
     compile(Libs.slf4j_simple)
 
