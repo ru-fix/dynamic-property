@@ -43,13 +43,13 @@ public interface DynamicPropertySource extends AutoCloseable {
     Properties getAllProperties() throws Exception;
 
 
-    /**
-     * Uploads initial properties.
-     *
-     * @param propertiesPath initial properties
-     * @return actual set of properties
-     */
-    Properties uploadInitialProperties(String propertiesPath) throws Exception;
+//    /**
+//     * Uploads initial properties.
+//     *
+//     * @param propertiesPath initial properties
+//     * @return actual set of properties
+//     */
+//    Properties uploadInitialProperties(String propertiesPath) throws Exception;
 
     /**
      * Updates (if already exists) or inserts property.

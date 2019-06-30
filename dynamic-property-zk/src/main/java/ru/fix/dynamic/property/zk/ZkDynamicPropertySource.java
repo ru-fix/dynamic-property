@@ -15,7 +15,6 @@ import ru.fix.dynamic.property.api.DynamicPropertyListener;
 import ru.fix.dynamic.property.api.DynamicPropertySource;
 import ru.fix.dynamic.property.api.marshaller.DynamicPropertyMarshaller;
 
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.*;
@@ -108,24 +107,6 @@ public class ZkDynamicPropertySource implements DynamicPropertySource {
 
             });
         }
-    }
-
-    @Override
-    public Properties uploadInitialProperties(String defaultPropertiesFileName) throws Exception {
-        Properties currentProperties = getAllProperties();
-
-        Properties initialProperties = new Properties();
-        InputStream input = ZkDynamicPropertySource.class.getClassLoader().getResourceAsStream(defaultPropertiesFileName);
-        initialProperties.load(input);
-
-        for (String property : initialProperties.stringPropertyNames()) {
-            if (currentProperties.getProperty(property) == null) {
-                curatorFramework.create().creatingParentsIfNeeded().forPath(configLocation + "/" + property,
-                        initialProperties.getProperty(property).getBytes(StandardCharsets.UTF_8));
-                currentProperties.put(property, initialProperties.getProperty(property));
-            }
-        }
-        return currentProperties;
     }
 
     @Override

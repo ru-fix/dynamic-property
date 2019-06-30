@@ -53,14 +53,6 @@ public class TestPropertySource implements DynamicPropertySource {
     }
 
     @Override
-    public Properties uploadInitialProperties(String propertiesPath) throws Exception {
-        try (InputStream resourceAsStream = getClass().getResourceAsStream(propertiesPath)) {
-            properties.load(resourceAsStream);
-        }
-        return properties;
-    }
-
-    @Override
     public void upsertProperty(String key, String propVal) {
         properties.put(key, propVal);
         firePropertyChanged(key, propVal);
