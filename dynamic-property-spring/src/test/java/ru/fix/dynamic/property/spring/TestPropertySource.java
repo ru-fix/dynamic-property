@@ -1,12 +1,9 @@
 package ru.fix.dynamic.property.spring;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import ru.fix.dynamic.property.api.DynamicPropertyListener;
 import ru.fix.dynamic.property.api.DynamicPropertySource;
 import ru.fix.dynamic.property.api.marshaller.DynamicPropertyMarshaller;
 
-import java.io.InputStream;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Properties;
@@ -15,8 +12,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 
 public class TestPropertySource implements DynamicPropertySource {
-
-    private static final Logger logger = LoggerFactory.getLogger(TestPropertySource.class);
 
     final Properties properties;
     private final DynamicPropertyMarshaller marshaller;
@@ -30,10 +25,6 @@ public class TestPropertySource implements DynamicPropertySource {
 
     public String getProperty(String key) {
         return properties.get(key).toString();
-    }
-
-    public String getProperty(String key, String defaulValue) {
-        return properties.get(key) == null ? defaulValue : properties.get(key).toString();
     }
 
     @Override
@@ -53,22 +44,10 @@ public class TestPropertySource implements DynamicPropertySource {
     }
 
     @Override
-    public void upsertProperty(String key, String propVal) {
-        properties.put(key, propVal);
-        firePropertyChanged(key, propVal);
-    }
-
-    @Override
     public <T> void putIfAbsent(String key, T propVal) {
         if (!properties.containsKey(key)) {
             properties.put(key, propVal);
         }
-    }
-
-    @Override
-    public void updateProperty(String key, String value) {
-        properties.put(key, value);
-        firePropertyChanged(key, value);
     }
 
     @Override
@@ -87,18 +66,5 @@ public class TestPropertySource implements DynamicPropertySource {
     @Override
     public void close() {
         // Nothing to do
-    }
-
-    private void firePropertyChanged(String propName, String value) {
-        Collection<DynamicPropertyListener<String>> zkPropertyChangeListeners = listeners.get(propName);
-        if (zkPropertyChangeListeners != null) {
-            zkPropertyChangeListeners.forEach(listener -> {
-                try {
-                    listener.onPropertyChanged(value);
-                } catch (Exception e) {
-                    logger.error("Failed to update property {}", propName, e);
-                }
-            });
-        }
     }
 }

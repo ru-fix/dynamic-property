@@ -7,7 +7,6 @@ import org.apache.curator.framework.recipes.cache.ChildData;
 import org.apache.curator.framework.recipes.cache.TreeCache;
 import org.apache.curator.framework.recipes.cache.TreeCacheEvent;
 import org.apache.curator.retry.ExponentialBackoffRetry;
-import org.apache.zookeeper.KeeperException;
 import org.apache.zookeeper.data.Stat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,8 +27,6 @@ public class ZkDynamicPropertySource implements DynamicPropertySource {
 
     private static final Logger log = LoggerFactory.getLogger(ZkDynamicPropertySource.class);
 
-    private static final int UPSERT_PROPERTY_RETRY_COUNT = 10;
-
     private final String configLocation;
     private CuratorFramework curatorFramework;
     private final DynamicPropertyMarshaller marshaller;
@@ -38,7 +35,11 @@ public class ZkDynamicPropertySource implements DynamicPropertySource {
 
     private TreeCache treeCache;
 
-    public ZkDynamicPropertySource(String zookeeperQuorum, String configLocation, DynamicPropertyMarshaller marshaller) throws Exception {
+    public ZkDynamicPropertySource(
+            String zookeeperQuorum,
+            String configLocation,
+            DynamicPropertyMarshaller marshaller
+    ) throws Exception {
         this(
                 CuratorFrameworkFactory.newClient(
                         zookeeperQuorum,
@@ -54,7 +55,11 @@ public class ZkDynamicPropertySource implements DynamicPropertySource {
      * @param configLocation   Root path where ZkDynamicPropertySource will store properties. E.g.
      *                         '/cpapsm/config/SWS'
      */
-    public ZkDynamicPropertySource(CuratorFramework curatorFramework, String configLocation, DynamicPropertyMarshaller marshaller) throws Exception {
+    public ZkDynamicPropertySource(
+            CuratorFramework curatorFramework,
+            String configLocation,
+            DynamicPropertyMarshaller marshaller
+    ) throws Exception {
         this.curatorFramework = curatorFramework;
         this.configLocation = configLocation;
         this.marshaller = marshaller;
@@ -110,35 +115,6 @@ public class ZkDynamicPropertySource implements DynamicPropertySource {
     }
 
     @Override
-    public void upsertProperty(String key, String propVal) throws Exception {
-        String propPath = getAbsolutePath(key);
-        int iteration = 0;
-        do {
-            ChildData currentData = treeCache.getCurrentData(propPath);
-            byte[] newData = propVal.getBytes(StandardCharsets.UTF_8);
-            if (currentData != null) {
-                if (!Arrays.equals(currentData.getData(), newData)) {
-                    curatorFramework.setData().forPath(propPath, newData);
-                }
-                break;
-            }
-
-            try {
-                curatorFramework.create().creatingParentsIfNeeded().forPath(propPath, newData);
-            } catch (KeeperException.NodeExistsException e) {
-                iteration++;
-                log.debug("upserting property '{}'='{}', iteration {}", propPath, propVal, iteration);
-                if (iteration < UPSERT_PROPERTY_RETRY_COUNT) {
-                    continue;
-                }
-
-                throw e;
-            }
-            break;
-        } while (true);
-    }
-
-    @Override
     public <T> void putIfAbsent(String key, T propVal) throws Exception {
         String propPath = getAbsolutePath(key);
         ChildData currentData = treeCache.getCurrentData(propPath);
@@ -184,25 +160,19 @@ public class ZkDynamicPropertySource implements DynamicPropertySource {
         if (exist != null) {
             List<String> childs = curatorFramework.getChildren().forPath(getAbsolutePath(""));
             if (!childs.isEmpty()) {
-                CountDownLatch latcher = new CountDownLatch(childs.size());
+                CountDownLatch latch = new CountDownLatch(childs.size());
                 for (String child : childs) {
                     curatorFramework.getData().watched().inBackground((client, event) -> {
                         allProperties.put(child, new String(event.getData(), StandardCharsets.UTF_8));
-                        latcher.countDown();
+                        latch.countDown();
                     }).forPath(getAbsolutePath(child));
                 }
-                if (!latcher.await(120, TimeUnit.SECONDS)) {
+                if (!latch.await(120, TimeUnit.SECONDS)) {
                     throw new TimeoutException("Failed to extract zk properties data");
                 }
             }
         }
         return allProperties;
-    }
-
-    @Override
-    public void updateProperty(String key, String value) throws Exception {
-        String path = getAbsolutePath(key);
-        curatorFramework.setData().forPath(path, value.getBytes(StandardCharsets.UTF_8));
     }
 
     @Override

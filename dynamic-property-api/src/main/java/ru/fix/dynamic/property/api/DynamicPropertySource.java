@@ -42,24 +42,6 @@ public interface DynamicPropertySource extends AutoCloseable {
      */
     Properties getAllProperties() throws Exception;
 
-
-//    /**
-//     * Uploads initial properties.
-//     *
-//     * @param propertiesPath initial properties
-//     * @return actual set of properties
-//     */
-//    Properties uploadInitialProperties(String propertiesPath) throws Exception;
-
-    /**
-     * Updates (if already exists) or inserts property.
-     *
-     * @param key     key
-     * @param propVal value
-     * @see #updateProperty(String, String)
-     */
-    void upsertProperty(String key, String propVal) throws Exception;
-
     /**
      * Set propertyValue if absent (if node isn't present)
      * <p>
@@ -69,15 +51,6 @@ public interface DynamicPropertySource extends AutoCloseable {
      * @param propVal value
      */
     <T> void putIfAbsent(String key, T propVal) throws Exception;
-
-    /**
-     * Updates property value
-     *
-     * @param key   key name
-     * @param value new value
-     * @see #upsertProperty(String, String)
-     */
-    void updateProperty(String key, String value) throws Exception;
 
     /**
      * Registers property change listener. Listener will trigger for
