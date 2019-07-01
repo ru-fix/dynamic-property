@@ -18,7 +18,7 @@ public class SourceProperty<T> implements DynamicProperty<T> {
 
     private static final Logger log = LoggerFactory.getLogger(SourceProperty.class);
 
-    private static final ExecutorService executor = Executors.newCachedThreadPool();
+    private static final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     private DynamicPropertySource propertySource;
     private Class<T> type;
@@ -51,7 +51,7 @@ public class SourceProperty<T> implements DynamicProperty<T> {
                         try {
                             listener.onPropertyChanged(newValue);
                         } catch (Exception e) {
-                            log.error("Failed to update property {} with value. {}", name, newValue, e);
+                            log.error("Failed to update property {} with value {}", name, newValue, e);
                         }
                     }));
                 }
