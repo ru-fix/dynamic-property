@@ -8,17 +8,13 @@ import ru.fix.dynamic.property.api.DynamicPropertySource;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * Contain property initial value. Automatically register property change listener.
  */
-public class SourceProperty<T> implements DynamicProperty<T> {
+public class SourcedProperty<T> implements DynamicProperty<T> {
 
-    private static final Logger log = LoggerFactory.getLogger(SourceProperty.class);
-
-    private static final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private static final Logger log = LoggerFactory.getLogger(SourcedProperty.class);
 
     private DynamicPropertySource propertySource;
     private Class<T> type;
@@ -28,11 +24,11 @@ public class SourceProperty<T> implements DynamicProperty<T> {
 
     private List<DynamicPropertyListener<T>> listeners = new CopyOnWriteArrayList<>();
 
-    public SourceProperty(DynamicPropertySource propertySource, String name, Class<T> type) {
+    public SourcedProperty(DynamicPropertySource propertySource, String name, Class<T> type) {
         this(propertySource, name, type, null);
     }
 
-    public SourceProperty(DynamicPropertySource propertySource, String name, Class<T> type, T defaultValue) {
+    public SourcedProperty(DynamicPropertySource propertySource, String name, Class<T> type, T defaultValue) {
         this.propertySource = propertySource;
         this.name = name;
         this.type = type;
@@ -47,13 +43,13 @@ public class SourceProperty<T> implements DynamicProperty<T> {
                 type,
                 newValue -> {
                     currentValue = newValue;
-                    listeners.forEach(listener -> executor.submit(() -> {
+                    listeners.forEach(listener -> {
                         try {
                             listener.onPropertyChanged(newValue);
                         } catch (Exception e) {
                             log.error("Failed to update property {} with value {}", name, newValue, e);
                         }
-                    }));
+                    });
                 }
         );
         currentValue = propertySource.getProperty(name, type, defaultValue);
@@ -64,6 +60,12 @@ public class SourceProperty<T> implements DynamicProperty<T> {
         return currentValue;
     }
 
+    /**
+     * Listener callback runs in the {@link DynamicPropertySource} thread.
+     * It should be very light, run very fast and so not use locks.
+     *
+     * @param listener Listener runs whenever property value changes.
+     */
     @Override
     public void addListener(DynamicPropertyListener<T> listener) {
         listeners.add(listener);
@@ -71,7 +73,7 @@ public class SourceProperty<T> implements DynamicProperty<T> {
 
     @Override
     public String toString() {
-        return "SourceProperty{" +
+        return "SourcedProperty{" +
                 "type=" + type +
                 ", name='" + name + '\'' +
                 ", currentValue=" + currentValue +

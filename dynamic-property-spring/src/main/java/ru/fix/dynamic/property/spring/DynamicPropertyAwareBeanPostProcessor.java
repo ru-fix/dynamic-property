@@ -5,7 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.util.ReflectionUtils;
-import ru.fix.dynamic.property.source.SourceProperty;
+import ru.fix.dynamic.property.source.SourcedProperty;
 import ru.fix.dynamic.property.api.DynamicProperty;
 import ru.fix.dynamic.property.api.DynamicPropertySource;
 import ru.fix.dynamic.property.api.annotation.PropertyId;
@@ -78,7 +78,7 @@ public class DynamicPropertyAwareBeanPostProcessor implements BeanPostProcessor 
             addDefaultValueIfAbsent(propertyId, propertyDefaultValue);
 
             //noinspection unchecked
-            return new SourceProperty<>(propertySource, propertyId, propertyClass, propertyDefaultValue);
+            return new SourcedProperty<>(propertySource, propertyId, propertyClass, propertyDefaultValue);
 
         } else {
             log.warn(
