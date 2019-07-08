@@ -14,7 +14,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class TestPropertySource implements DynamicPropertySource {
 
-    final Properties properties;
+    private final Properties properties;
     private final DynamicPropertyMarshaller marshaller;
 
     private Map<String, Collection<DynamicPropertyListener<String>>> listeners = new ConcurrentHashMap<>();

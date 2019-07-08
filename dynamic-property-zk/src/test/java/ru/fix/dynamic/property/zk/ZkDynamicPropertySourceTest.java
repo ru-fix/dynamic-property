@@ -121,21 +121,6 @@ public class ZkDynamicPropertySourceTest {
     }
 
     @Test
-    public void shouldCallCorrectListener() throws Exception {
-        DynamicPropertySource source = createPropertySource();
-
-        setServerProperty(PROPERTIES_LOCATION + "/" + TEST_PROP_KEY, "some Value 1");
-        setServerProperty(PROPERTIES_LOCATION + "/" + TEST_PROP_KEY_1, "some Value 2");
-
-        source.addPropertyChangeListener(TEST_PROP_KEY, String.class, value -> assertEquals("new some Value 1", value));
-
-        source.addPropertyChangeListener(TEST_PROP_KEY_1, String.class, value -> assertEquals("new some Value 2", value));
-
-        changeServerProperty(PROPERTIES_LOCATION + "/" + TEST_PROP_KEY, "new some Value 1");
-        changeServerProperty(PROPERTIES_LOCATION + "/" + TEST_PROP_KEY_1, "new some Value 2");
-    }
-
-    @Test
     public void shouldFetchAllProperties() throws Exception {
         ZkDynamicPropertySource source = createPropertySource();
 
