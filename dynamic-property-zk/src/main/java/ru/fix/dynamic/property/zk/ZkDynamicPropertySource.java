@@ -141,8 +141,8 @@ public class ZkDynamicPropertySource implements DynamicPropertySource {
     /**
      * Works through curator directly to load latest data
      */
-    public Properties getAllProperties() throws Exception {
-        Properties allProperties = new Properties();
+    public Map<String, Object> getAllProperties() throws Exception {
+        Map<String, Object> allProperties = new HashMap<>();
         Stat exist = curatorFramework.checkExists().forPath(getAbsolutePath(""));
         if (exist != null) {
             List<String> childs = curatorFramework.getChildren().forPath(getAbsolutePath(""));

@@ -8,8 +8,8 @@ import ru.fix.dynamic.property.api.DynamicPropertySource;
 import ru.fix.dynamic.property.zk.test.ZKTestingServer;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 import java.util.Objects;
-import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -142,18 +142,18 @@ public class ZkDynamicPropertySourceTest {
         setServerProperty(PROPERTIES_LOCATION + "/propName1", "some Value 1");
         setServerProperty(PROPERTIES_LOCATION + "/propName2", "some Value 2");
 
-        Properties childProperties = source.getAllProperties();
+        Map<String, Object> childProperties = source.getAllProperties();
         assertNotNull(childProperties);
         assertEquals(2, childProperties.size());
-        assertEquals("some Value 1", childProperties.getProperty("propName1"));
-        assertEquals("some Value 2", childProperties.getProperty("propName2"));
+        assertEquals("some Value 1", childProperties.get("propName1"));
+        assertEquals("some Value 2", childProperties.get("propName2"));
     }
 
     @Test
     public void shouldNotFetchPropertiesIfNotPresent() throws Exception {
         ZkDynamicPropertySource source = createPropertySource();
 
-        Properties allProperties = source.getAllProperties();
+        Map<String, Object> allProperties = source.getAllProperties();
         assertNotNull(allProperties);
         assertEquals(allProperties.size(), 0);
     }
