@@ -5,7 +5,7 @@ import ru.fix.dynamic.property.api.DynamicProperty;
 import ru.fix.dynamic.property.api.DynamicPropertySource;
 import ru.fix.dynamic.property.api.annotation.PropertyId;
 import ru.fix.dynamic.property.jackson.JacksonDynamicPropertyMarshaller;
-import ru.fix.dynamic.property.spring.exception.DynamicPropertyDefaultValueNotFoundException;
+import ru.fix.dynamic.property.spring.exception.DynamicPropertyDefaultValueNotDefinedException;
 
 import java.util.Properties;
 
@@ -18,7 +18,7 @@ class DynamicPropertyAwareBeanPostProcessorTest {
     DynamicPropertyAwareBeanPostProcessor processor;
 
     @Test
-    public void processBean_shouldInitializeAllDynamicPropertiesByDefault() {
+    public void processBean_shouldNotInitializeAllDynamicPropertiesByDefault() {
         propertySource = new TestPropertySource(new Properties(), new JacksonDynamicPropertyMarshaller());
         processor = new DynamicPropertyAwareBeanPostProcessor(propertySource);
 
@@ -26,7 +26,7 @@ class DynamicPropertyAwareBeanPostProcessorTest {
 
         PropertyContainer processedBean = (PropertyContainer) processor.postProcessBeforeInitialization(bean, "propertyContainer");
 
-        assertEquals("kazan", processedBean.getCity().get());
+        assertNull(processedBean.getCity().get());
     }
 
     @Test
@@ -51,7 +51,7 @@ class DynamicPropertyAwareBeanPostProcessorTest {
 
         PropertyWithoutDefaultValue bean = new PropertyWithoutDefaultValue();
 
-        assertThrows(DynamicPropertyDefaultValueNotFoundException.class, () ->
+        assertThrows(DynamicPropertyDefaultValueNotDefinedException.class, () ->
                 processor.postProcessBeforeInitialization(bean, "propertyWithoutDefaultValue")
         );
     }

@@ -114,18 +114,6 @@ public class ZkDynamicPropertySource implements DynamicPropertySource {
         }
     }
 
-    @Override
-    public <T> void putIfAbsent(String key, T propVal) throws Exception {
-        String propPath = getAbsolutePath(key);
-        ChildData currentData = treeCache.getCurrentData(propPath);
-        if (currentData == null) {
-            curatorFramework.create()
-                    .creatingParentsIfNeeded()
-                    .forPath(propPath,
-                            marshaller.marshall(propVal).getBytes(StandardCharsets.UTF_8));
-        }
-    }
-
     private String getProperty(String key) {
         return getProperty(key, (String) null);
     }
@@ -153,7 +141,6 @@ public class ZkDynamicPropertySource implements DynamicPropertySource {
     /**
      * Works through curator directly to load latest data
      */
-    @Override
     public Properties getAllProperties() throws Exception {
         Properties allProperties = new Properties();
         Stat exist = curatorFramework.checkExists().forPath(getAbsolutePath(""));
@@ -176,7 +163,8 @@ public class ZkDynamicPropertySource implements DynamicPropertySource {
     }
 
     @Override
-    public <T> void addPropertyChangeListener(String propertyName, Class<T> type,
+    public <T> void addPropertyChangeListener(String propertyName,
+                                              Class<T> type,
                                               DynamicPropertyListener<T> typedListener) {
         addPropertyChangeListener(propertyName, value -> {
             T convertedValue = marshaller.unmarshall(value, type);

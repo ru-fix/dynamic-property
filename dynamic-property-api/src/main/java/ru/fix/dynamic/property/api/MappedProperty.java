@@ -1,7 +1,4 @@
-package ru.fix.dynamic.property.source;
-
-import ru.fix.dynamic.property.api.DynamicProperty;
-import ru.fix.dynamic.property.api.DynamicPropertyListener;
+package ru.fix.dynamic.property.api;
 
 import java.util.function.Function;
 

@@ -1,6 +1,5 @@
 package ru.fix.dynamic.property.api;
 
-import java.util.Properties;
 
 public interface DynamicPropertySource extends AutoCloseable {
 
@@ -34,23 +33,6 @@ public interface DynamicPropertySource extends AutoCloseable {
      * {@code defaultValue} if there is no such property
      */
     <T> T getProperty(String key, Class<T> type, T defaultValue);
-
-    /**
-     * Reads up all existing properties
-     *
-     * @return properties with values
-     */
-    Properties getAllProperties() throws Exception;
-
-    /**
-     * Set propertyValue if absent (if node isn't present)
-     * <p>
-     * If node presents (including empty value), node's value remains unchanged
-     *
-     * @param key     key
-     * @param propVal value
-     */
-    <T> void putIfAbsent(String key, T propVal) throws Exception;
 
     /**
      * Registers property change listener. Listener will trigger for

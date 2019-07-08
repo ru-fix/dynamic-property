@@ -6,6 +6,7 @@ import ru.fix.dynamic.property.api.marshaller.DynamicPropertyMarshaller;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -24,7 +25,9 @@ public class TestPropertySource implements DynamicPropertySource {
     }
 
     public String getProperty(String key) {
-        return properties.get(key).toString();
+        return Optional.ofNullable(properties.get(key))
+                .map(Object::toString)
+                .orElse(null);
     }
 
     @Override
@@ -36,18 +39,6 @@ public class TestPropertySource implements DynamicPropertySource {
     public <T> T getProperty(String key, Class<T> type, T defaultValue) {
         String value = getProperty(key);
         return marshaller.unmarshall(value, type);
-    }
-
-    @Override
-    public Properties getAllProperties() {
-        return properties;
-    }
-
-    @Override
-    public <T> void putIfAbsent(String key, T propVal) {
-        if (!properties.containsKey(key)) {
-            properties.put(key, propVal);
-        }
     }
 
     @Override

@@ -2,8 +2,6 @@ package ru.fix.dynamic.property.zk;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import ru.fix.dynamic.property.jackson.JacksonDynamicPropertyMarshaller;
 import ru.fix.dynamic.property.source.SourcedProperty;
 import ru.fix.dynamic.property.api.DynamicPropertySource;
@@ -20,8 +18,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 
 public class ZkDynamicPropertySourceTest {
-
-    private static final Logger log = LoggerFactory.getLogger(ZkDynamicPropertySourceTest.class);
 
     private static final String TEST_PROP_KEY = "test_prop_key";
     private static final String TEST_PROP_KEY_1 = "test_prop_key_1";
@@ -141,7 +137,7 @@ public class ZkDynamicPropertySourceTest {
 
     @Test
     public void shouldFetchAllProperties() throws Exception {
-        DynamicPropertySource source = createPropertySource();
+        ZkDynamicPropertySource source = createPropertySource();
 
         setServerProperty(PROPERTIES_LOCATION + "/propName1", "some Value 1");
         setServerProperty(PROPERTIES_LOCATION + "/propName2", "some Value 2");
@@ -155,7 +151,7 @@ public class ZkDynamicPropertySourceTest {
 
     @Test
     public void shouldNotFetchPropertiesIfNotPresent() throws Exception {
-        DynamicPropertySource source = createPropertySource();
+        ZkDynamicPropertySource source = createPropertySource();
 
         Properties allProperties = source.getAllProperties();
         assertNotNull(allProperties);

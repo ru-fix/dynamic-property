@@ -9,7 +9,7 @@ import ru.fix.dynamic.property.source.SourcedProperty;
 import ru.fix.dynamic.property.api.DynamicProperty;
 import ru.fix.dynamic.property.api.DynamicPropertySource;
 import ru.fix.dynamic.property.api.annotation.PropertyId;
-import ru.fix.dynamic.property.spring.exception.DynamicPropertyDefaultValueNotFoundException;
+import ru.fix.dynamic.property.spring.exception.DynamicPropertyDefaultValueNotDefinedException;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -72,11 +72,8 @@ public class DynamicPropertyAwareBeanPostProcessor implements BeanPostProcessor 
                                 "DynamicProperty type annotated by @PropertyId must have default value other than null",
                         field.getName(), beanName
                 );
-                throw new DynamicPropertyDefaultValueNotFoundException(errorMessage);
+                throw new DynamicPropertyDefaultValueNotDefinedException(errorMessage);
             }
-
-            addDefaultValueIfAbsent(propertyId, propertyDefaultValue);
-
             //noinspection unchecked
             return new SourcedProperty<>(propertySource, propertyId, propertyClass, propertyDefaultValue);
 
@@ -112,14 +109,6 @@ public class DynamicPropertyAwareBeanPostProcessor implements BeanPostProcessor 
         return Optional.ofNullable(dynamicProperty)
                 .map(DynamicProperty::get)
                 .orElse(null);
-    }
-
-    private void addDefaultValueIfAbsent(String propertyId, Object propertyDefaultValue) {
-        try {
-            propertySource.putIfAbsent(propertyId, propertyDefaultValue);
-        } catch (Exception e) {
-            log.error("Failed to put default value '{}' to property '{}'", propertyDefaultValue, propertyId);
-        }
     }
 
     @Override
