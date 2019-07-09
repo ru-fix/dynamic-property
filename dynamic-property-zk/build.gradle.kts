@@ -14,5 +14,5 @@ dependencies {
 
     testImplementation(Libs.junit_api)
     testRuntimeOnly(Libs.junit_engine)
-    testCompile(project(":dynamic-property-zk-test"))
+    testCompile(Libs.jfix_zookeeper)
 }

@@ -1,20 +1,11 @@
 import org.gradle.kotlin.dsl.kotlin
-import org.gradle.kotlin.dsl.maven
 import org.gradle.kotlin.dsl.repositories
-import java.net.URI
-import ru.fix.gradle.release.plugin.ReleaseExtension
 import org.gradle.api.tasks.bundling.Jar
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
-import org.gradle.api.artifacts.dsl.*
-import org.gradle.kotlin.dsl.extra
-import org.gradle.api.publication.maven.internal.action.MavenInstallAction
 import org.gradle.api.tasks.testing.logging.TestLogEvent
-import org.gradle.internal.authentication.DefaultBasicAuthentication
-import org.gradle.kotlin.dsl.repositories
 import org.gradle.kotlin.dsl.version
 import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import kotlin.properties.Delegates
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
@@ -25,7 +16,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath(Libs.gradleReleasePlugin)
+        classpath(Libs.gradle_release_plugin)
         classpath(Libs.dokkaGradlePlugin)
         classpath(Libs.kotlin_stdlib)
         classpath(Libs.kotlin_jdk8)
@@ -55,7 +46,6 @@ val signingSecretKeyRingFile by envConfig()
 
 repositories {
     jcenter()
-    gradlePluginPortal()
     mavenCentral()
 }
 
@@ -82,6 +72,9 @@ subprojects {
     repositories {
         mavenCentral()
         jcenter()
+        if (!repositoryUrl.isNullOrEmpty()) {
+            maven(url="$repositoryUrl")
+        }
     }
 
 

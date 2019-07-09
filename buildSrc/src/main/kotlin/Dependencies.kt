@@ -1,8 +1,8 @@
 object Vers {
-    const val kotlin = "1.2.41"
+    const val kotlin = "1.3.41"
     const val sl4j = "1.7.26"
     const val dokkav = "0.9.16"
-    const val gradleReleasePlugin = "1.2.18"
+    const val gradle_release_plugin = "1.3.9"
     const val junit = "5.4.2"
     const val curator_recipes = "4.2.0"
     const val curator_test = "4.2.0"
@@ -16,7 +16,7 @@ object Libs {
     const val kotlin_jdk8 = "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${Vers.kotlin}"
     const val kotlin_reflect = "org.jetbrains.kotlin:kotlin-reflect:${Vers.kotlin}"
 
-    const val gradleReleasePlugin = "ru.fix:gradle-release-plugin:${Vers.gradleReleasePlugin}"
+    const val gradle_release_plugin = "ru.fix:gradle-release-plugin:${Vers.gradle_release_plugin}"
     const val dokkaGradlePlugin =  "org.jetbrains.dokka:dokka-gradle-plugin:${Vers.dokkav}"
 
     const val slf4j_api = "org.slf4j:slf4j-api:${Vers.sl4j}"
@@ -41,4 +41,6 @@ object Libs {
 
     const val junit_api = "org.junit.jupiter:junit-jupiter-api:${Vers.junit}"
     const val junit_engine = "org.junit.jupiter:junit-jupiter-engine:${Vers.junit}"
+
+    const val jfix_zookeeper = "ru.fix:jfix-zookeeper:1.0.3"
 }

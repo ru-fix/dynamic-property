@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import ru.fix.dynamic.property.api.DynamicPropertySource;
 import ru.fix.dynamic.property.jackson.JacksonDynamicPropertyMarshaller;
 import ru.fix.dynamic.property.source.SourcedProperty;
-import ru.fix.dynamic.property.zk.test.ZKTestingServer;
+import ru.fix.zookeeper.testing.ZKTestingServer;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
