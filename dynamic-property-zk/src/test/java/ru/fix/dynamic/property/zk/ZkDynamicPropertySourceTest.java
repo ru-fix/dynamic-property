@@ -2,9 +2,9 @@ package ru.fix.dynamic.property.zk;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import ru.fix.dynamic.property.api.DynamicPropertySource;
 import ru.fix.dynamic.property.jackson.JacksonDynamicPropertyMarshaller;
 import ru.fix.dynamic.property.source.SourcedProperty;
-import ru.fix.dynamic.property.api.DynamicPropertySource;
 import ru.fix.dynamic.property.zk.test.ZKTestingServer;
 
 import java.nio.charset.StandardCharsets;
@@ -147,16 +147,28 @@ public class ZkDynamicPropertySourceTest {
     public void shouldGetActualValueFromHolder() throws Exception {
         ZkDynamicPropertySource source = createPropertySource();
 
-
         String propertyNewValue = "some Value 2";
+
+        CountDownLatch propertyAdded = new CountDownLatch(1);
+        CountDownLatch propertyRemoved = new CountDownLatch(1);
+
+        source.addPropertyChangeListener("propName1", String.class, value -> {
+            if (null == value) {
+                propertyRemoved.countDown();
+            } else {
+                propertyAdded.countDown();
+            }
+        });
 
         SourcedProperty<String> propertyHolder = new SourcedProperty<>(source, "propName1", String.class);
         retryAssert(null, propertyHolder::get);
 
         setServerProperty(PROPERTIES_LOCATION + "/propName1", propertyNewValue);
+        propertyAdded.await();
         retryAssert(propertyNewValue, propertyHolder::get);
 
         removeServerProperty(PROPERTIES_LOCATION + "/propName1");
+        propertyRemoved.await();
         retryAssert(null, propertyHolder::get);
     }
 
