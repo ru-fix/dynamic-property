@@ -7,14 +7,17 @@ plugins {
 }
 
 dependencies {
-    compile(Libs.slf4j_api)
-    compile(Libs.slf4j_simple)
+
+    compile(Libs.kotlin_logging)
+    compile(Libs.curator_recipes)
+    compile(Libs.curator_test)
+    compile(Libs.junit_api)
+    compile(Libs.junit_engine)
 
     testImplementation(Libs.junit_api)
     testRuntimeOnly(Libs.junit_engine)
     testCompile(Libs.kotlin_jdk8)
     testCompile(Libs.kotlin_stdlib)
     testCompile(Libs.kotlin_reflect)
+
 }
-
-

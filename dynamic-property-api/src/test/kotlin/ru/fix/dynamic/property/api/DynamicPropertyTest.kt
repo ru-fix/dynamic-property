@@ -1,10 +1,8 @@
-package ru.fix.dynamic.property.api.test
+package ru.fix.dynamic.property.api
 
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import ru.fix.dynamic.property.api.AtomicProperty
-import ru.fix.dynamic.property.api.DynamicProperty
 import java.util.concurrent.atomic.AtomicReference
 
 class DynamicPropertyTest {
@@ -23,14 +21,14 @@ class DynamicPropertyTest {
         assertEquals(122, property.get())
 
 
-        val listenerAceptedValue = AtomicReference<Int>()
+        val listenerAcceptedValue = AtomicReference<Int>()
 
-        property.addListener { listenerAceptedValue.set(it) }
+        property.addListener { listenerAcceptedValue.set(it) }
 
         property.set(123)
 
         assertEquals(123, property.get())
-        assertEquals(123, listenerAceptedValue.get())
+        assertEquals(123, listenerAcceptedValue.get())
     }
 
     @Test
