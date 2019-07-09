@@ -47,3 +47,28 @@ val atomicProperty = AtomicProperty(122)
 //... inject properties to service
 atomicProperty.set(512)
 ```
+
+## Polled values
+DynamicPropertyPoller regularly invoke user defined supplier function that returns current value of DynamicProperty
+that backed by custom user defined data source.
+```java
+DynamicPropertyPoller poller = DynamicPropertyPoller(
+        NamedExecutors.newSingleThreadScheduler(
+            "polling",
+            profiler
+        ),
+        DynamicProperty.of(Schedule.withRate(1000L)));
+
+
+class UserClassWithDynamicPropertiesBackedByCustomDataSource {
+  DynamicProperty myProperty;
+
+  public UserClass(DynamicPropertyPoller poller){
+     myProperty = poller.createProperty(()-> myBattsDatabaseMapper.selectValue(...));
+     myProperty.addListener(()->{
+         //on property changed
+         ...
+     });
+  }
+}
+```
