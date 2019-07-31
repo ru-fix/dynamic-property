@@ -58,7 +58,7 @@ class DynamicPropertyTest {
         val first = AtomicProperty("hello")
         val second = AtomicProperty("123")
 
-        val combine = CombinedProperty(Supplier { first.get() + second.get() }, first, second)
+        val combine = CombinedProperty(listOf(first, second)) { first.get() + second.get() }
         assertEquals("hello123", combine.get())
 
         first.set("hi")
@@ -66,7 +66,5 @@ class DynamicPropertyTest {
 
         second.set("42")
         assertEquals("hi42", combine.get())
-
-
     }
 }
