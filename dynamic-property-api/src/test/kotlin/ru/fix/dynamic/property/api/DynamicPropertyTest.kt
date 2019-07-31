@@ -4,7 +4,6 @@ package ru.fix.dynamic.property.api
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.util.concurrent.atomic.AtomicReference
-import java.util.function.Supplier
 
 class DynamicPropertyTest {
 
