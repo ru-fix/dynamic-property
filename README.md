@@ -37,6 +37,23 @@ val intProperty = stringProperty.map { str -> str.toInt() }
 val service = ServiceThatRequiresIntProperty(intProperty)
 ```
 
+## Combine properties
+You can build new property based on several others:
+```kotlin
+val first = AtomicProperty("hello")
+val second = AtomicProperty("123")
+
+val combined = CombinedProperty(listOf(first, second)) { first.get() + second.get() }
+//combined == "hello123"
+        
+first.set("hi")
+//combined == "hi123"
+
+second.set("42")
+//combined == "hi42"
+```
+
+
 ## Mock property in tests
 ```kotlin
 //constant property that never changes
