@@ -34,6 +34,8 @@ object Libs {
     const val jackson_jsr310 = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${Vers.jackson}"
     const val jackson_module_kotlin = "com.fasterxml.jackson.module:jackson-module-kotlin:${Vers.jackson}"
 
+    const val liquibase_core = "org.liquibase:liquibase-core:3.7.0"
+
 
     const val mockito = "org.mockito:mockito-all:1.10.19"
     const val mockito_kotiln = "com.nhaarman:mockito-kotlin-kt1.1:1.5.0"

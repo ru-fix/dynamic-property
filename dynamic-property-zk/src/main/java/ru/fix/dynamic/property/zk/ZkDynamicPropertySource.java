@@ -125,11 +125,6 @@ public class ZkDynamicPropertySource implements DynamicPropertySource {
     }
 
     @Override
-    public <T> T getProperty(String key, Class<T> type) {
-        return getProperty(key, type, null);
-    }
-
-    @Override
     public <T> T getProperty(String key, Class<T> type, T defaultValue) {
         String value = getProperty(key);
         if (value != null) {
