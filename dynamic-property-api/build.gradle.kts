@@ -8,7 +8,8 @@ plugins {
 
 dependencies {
     compile(Libs.slf4j_api)
-    compile(Libs.slf4j_simple)
+
+    testRuntimeOnly(Libs.slf4j_simple)
 
     testImplementation(Libs.junit_api)
     testRuntimeOnly(Libs.junit_engine)
