@@ -48,4 +48,19 @@ class DynamicPropertyTest {
 
         assertEquals(305, captor.get())
     }
+
+    @Test
+    fun `combine properties`() {
+        val first = AtomicProperty("hello")
+        val second = AtomicProperty("123")
+
+        val combine = CombinedProperty(listOf(first, second)) { first.get() + second.get() }
+        assertEquals("hello123", combine.get())
+
+        first.set("hi")
+        assertEquals("hi123", combine.get())
+
+        second.set("42")
+        assertEquals("hi42", combine.get())
+    }
 }
