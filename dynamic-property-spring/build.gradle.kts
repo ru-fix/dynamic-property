@@ -17,6 +17,8 @@ dependencies {
     testImplementation(Libs.junit_api)
     testRuntimeOnly(Libs.junit_engine)
     testCompile(Libs.spring_test)
+
+    testCompile(Libs.slf4j_simple)
 }
 
 

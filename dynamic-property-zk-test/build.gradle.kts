@@ -20,4 +20,6 @@ dependencies {
     testCompile(Libs.kotlin_stdlib)
     testCompile(Libs.kotlin_reflect)
 
+    testCompile(Libs.slf4j_simple)
+
 }

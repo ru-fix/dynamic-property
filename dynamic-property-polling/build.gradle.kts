@@ -14,6 +14,8 @@ dependencies {
     testCompile(Libs.kotlin_reflect)
     compile(Libs.jfix_stdlib_concurrency)
     compile(project(":dynamic-property-api"))
+
+    testCompile(Libs.slf4j_simple)
 }
 
 
