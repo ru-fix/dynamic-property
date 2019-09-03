@@ -1,29 +1,35 @@
-import org.gradle.kotlin.dsl.kotlin
-import org.gradle.kotlin.dsl.repositories
-import org.gradle.api.tasks.bundling.Jar
+import de.marcphilipp.gradle.nexus.NexusPublishExtension
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
-import org.gradle.kotlin.dsl.version
 import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
+import org.asciidoctor.gradle.AsciidoctorTask
 
 buildscript {
     repositories {
         jcenter()
-        gradlePluginPortal()
         mavenCentral()
     }
     dependencies {
         classpath(Libs.gradle_release_plugin)
-        classpath(Libs.dokkaGradlePlugin)
+        classpath(Libs.dokka_gradle_plugin)
         classpath(Libs.kotlin_stdlib)
         classpath(Libs.kotlin_jdk8)
         classpath(Libs.kotlin_reflect)
+        classpath(Libs.asciidoctor)
     }
 }
 
+plugins {
+    kotlin("jvm") version Vers.kotlin apply false
+    signing
+    `maven-publish`
+    id(Libs.nexus_publish_plugin) version "0.3.0" apply false
+    id(Libs.nexus_staging_plugin) version "0.21.0"
+    id("org.asciidoctor.convert") version Vers.asciidoctor
+}
 
 /**
  * Project configuration by properties and environment
@@ -44,15 +50,13 @@ val signingKeyId by envConfig()
 val signingPassword by envConfig()
 val signingSecretKeyRingFile by envConfig()
 
-repositories {
-    jcenter()
-    mavenCentral()
-}
-
-plugins {
-    kotlin("jvm") version "${Vers.kotlin}" apply false
-    signing
-    `maven-publish`
+nexusStaging {
+    packageGroup = "ru.fix"
+    stagingProfileId = "1f0730098fd259"
+    username = "$repositoryUser"
+    password = "$repositoryPassword"
+    numberOfRetries = 50
+    delayBetweenRetriesInMillis = 3_000
 }
 
 apply {
@@ -67,16 +71,13 @@ subprojects {
         plugin("signing")
         plugin("java")
         plugin("org.jetbrains.dokka")
+        plugin(Libs.nexus_publish_plugin)
     }
 
     repositories {
-        mavenCentral()
         jcenter()
-        if (!repositoryUrl.isNullOrEmpty()) {
-            maven(url="$repositoryUrl")
-        }
+        mavenCentral()
     }
-
 
     val sourcesJar by tasks.creating(Jar::class) {
         classifier = "sources"
@@ -84,7 +85,7 @@ subprojects {
         from("src/main/kotlin")
     }
 
-    val dokkaTask by tasks.creating(DokkaTask::class){
+    val dokkaTask by tasks.creating(DokkaTask::class) {
         outputFormat = "javadoc"
         outputDirectory = "$buildDir/dokka"
     }
@@ -96,79 +97,88 @@ subprojects {
         dependsOn(dokkaTask)
     }
 
-    publishing {
+    configure<NexusPublishExtension> {
         repositories {
-            maven {
-                url = uri("$repositoryUrl")
-                if (url.scheme.startsWith("http", true)) {
-                    credentials {
-                        username = "$repositoryUser"
-                        password = "$repositoryPassword"
-                    }
-                }
+            sonatype {
+                username.set("$repositoryUser")
+                password.set("$repositoryPassword")
+                useStaging.set(true)
+                stagingProfileId.set("1f0730098fd259")
             }
         }
+    }
 
-        publications {
-            register("maven", MavenPublication::class) {
-                from(components["java"])
+    project.afterEvaluate {
+        publishing {
 
-                artifact(sourcesJar)
-                artifact(dokkaJar)
-
-                pom {
-                    name.set("${project.group}:${project.name}")
-                    description.set("Provides easy way to change application configuration at runtime.")
-                    url.set("https://github.com/ru-fix/dynamic-property")
-                    licenses {
-                        license {
-                            name.set("The Apache License, Version 2.0")
-                            url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+            publications {
+                //Internal repository setup
+                repositories {
+                    maven {
+                        url = uri("$repositoryUrl")
+                        if (url.scheme.startsWith("http", true)) {
+                            credentials {
+                                username = "$repositoryUser"
+                                password = "$repositoryPassword"
+                            }
                         }
                     }
-                    developers {
-                        developer {
-                            id.set("swarmshine")
-                            name.set("Kamil Asfandiyarov")
-                            url.set("https://github.com/swarmshine")
+                }
+
+                create<MavenPublication>("maven") {
+                    from(components["java"])
+
+                    artifact(sourcesJar)
+                    artifact(dokkaJar)
+
+                    pom {
+                        name.set("${project.group}:${project.name}")
+                        description.set("https://github.com/ru-fix/${rootProject.name}")
+                        url.set("https://github.com/ru-fix/${rootProject.name}")
+                        licenses {
+                            license {
+                                name.set("The Apache License, Version 2.0")
+                                url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+                            }
                         }
-                    }
-                    scm {
-                        url.set("https://github.com/ru-fix/dynamic-property")
-                        connection.set("https://github.com/ru-fix/dynamic-property.git")
-                        developerConnection.set("https://github.com/ru-fix/dynamic-property.git")
+                        developers {
+                            developer {
+                                id.set("JFix Team")
+                                name.set("JFix Team")
+                                url.set("https://github.com/ru-fix/")
+                            }
+                        }
+                        scm {
+                            url.set("https://github.com/ru-fix/${rootProject.name}")
+                            connection.set("https://github.com/ru-fix/${rootProject.name}.git")
+                            developerConnection.set("https://github.com/ru-fix/${rootProject.name}.git")
+                        }
                     }
                 }
             }
         }
     }
 
-
     configure<SigningExtension> {
-
         if (!signingKeyId.isNullOrEmpty()) {
             project.ext["signing.keyId"] = signingKeyId
             project.ext["signing.password"] = signingPassword
             project.ext["signing.secretKeyRingFile"] = signingSecretKeyRingFile
-
             logger.info("Signing key id provided. Sign artifacts for $project.")
-
             isRequired = true
         } else {
-            logger.warn("${project.name}: Signing key not provided. Disable signing for  $project.")
+            logger.info("${project.name}: Signing key not provided. Disable signing for  $project.")
             isRequired = false
         }
-
         sign(publishing.publications)
     }
 
     tasks {
-
-
         withType<KotlinCompile> {
-            kotlinOptions.jvmTarget = "1.8"
+            kotlinOptions {
+                jvmTarget = "1.8"
+            }
         }
-
         withType<Test> {
             useJUnitPlatform()
 
@@ -178,6 +188,23 @@ subprojects {
                 events(TestLogEvent.PASSED, TestLogEvent.FAILED, TestLogEvent.SKIPPED)
                 showStandardStreams = true
                 exceptionFormat = TestExceptionFormat.FULL
+            }
+        }
+    }
+}
+
+tasks {
+    withType<AsciidoctorTask> {
+        sourceDir = project.file("asciidoc")
+        resources(closureOf<CopySpec> {
+            from("asciidoc")
+            include("**/*.png")
+        })
+        doLast {
+            copy {
+                from(outputDir.resolve("html5"))
+                into(project.file("docs"))
+                include("**/*.html", "**/*.png")
             }
         }
     }

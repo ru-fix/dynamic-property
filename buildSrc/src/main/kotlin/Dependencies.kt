@@ -1,8 +1,12 @@
 object Vers {
+    //Plugins
+    const val dokkav = "0.9.18"
+    const val gradle_release_plugin = "1.3.9"
+    const val asciidoctor = "1.5.9.2"
+
+    //Dependencies
     const val kotlin = "1.3.41"
     const val sl4j = "1.7.26"
-    const val dokkav = "0.9.16"
-    const val gradle_release_plugin = "1.3.9"
     const val junit = "5.4.2"
     const val curator_recipes = "4.2.0"
     const val curator_test = "4.2.0"
@@ -12,12 +16,17 @@ object Vers {
 }
 
 object Libs {
+    //Plugins
+    const val gradle_release_plugin = "ru.fix:gradle-release-plugin:${Vers.gradle_release_plugin}"
+    const val dokka_gradle_plugin =  "org.jetbrains.dokka:dokka-gradle-plugin:${Vers.dokkav}"
+    const val asciidoctor = "org.asciidoctor:asciidoctor-gradle-plugin:${Vers.asciidoctor}"
+    const val nexus_staging_plugin = "io.codearte.nexus-staging"
+    const val nexus_publish_plugin = "de.marcphilipp.nexus-publish"
+
+    //Dependencies
     const val kotlin_stdlib = "org.jetbrains.kotlin:kotlin-stdlib:${Vers.kotlin}"
     const val kotlin_jdk8 = "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${Vers.kotlin}"
     const val kotlin_reflect = "org.jetbrains.kotlin:kotlin-reflect:${Vers.kotlin}"
-
-    const val gradle_release_plugin = "ru.fix:gradle-release-plugin:${Vers.gradle_release_plugin}"
-    const val dokkaGradlePlugin =  "org.jetbrains.dokka:dokka-gradle-plugin:${Vers.dokkav}"
 
     const val slf4j_api = "org.slf4j:slf4j-api:${Vers.sl4j}"
     const val slf4j_simple = "org.slf4j:slf4j-simple:${Vers.sl4j}"
