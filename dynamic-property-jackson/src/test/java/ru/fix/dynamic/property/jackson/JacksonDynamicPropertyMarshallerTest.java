@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,6 +25,7 @@ class JacksonDynamicPropertyMarshallerTest {
         assertPrimitives(true, Boolean.class);
         assertPrimitives(1.1D, Double.class);
         assertPrimitives(1.F, Float.class);
+        assertPrimitives(Duration.ofMinutes(1), Duration.class);
     }
 
     private <T> void assertPrimitives(T sourceValue, Class<T> clazz) {
@@ -39,12 +41,13 @@ class JacksonDynamicPropertyMarshallerTest {
         phones.add(BigInteger.valueOf(88005553535L));
         phones.add(BigInteger.valueOf(11111111111L));
 
-        User user = new User("pretty name", new Email("test@mail.ua"), phones);
+        User user = new User("pretty name", new Email("test@mail.ua"), phones, Duration.ofSeconds(1));
 
         String serialized = marshaller.marshall(user);
         User deserialized = marshaller.unmarshall(serialized, User.class);
 
         assertEquals(user.getName(), deserialized.getName());
         assertEquals(user.getEmail().getValue(), deserialized.getEmail().getValue());
+        assertEquals(user.getSessionDuration(), deserialized.getSessionDuration());
     }
 }
