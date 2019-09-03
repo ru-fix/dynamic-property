@@ -12,6 +12,7 @@ import ru.fix.dynamic.property.api.marshaller.DynamicPropertyMarshaller;
 import ru.fix.dynamic.property.api.marshaller.exception.DynamicPropertySerializationException;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -32,12 +33,17 @@ public class JacksonDynamicPropertyMarshaller implements DynamicPropertyMarshall
         SimpleModule localDatetimeModule = new SimpleModule();
         localDatetimeModule.addSerializer(LocalDateTime.class, new LocalDateTimeSerializer(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
         localDatetimeModule.addDeserializer(LocalDateTime.class, new LocalDateTimeDeserializer(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
-        mapper.registerModule(localDatetimeModule);
+
+        SimpleModule durationModule = new SimpleModule();
+        durationModule.addSerializer(Duration.class, new DurationSerializer());
+        mapper.registerModules(localDatetimeModule, durationModule);
+
     }
 
     @Override
     public String marshall(Object marshalledObject) {
-        if (String.class.equals(marshalledObject.getClass())) {
+        if (String.class.equals(marshalledObject.getClass()) ||
+                Duration.class.equals(marshalledObject.getClass())) {
             return marshalledObject.toString();
         }
 
@@ -54,6 +60,10 @@ public class JacksonDynamicPropertyMarshaller implements DynamicPropertyMarshall
     public <T> T unmarshall(String rawString, Class<T> clazz) {
         if (String.class.equals(clazz)) {
             return (T) rawString;
+        }
+
+        if (Duration.class.equals(clazz)) {
+            return (T) Duration.parse(rawString);
         }
 
         try {

@@ -5,13 +5,19 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class JacksonDynamicPropertyMarshallerTest {
     private JacksonDynamicPropertyMarshaller marshaller = new JacksonDynamicPropertyMarshaller();
+
+    private static final String USER_JSON = "{\"name\":\"pretty name\",\"email\":{\"value\":\"test@mail.ua\"}," +
+            "\"phones\":[88005553535,11111111111],\"sessionDuration\":\"PT1S\"}";
+
+    private static final User USER = new User("pretty name", new Email("test@mail.ua"),
+            Arrays.asList(BigInteger.valueOf(88005553535L), BigInteger.valueOf(11111111111L)), Duration.ofSeconds(1));
+
 
     @Test
     public void marshallAndUnmarshallPrimitiveTypes_shouldBeEqual() {
@@ -28,6 +34,32 @@ class JacksonDynamicPropertyMarshallerTest {
         assertPrimitives(Duration.ofMinutes(1), Duration.class);
     }
 
+
+    @Test
+    public void unmarshallPrimitiveTypesFromString_shouldBeEqual() {
+
+        System.out.println(Duration.ofMinutes(1));
+
+        assertPrimitivesFromString("1", "1");
+        assertPrimitivesFromString("1", 1);
+        assertPrimitivesFromString("1", 1L);
+        assertPrimitivesFromString("1", (byte) 1);
+        assertPrimitivesFromString("1.1", new BigDecimal("1.1"));
+        assertPrimitivesFromString("11", BigInteger.valueOf(11L));
+        assertPrimitivesFromString("false", false);
+        assertPrimitivesFromString("true", true);
+        assertPrimitivesFromString("1.1", 1.1D);
+        assertPrimitivesFromString("1.1", 1.1F);
+        assertPrimitivesFromString("PT1M", Duration.ofMinutes(1));
+
+    }
+
+
+    private void assertPrimitivesFromString(String source, Object target) {
+        Object value = marshaller.unmarshall(source, target.getClass());
+        assertEquals(target, value);
+    }
+
     private <T> void assertPrimitives(T sourceValue, Class<T> clazz) {
         String serialize = marshaller.marshall(sourceValue);
         T deserialize = marshaller.unmarshall(serialize, clazz);
@@ -37,17 +69,23 @@ class JacksonDynamicPropertyMarshallerTest {
 
     @Test
     public void marshallAndUnmarshallComplexObject_shouldBeEqual() {
-        List<BigInteger> phones = new ArrayList<>();
-        phones.add(BigInteger.valueOf(88005553535L));
-        phones.add(BigInteger.valueOf(11111111111L));
 
-        User user = new User("pretty name", new Email("test@mail.ua"), phones, Duration.ofSeconds(1));
-
-        String serialized = marshaller.marshall(user);
+        String serialized = marshaller.marshall(USER);
         User deserialized = marshaller.unmarshall(serialized, User.class);
 
-        assertEquals(user.getName(), deserialized.getName());
-        assertEquals(user.getEmail().getValue(), deserialized.getEmail().getValue());
-        assertEquals(user.getSessionDuration(), deserialized.getSessionDuration());
+        assertEquals(USER_JSON, serialized);
+        assertEquals(USER.getName(), deserialized.getName());
+        assertEquals(USER.getEmail().getValue(), deserialized.getEmail().getValue());
+        assertEquals(USER.getSessionDuration(), deserialized.getSessionDuration());
+        assertEquals(USER.getPhones(), deserialized.getPhones());
+    }
+
+    @Test
+    public void unmarshallComplexObject_shouldBeEquals() {
+        User deserialized = marshaller.unmarshall(USER_JSON, User.class);
+        assertEquals(USER.getName(), deserialized.getName());
+        assertEquals(USER.getEmail().getValue(), deserialized.getEmail().getValue());
+        assertEquals(USER.getSessionDuration(), deserialized.getSessionDuration());
+        assertEquals(USER.getPhones(), deserialized.getPhones());
     }
 }

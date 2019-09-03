@@ -33,4 +33,7 @@ public class User {
         return sessionDuration;
     }
 
+    public List<BigInteger> getPhones() {
+        return phones;
+    }
 }
