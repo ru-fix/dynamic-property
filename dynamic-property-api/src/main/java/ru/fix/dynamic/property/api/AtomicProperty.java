@@ -30,7 +30,17 @@ public class AtomicProperty<T> implements DynamicProperty<T> {
     }
 
     @Override
-    public void addListener(DynamicPropertyListener<T> listener) {
+    public DynamicProperty<T> addListener(DynamicPropertyListener<T> listener) {
         listeners.add(listener);
+        return this;
+    }
+
+    @Override
+    public T addAndCallListener(DynamicPropertyListener<T> listener) {
+
+
+        listeners.add(listener);
+        listener.onPropertyChanged(holder.get());
+        return null;
     }
 }
