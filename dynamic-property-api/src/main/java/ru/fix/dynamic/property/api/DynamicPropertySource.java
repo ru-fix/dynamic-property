@@ -3,6 +3,7 @@ package ru.fix.dynamic.property.api;
 
 public interface DynamicPropertySource extends AutoCloseable {
 
+    //TODO: do we need getProperty in interface
     /**
      * Returns property value for specified key in required type.
      * <p>
@@ -38,8 +39,14 @@ public interface DynamicPropertySource extends AutoCloseable {
      * Registers property change listener. Listener will trigger for
      * add/update/remove actions on specified property.
      *
-     * @param propertyName property name
+     * @param propertyName property name to identify property within PropertySource
+     * @param propertyType type of the property
+     * @param defaultValue value that will be used if property does not exist in the store
      * @param listener     listener
      */
-    <T> void addPropertyChangeListener(String propertyName, Class<T> type, DynamicPropertyListener<T> listener);
+    <T> void addAndCallPropertyChangeListener(
+            String propertyName,
+            Class<T> propertyType,
+            T defaultValue,
+            DynamicPropertyListener<T> listener);
 }

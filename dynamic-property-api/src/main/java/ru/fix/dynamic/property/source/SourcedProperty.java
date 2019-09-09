@@ -8,19 +8,21 @@ import ru.fix.dynamic.property.api.DynamicPropertySource;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * Contain property initial value. Automatically register property change listener.
+ * Contains property initial value.
+ * Registers listener within {@link DynamicPropertySource}.
+ * Listen for events from  {@link DynamicPropertySource}.
+ * Update local value and propagates update events to subscribes.
  */
 public class SourcedProperty<T> implements DynamicProperty<T> {
 
     private static final Logger log = LoggerFactory.getLogger(SourcedProperty.class);
 
-    private DynamicPropertySource propertySource;
-    private Class<T> type;
-    private String name;
-    private T defaultValue;
-    private volatile T currentValue;
+    private final String name;
+    private final Class<T> type;
+    private final AtomicReference<T> currentValue = new AtomicReference<>();
 
     private List<DynamicPropertyListener<T>> listeners = new CopyOnWriteArrayList<>();
 
@@ -29,46 +31,61 @@ public class SourcedProperty<T> implements DynamicProperty<T> {
     }
 
     public SourcedProperty(DynamicPropertySource propertySource, String name, Class<T> type, T defaultValue) {
-        this.propertySource = propertySource;
         this.name = name;
         this.type = type;
-        this.defaultValue = defaultValue;
 
-        init();
-    }
-
-    private void init() {
-        propertySource.addPropertyChangeListener(
-                name,
-                type,
+        propertySource.addAndCallPropertyChangeListener(
+                this.name,
+                this.type,
+                defaultValue,
                 newValue -> {
-                    currentValue = newValue;
-                    listeners.forEach(listener -> {
-                        try {
-                            listener.onPropertyChanged(newValue);
-                        } catch (Exception e) {
-                            log.error("Failed to update property {} with value {}", name, newValue, e);
-                        }
-                    });
+                    synchronized (SourcedProperty.this) {
+                        currentValue.set(newValue);
+                        listeners.forEach(listener -> {
+                            try {
+                                listener.onPropertyChanged(newValue);
+                            } catch (Exception e) {
+                                log.error("Failed to update property {} with value {}", this.name, newValue, e);
+                            }
+                        });
+                    }
                 }
         );
-        currentValue = propertySource.getProperty(name, type, defaultValue);
     }
 
     @Override
     public T get() {
-        return currentValue;
+        return currentValue.get();
     }
 
     /**
      * Listener callback runs in the {@link DynamicPropertySource} thread.
-     * It should be very light, run very fast and so not use locks.
      *
      * @param listener Listener runs whenever property value changes.
      */
     @Override
-    public void addListener(DynamicPropertyListener<T> listener) {
+    public DynamicProperty<T> addListener(DynamicPropertyListener<T> listener) {
         listeners.add(listener);
+        return this;
+    }
+
+    @Override
+    public synchronized DynamicProperty<T> addAndCallListener(DynamicPropertyListener<T> listener) {
+        listeners.add(listener);
+        listener.onPropertyChanged(currentValue.get());
+        return this;
+    }
+
+    @Override
+    public synchronized T addListenerAndGet(DynamicPropertyListener<T> listener) {
+        listeners.add(listener);
+        return currentValue.get();
+    }
+
+    @Override
+    public DynamicProperty<T> removeListener(DynamicPropertyListener<T> listener) {
+        listeners.remove(listener);
+        return this;
     }
 
     @Override
