@@ -2,38 +2,52 @@ package ru.fix.dynamic.property.spring;
 
 import org.junit.jupiter.api.Test;
 import ru.fix.dynamic.property.api.DynamicProperty;
-import ru.fix.dynamic.property.api.DynamicPropertySource;
 import ru.fix.dynamic.property.api.annotation.PropertyId;
 import ru.fix.dynamic.property.jackson.JacksonDynamicPropertyMarshaller;
-import ru.fix.dynamic.property.spring.exception.DynamicPropertyDefaultValueNotDefinedException;
-
-import java.util.Properties;
+import ru.fix.dynamic.property.source.DynamicPropertyNotFoundException;
+import ru.fix.dynamic.property.std.source.InMemoryPropertySource;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class DynamicPropertyAwareBeanPostProcessorTest {
 
-    DynamicPropertySource propertySource;
-
+    InMemoryPropertySource propertySource;
     DynamicPropertyAwareBeanPostProcessor processor;
 
+    public static class PropertyContainer {
+
+        private DynamicProperty<String> status = DynamicProperty.of("NEW");
+
+        @PropertyId("property.city")
+        private DynamicProperty<String> city = DynamicProperty.of("kazan");
+
+        public DynamicProperty<String> getCity() {
+            return city;
+        }
+        public DynamicProperty<String> getStatus() {
+            return status;
+        }
+    }
+
     @Test
-    public void processBean_shouldNotInitializeAllDynamicPropertiesByDefault() {
-        propertySource = new TestPropertySource(new Properties(), new JacksonDynamicPropertyMarshaller());
+    public void processBean_shouldInitializeAllDynamicPropertiesByDefault() {
+        propertySource = new InMemoryPropertySource(new JacksonDynamicPropertyMarshaller());
         processor = new DynamicPropertyAwareBeanPostProcessor(propertySource);
 
         PropertyContainer bean = new PropertyContainer();
 
         PropertyContainer processedBean = (PropertyContainer) processor.postProcessBeforeInitialization(bean, "propertyContainer");
 
-        assertNull(processedBean.getCity().get());
+        assertNotNull(processedBean.getCity().get());
+        assertEquals(processedBean.getCity().get(), "kazan");
     }
 
     @Test
     public void processBean_shouldInitializeAllDynamicPropertiesFromSource() {
-        Properties properties = new Properties();
-        properties.put("property.city", "Moscow");
-        propertySource = new TestPropertySource(properties, new JacksonDynamicPropertyMarshaller());
+
+        propertySource = new InMemoryPropertySource(new JacksonDynamicPropertyMarshaller());
+        propertySource.set("property.city", "Moscow");
+
         processor = new DynamicPropertyAwareBeanPostProcessor(propertySource);
 
         PropertyContainer bean = new PropertyContainer();
@@ -44,32 +58,47 @@ class DynamicPropertyAwareBeanPostProcessorTest {
         assertEquals( "NEW", processedBean.getStatus().get(), "Must initialize annotated by @PropertyId");
     }
 
-    @Test
-    public void processBean_propertyWithoutDefault_mustCompleteExceptionally() {
-        propertySource = new TestPropertySource(new Properties(), new JacksonDynamicPropertyMarshaller());
-        processor = new DynamicPropertyAwareBeanPostProcessor(propertySource);
 
-        PropertyWithoutDefaultValue bean = new PropertyWithoutDefaultValue();
-
-        assertThrows(DynamicPropertyDefaultValueNotDefinedException.class, () ->
-                processor.postProcessBeforeInitialization(bean, "propertyWithoutDefaultValue")
-        );
-    }
 
     @Test
     public void processBeanWithoutProperty() {
-        propertySource = new TestPropertySource(new Properties(), new JacksonDynamicPropertyMarshaller());
+        propertySource = new InMemoryPropertySource(new JacksonDynamicPropertyMarshaller());
         processor = new DynamicPropertyAwareBeanPostProcessor(propertySource);
 
         processor.postProcessBeforeInitialization(new Object(), "withoutProperty");
     }
 
-    class PropertyWithoutDefaultValue {
+    static class PropertyWithoutDefaultValue {
         @PropertyId("property.city")
         private DynamicProperty<String> city;
 
         public DynamicProperty<String> getCity() {
             return city;
         }
+    }
+
+    @Test
+    public void propertyWithoutDefault_withoutSource_mustCompleteExceptionally() {
+        propertySource = new InMemoryPropertySource(new JacksonDynamicPropertyMarshaller());
+        processor = new DynamicPropertyAwareBeanPostProcessor(propertySource);
+
+        PropertyWithoutDefaultValue bean = new PropertyWithoutDefaultValue();
+
+        assertThrows(DynamicPropertyNotFoundException.class, () ->
+                processor.postProcessBeforeInitialization(bean, "propertyWithoutDefaultValue")
+        );
+    }
+
+    @Test
+    public void propertyWithoutDefault_withSource_mustUseValueFromSource() {
+        propertySource = new InMemoryPropertySource(new JacksonDynamicPropertyMarshaller());
+        propertySource.set("property.city", "Moscow");
+        processor = new DynamicPropertyAwareBeanPostProcessor(propertySource);
+
+        PropertyWithoutDefaultValue bean = new PropertyWithoutDefaultValue();
+        processor.postProcessBeforeInitialization(bean, "propertyWithoutDefaultValue");
+
+        assertEquals("Moscow", bean.city.get());
+
     }
 }

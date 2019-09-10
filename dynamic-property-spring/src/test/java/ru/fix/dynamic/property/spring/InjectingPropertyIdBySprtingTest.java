@@ -10,11 +10,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import ru.fix.dynamic.property.api.DynamicProperty;
 import ru.fix.dynamic.property.api.DynamicPropertySource;
+import ru.fix.dynamic.property.api.annotation.PropertyId;
 import ru.fix.dynamic.property.jackson.JacksonDynamicPropertyMarshaller;
 import ru.fix.dynamic.property.spring.config.DynamicPropertyConfig;
-
-import java.util.Properties;
+import ru.fix.dynamic.property.std.source.InMemoryPropertySource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -23,8 +24,23 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Ayrat Zulkarnyaev
  */
 @ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = PropertyIdTest.Config.class)
-public class PropertyIdTest {
+@ContextConfiguration(classes = InjectingPropertyIdBySprtingTest.Config.class)
+public class InjectingPropertyIdBySprtingTest {
+
+    public static class PropertyContainer {
+
+        private DynamicProperty<String> status = DynamicProperty.of("NEW");
+
+        @PropertyId("property.city")
+        private DynamicProperty<String> city = DynamicProperty.of("kazan");
+
+        public DynamicProperty<String> getCity() {
+            return city;
+        }
+        public DynamicProperty<String> getStatus() {
+            return status;
+        }
+    }
 
     @Configuration
     @Import(DynamicPropertyConfig.class)
@@ -33,9 +49,9 @@ public class PropertyIdTest {
 
         @Bean
         public DynamicPropertySource dynamicPropertySource() {
-            Properties properties = new Properties();
-            properties.put("property.city", "Biribidjan");
-            return new TestPropertySource(properties, new JacksonDynamicPropertyMarshaller());
+            InMemoryPropertySource source = new InMemoryPropertySource(new JacksonDynamicPropertyMarshaller());
+            source.set("property.city", "Biribidjan");
+            return source;
         }
 
         @Bean

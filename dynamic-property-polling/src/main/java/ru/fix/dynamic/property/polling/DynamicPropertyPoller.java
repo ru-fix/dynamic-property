@@ -9,12 +9,11 @@ import ru.fix.dynamic.property.api.DynamicProperty;
 import ru.fix.stdlib.concurrency.threads.ReschedulableScheduler;
 import ru.fix.stdlib.concurrency.threads.Schedule;
 
-import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.function.Supplier;
 
 public class DynamicPropertyPoller implements AutoCloseable {
-    private Map<PolledProperty, Supplier> properties = new WeakHashMap<>();
+    private WeakHashMap<PolledProperty, Supplier> properties = new WeakHashMap<>();
     private ReschedulableScheduler scheduler;
     private DynamicProperty<Schedule> delay;
 

@@ -33,4 +33,8 @@ public class ConstantProperty<T> implements DynamicProperty<T> {
     public DynamicProperty<T> removeListener(DynamicPropertyListener<T> listener) {
         return this;
     }
+
+    @Override
+    public void close(){
+    }
 }

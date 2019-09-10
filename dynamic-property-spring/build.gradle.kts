@@ -6,19 +6,21 @@ plugins {
 }
 
 dependencies {
+    api(Libs.spring_beans)
+    api(project(Projs.dynamic_property_api.dependency))
 
-    compile(Libs.spring_beans)
-    compile(Libs.spring_boot_auto_configure)
+    implementation(Libs.spring_boot_auto_configure)
 
-    compile(project(":dynamic-property-zk"))
-    compile(project(":dynamic-property-api"))
-    compile(project(":dynamic-property-jackson"))
 
+    testImplementation(Libs.log4j_kotlin)
     testImplementation(Libs.junit_api)
+    testImplementation(Libs.hamkrest)
+    testImplementation(Libs.spring_test)
     testRuntimeOnly(Libs.junit_engine)
-    testCompile(Libs.spring_test)
+    testRuntimeOnly(Libs.slf4j_over_log4j)
+    testRuntimeOnly(Libs.log4j_core)
 
-    testCompile(Libs.slf4j_simple)
+    testImplementation(project(Projs.dynamic_property_std_source.dependency))
+    testImplementation(project(Projs.dynamic_property_jackson.dependency))
+
 }
-
-

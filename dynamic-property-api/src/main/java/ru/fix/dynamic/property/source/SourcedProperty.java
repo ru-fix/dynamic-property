@@ -23,16 +23,17 @@ public class SourcedProperty<T> implements DynamicProperty<T> {
     private final String name;
     private final Class<T> type;
     private final AtomicReference<T> currentValue = new AtomicReference<>();
+    private final List<DynamicPropertyListener<T>> listeners = new CopyOnWriteArrayList<>();
 
-    private List<DynamicPropertyListener<T>> listeners = new CopyOnWriteArrayList<>();
+    private final DynamicPropertySource propertySource;
 
-    public SourcedProperty(DynamicPropertySource propertySource, String name, Class<T> type) {
-        this(propertySource, name, type, null);
-    }
-
-    public SourcedProperty(DynamicPropertySource propertySource, String name, Class<T> type, T defaultValue) {
+    public SourcedProperty(DynamicPropertySource propertySource,
+                           String name,
+                           Class<T> type,
+                           DefaultValue<T> defaultValue) {
         this.name = name;
         this.type = type;
+        this.propertySource = propertySource;
 
         propertySource.addAndCallPropertyChangeListener(
                 this.name,
@@ -86,6 +87,12 @@ public class SourcedProperty<T> implements DynamicProperty<T> {
     public DynamicProperty<T> removeListener(DynamicPropertyListener<T> listener) {
         listeners.remove(listener);
         return this;
+    }
+
+    @Override
+    public void close() {
+        propertySource.removeListener()
+
     }
 
     @Override

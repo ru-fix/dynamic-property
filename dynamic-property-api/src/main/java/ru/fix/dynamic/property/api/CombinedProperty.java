@@ -40,4 +40,9 @@ public class CombinedProperty<R> implements DynamicProperty<R> {
     public DynamicProperty<R> addListener(DynamicPropertyListener<R> listener) {
         return property.addListener(listener);
     }
+
+    @Override
+    public void close() throws Exception {
+        property.close();
+    }
 }

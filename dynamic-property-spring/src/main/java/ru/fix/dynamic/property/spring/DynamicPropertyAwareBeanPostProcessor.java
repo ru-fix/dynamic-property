@@ -5,17 +5,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.util.ReflectionUtils;
-import ru.fix.dynamic.property.source.SourcedProperty;
 import ru.fix.dynamic.property.api.DynamicProperty;
 import ru.fix.dynamic.property.api.DynamicPropertySource;
 import ru.fix.dynamic.property.api.annotation.PropertyId;
-import ru.fix.dynamic.property.spring.exception.DynamicPropertyDefaultValueNotDefinedException;
+import ru.fix.dynamic.property.source.DefaultValue;
+import ru.fix.dynamic.property.source.SourcedProperty;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.atomic.LongAdder;
 
 /**
@@ -65,15 +64,8 @@ public class DynamicPropertyAwareBeanPostProcessor implements BeanPostProcessor 
             String propertyId = propertyIdAnnotation.value();
 
             Class propertyClass = extractPropertyClass(field);
-            Object propertyDefaultValue = extractDefaultValue(bean, field);
-            if (null == propertyDefaultValue) {
-                String errorMessage = String.format(
-                        "Illegal default property value '%s' of bean '%s'. " +
-                                "DynamicProperty type annotated by @PropertyId must have default value other than null",
-                        field.getName(), beanName
-                );
-                throw new DynamicPropertyDefaultValueNotDefinedException(errorMessage);
-            }
+            DefaultValue<Object> propertyDefaultValue = extractDefaultValue(bean, field);
+
             //noinspection unchecked
             return new SourcedProperty<>(propertySource, propertyId, propertyClass, propertyDefaultValue);
 
@@ -99,16 +91,19 @@ public class DynamicPropertyAwareBeanPostProcessor implements BeanPostProcessor 
         return propertyClass;
     }
 
-    private Object extractDefaultValue(Object bean, Field field) {
+    private DefaultValue<Object> extractDefaultValue(Object bean, Field field) {
         DynamicProperty<?> dynamicProperty = null;
         try {
             dynamicProperty = (DynamicProperty<?>) field.get(bean);
         } catch (IllegalAccessException e) {
-            log.error("Error occurred when extracting value from field '{}'", field.getName());
+            log.error("Error occurred when extracting value from field {}", field.getName());
         }
-        return Optional.ofNullable(dynamicProperty)
-                .map(DynamicProperty::get)
-                .orElse(null);
+
+        if(dynamicProperty != null){
+            return DefaultValue.of(dynamicProperty.get());
+        } else {
+            return DefaultValue.none();
+        }
     }
 
     @Override

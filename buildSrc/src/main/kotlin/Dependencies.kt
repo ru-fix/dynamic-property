@@ -1,3 +1,6 @@
+import org.gradle.api.artifacts.dsl.DependencyHandler
+import org.gradle.kotlin.dsl.project
+
 object Vers {
     //Plugins
     const val dokkav = "0.9.18"
@@ -13,6 +16,8 @@ object Vers {
     const val spring = "5.1.8.RELEASE"
     const val spring_boot_auto_configure = "2.1.5.RELEASE"
     const val jackson = "2.9.9"
+
+    const val log4j =  "2.12.0"
 }
 
 object Libs {
@@ -28,8 +33,15 @@ object Libs {
     const val kotlin_jdk8 = "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${Vers.kotlin}"
     const val kotlin_reflect = "org.jetbrains.kotlin:kotlin-reflect:${Vers.kotlin}"
 
+    val jfix_stdlib_concurrency = "ru.fix:jfix-stdlib-concurrency:1.0.42"
+
     const val slf4j_api = "org.slf4j:slf4j-api:${Vers.sl4j}"
     const val slf4j_simple = "org.slf4j:slf4j-simple:${Vers.sl4j}"
+
+    val log4j_api = "org.apache.logging.log4j:log4j-api:${Vers.log4j}"
+    val log4j_core = "org.apache.logging.log4j:log4j-core:${Vers.log4j}"
+    val log4j_kotlin = "org.apache.logging.log4j:log4j-api-kotlin:1.0.0"
+    val slf4j_over_log4j = "org.apache.logging.log4j:log4j-slf4j-impl:${Vers.log4j}"
 
     const val curator_recipes = "org.apache.curator:curator-recipes:${Vers.curator_recipes}"
     const val curator_test = "org.apache.curator:curator-test:${Vers.curator_test}"
@@ -43,6 +55,7 @@ object Libs {
     const val jackson_jsr310 = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${Vers.jackson}"
     const val jackson_module_kotlin = "com.fasterxml.jackson.module:jackson-module-kotlin:${Vers.jackson}"
 
+    const val hamkrest = "com.natpryce:hamkrest:1.7.0.0"
 
     const val mockito = "org.mockito:mockito-all:1.10.19"
     const val mockito_kotiln = "com.nhaarman:mockito-kotlin-kt1.1:1.5.0"
@@ -52,4 +65,17 @@ object Libs {
     const val junit_engine = "org.junit.jupiter:junit-jupiter-engine:${Vers.junit}"
 
     const val jfix_zookeeper = "ru.fix:jfix-zookeeper:1.0.4"
+}
+
+enum class Projs{
+    dynamic_property_jackson,
+    dynamic_property_api,
+    dynamic_property_zk,
+    dynamic_property_spring,
+    dynamic_property_polling,
+    dynamic_property_std_source;
+
+    val directory get() = this.name.replace('_', '-')
+    val dependency get(): String = ":$directory"
+
 }

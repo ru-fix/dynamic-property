@@ -78,7 +78,7 @@ import java.util.function.Supplier;
  * }
  * }</pre>
  */
-public interface DynamicProperty<T> {
+public interface DynamicProperty<T>  extends AutoCloseable{
 
     /**
      * @return current value of property
@@ -129,6 +129,4 @@ public interface DynamicProperty<T> {
     default <R> DynamicProperty<R> map(Function<T, R> map) {
         return new MappedProperty<>(this, map);
     }
-
-    TODO: Closable Or WeakReference
 }

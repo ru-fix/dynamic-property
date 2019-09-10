@@ -88,4 +88,9 @@ public class AtomicProperty<T> implements DynamicProperty<T> {
         listeners.remove(listener);
         return this;
     }
+
+    @Override
+    public void close() {
+        listeners.clear();
+    }
 }
