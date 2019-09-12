@@ -33,7 +33,7 @@ object Libs {
     const val kotlin_jdk8 = "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${Vers.kotlin}"
     const val kotlin_reflect = "org.jetbrains.kotlin:kotlin-reflect:${Vers.kotlin}"
 
-    val jfix_stdlib_concurrency = "ru.fix:jfix-stdlib-concurrency:1.0.42"
+    val jfix_stdlib_concurrency = "ru.fix:jfix-stdlib-concurrency:1.0.49"
 
     const val slf4j_api = "org.slf4j:slf4j-api:${Vers.sl4j}"
     const val slf4j_simple = "org.slf4j:slf4j-simple:${Vers.sl4j}"

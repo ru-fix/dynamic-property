@@ -35,7 +35,7 @@ public class SourcedProperty<T> implements DynamicProperty<T> {
         this.type = type;
         this.propertySource = propertySource;
 
-        propertySource.addAndCallPropertyChangeListener(
+        propertySource.subscribeAndCallListener(
                 this.name,
                 this.type,
                 defaultValue,
@@ -91,7 +91,8 @@ public class SourcedProperty<T> implements DynamicProperty<T> {
 
     @Override
     public void close() {
-        propertySource.removeListener()
+        //TODO:
+//        propertySource.removeListener()
 
     }
 

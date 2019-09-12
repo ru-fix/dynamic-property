@@ -58,6 +58,4 @@ public interface DynamicPropertySource extends AutoCloseable {
             Class<T> propertyType,
             DefaultValue<T> defaultValue,
             DynamicPropertyListener<T> listener);
-
-    void unsubscribe(Subscription subscription);
 }

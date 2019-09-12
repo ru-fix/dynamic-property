@@ -8,23 +8,27 @@ import org.apache.curator.framework.recipes.cache.TreeCache;
 import org.apache.curator.framework.recipes.cache.TreeCacheEvent;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.zookeeper.data.Stat;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.fix.dynamic.property.api.DynamicPropertyListener;
-import ru.fix.dynamic.property.api.DynamicPropertySource;
 import ru.fix.dynamic.property.api.marshaller.DynamicPropertyMarshaller;
+import ru.fix.dynamic.property.std.source.AbstractPropertySource;
+import ru.fix.stdlib.concurrency.threads.ReferenceCleaner;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.*;
-import java.util.function.Function;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Implementation of {@link DynamicPropertyListener} which uses {@link TreeCache} inside and
  * provides subscriptions to property change events
  */
-public class ZkDynamicPropertySource implements DynamicPropertySource {
-
+public class ZkDynamicPropertySource extends AbstractPropertySource {
     private static final Logger log = LoggerFactory.getLogger(ZkDynamicPropertySource.class);
 
     private final String configLocation;
@@ -60,10 +64,24 @@ public class ZkDynamicPropertySource implements DynamicPropertySource {
             String configLocation,
             DynamicPropertyMarshaller marshaller
     ) throws Exception {
+        super(marshaller, ReferenceCleaner.getInstance());
+
         this.curatorFramework = curatorFramework;
         this.configLocation = configLocation;
         this.marshaller = marshaller;
         init();
+    }
+
+    private String zkDataToStringOrNull(byte[] data, String logDetails){
+        try {
+            return new String(
+                    data,
+                    StandardCharsets.UTF_8);
+        } catch (Exception exc) {
+            log.error("Failed to read string value from zk node. {}", logDetails, exc);
+            return null;
+        }
+
     }
 
     private void init() throws Exception {
@@ -76,18 +94,18 @@ public class ZkDynamicPropertySource implements DynamicPropertySource {
             switch (treeCacheEvent.getType()) {
                 case NODE_ADDED:
                 case NODE_UPDATED:
-                    firePropertyChanged(treeCacheEvent, path -> {
-                        try {
-                            return new String(currentFramework.getData().forPath(treeCacheEvent.getData().getPath()),
-                                    StandardCharsets.UTF_8);
-                        } catch (Exception e) {
-                            log.error("Zk property updating error", e);
-                        }
-                        return null;
-                    });
+                    try {
+                        onZkTreeChanged(treeCacheEvent, zkDataToStringOrNull(
+                                treeCacheEvent.getData().getData(),
+                                treeCacheEvent.toString()
+                        ));
+
+                    } catch (Exception exc) {
+                        log.error("Zk property updating error for event {}", treeCacheEvent, exc);
+                    }
                     break;
                 case NODE_REMOVED:
-                    firePropertyChanged(treeCacheEvent, path -> null);
+                    onZkTreeChanged(treeCacheEvent, null);
                     break;
                 default:
                     break;
@@ -96,63 +114,40 @@ public class ZkDynamicPropertySource implements DynamicPropertySource {
         treeCache.start();
     }
 
-    private void firePropertyChanged(TreeCacheEvent treeCacheEvent, Function<String, String> valueExtractor) {
-        String propertyPath = treeCacheEvent.getData().getPath();
-        Collection<DynamicPropertyListener<String>> zkPropertyChangeListeners = listeners.get(propertyPath);
-        String newValue = valueExtractor.apply(propertyPath);
-        log.info("Event type {} for node '{}'. New value is '{}'", treeCacheEvent.getType(), propertyPath, newValue);
+    private void onZkTreeChanged(TreeCacheEvent treeCacheEvent, String newValue) {
+        String absolutePath = treeCacheEvent.getData().getPath();
+        String propertyName = getPropertyNameFromAbsolutePath(absolutePath);
 
-        if (zkPropertyChangeListeners != null) {
-            zkPropertyChangeListeners.forEach(listener -> {
-                try {
-                    listener.onPropertyChanged(newValue);
-                } catch (Exception e) {
-                    log.error("Failed to update property {}", propertyPath, e);
-                }
-
-            });
-        }
+        log.info("Event type {} for node '{}'. New value is '{}'", treeCacheEvent.getType(), absolutePath, newValue);
+        invokePropertyListener(propertyName, newValue);
     }
 
-    private String getProperty(String key) {
-        return getProperty(key, (String) null);
-    }
 
-    private String getProperty(String key, String defaulValue) {
-        String path = getAbsolutePath(key);
+
+    @Nullable
+    @Override
+    public String getPropertyValue(@NotNull String propertyName) {
+        String path = getAbsolutePathForProperty(propertyName);
         ChildData currentData = treeCache.getCurrentData(path);
-        return currentData == null ? defaulValue : new String(currentData.getData(), StandardCharsets.UTF_8);
+        return currentData == null ? null : new String(currentData.getData(), StandardCharsets.UTF_8);
     }
 
-    @Override
-    public <T> T getProperty(String key, Class<T> type) {
-        return getProperty(key, type, null);
-    }
-
-    @Override
-    public <T> T getProperty(String key, Class<T> type, T defaultValue) {
-        String value = getProperty(key);
-        if (value != null) {
-            return marshaller.unmarshall(value, type);
-        }
-        return defaultValue;
-    }
 
     /**
      * Works through curator directly to load latest data
      */
     public Map<String, Object> getAllProperties() throws Exception {
         Map<String, Object> allProperties = new HashMap<>();
-        Stat exist = curatorFramework.checkExists().forPath(getAbsolutePath(""));
+        Stat exist = curatorFramework.checkExists().forPath(configLocation);
         if (exist != null) {
-            List<String> childs = curatorFramework.getChildren().forPath(getAbsolutePath(""));
+            List<String> childs = curatorFramework.getChildren().forPath(configLocation);
             if (!childs.isEmpty()) {
                 CountDownLatch latch = new CountDownLatch(childs.size());
                 for (String child : childs) {
                     curatorFramework.getData().watched().inBackground((client, event) -> {
                         allProperties.put(child, new String(event.getData(), StandardCharsets.UTF_8));
                         latch.countDown();
-                    }).forPath(getAbsolutePath(child));
+                    }).forPath(getAbsolutePathForProperty(child));
                 }
                 if (!latch.await(120, TimeUnit.SECONDS)) {
                     throw new TimeoutException("Failed to extract zk properties data");
@@ -162,27 +157,20 @@ public class ZkDynamicPropertySource implements DynamicPropertySource {
         return allProperties;
     }
 
-    @Override
-    public <T> void addPropertyChangeListener(String propertyName,
-                                              Class<T> type,
-                                              DynamicPropertyListener<T> typedListener) {
-        addPropertyChangeListener(propertyName, value -> {
-            T convertedValue = marshaller.unmarshall(value, type);
-            typedListener.onPropertyChanged(convertedValue);
-        });
+
+    private String getAbsolutePathForProperty(String propertyName) {
+        Objects.requireNonNull(propertyName);
+        return configLocation + '/' + propertyName;
     }
 
-    private void addPropertyChangeListener(String propertyName, DynamicPropertyListener<String> listener) {
-        listeners.computeIfAbsent(getAbsolutePath(propertyName), key -> new CopyOnWriteArrayList<>()).add(listener);
+    private String getPropertyNameFromAbsolutePath(String absolutePath){
+        return absolutePath.substring(configLocation.length() + 1);
     }
 
-    private String getAbsolutePath(String nodeName) {
-        boolean nodeNameIsEmpty = null == nodeName || nodeName.isEmpty();
-        return configLocation + (nodeNameIsEmpty ? "" : '/' + nodeName);
-    }
 
     @Override
     public void close() {
+        super.close();
         treeCache.close();
     }
 }

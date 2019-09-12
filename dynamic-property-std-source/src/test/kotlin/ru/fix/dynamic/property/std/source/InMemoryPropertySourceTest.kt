@@ -15,7 +15,8 @@ class InMemoryPropertySourceTest {
     fun `register listener and change property value`() {
         val deque = Collections.synchronizedList(ArrayList<Int>())
         val source = InMemoryPropertySource(JacksonDynamicPropertyMarshaller())
-        source.addAndCallPropertyChangeListener(
+
+        val subscription = source.subscribeAndCallListener(
                 "foo",
                 Integer::class.java,
                 DefaultValue.of(Integer(12))
@@ -30,6 +31,13 @@ class InMemoryPropertySourceTest {
         assertThat(deque, hasSize(equalTo(1)))
 
         source["foo"] = "14"
+        assertThat(deque, hasSize(equalTo(2)))
+        assertThat(deque[1], equalTo(14))
+
+        subscription.close()
+
+        //after closing subscription there will be no update from source
+        source["foo"] = "42"
         assertThat(deque, hasSize(equalTo(2)))
         assertThat(deque[1], equalTo(14))
     }

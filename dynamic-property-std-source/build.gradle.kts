@@ -9,6 +9,10 @@ dependencies {
 
     implementation(Libs.kotlin_stdlib)
     implementation(Libs.kotlin_jdk8)
+    implementation(Libs.jfix_stdlib_concurrency){
+        exclude("ru.fix", "dynamic-property-api")
+    }
+
 
     api(project(Projs.dynamic_property_api.dependency))
 
