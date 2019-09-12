@@ -42,7 +42,7 @@ public class CombinedProperty<R> implements DynamicProperty<R> {
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
         property.close();
     }
 }

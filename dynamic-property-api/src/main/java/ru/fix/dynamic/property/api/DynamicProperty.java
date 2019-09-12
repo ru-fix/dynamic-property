@@ -129,4 +129,10 @@ public interface DynamicProperty<T>  extends AutoCloseable{
     default <R> DynamicProperty<R> map(Function<T, R> map) {
         return new MappedProperty<>(this, map);
     }
+
+    /**
+     * Close this instance of DynamicProperty.
+     * Unsubscribe it from {@link DynamicPropertySource}
+     */
+    void close();
 }

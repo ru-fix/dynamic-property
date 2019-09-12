@@ -91,7 +91,7 @@ abstract class AbstractPropertySource(
     /**
      * @return null if there are no such property in PropertySource
      */
-    abstract fun getPropertyValue(propertyName: String): String?
+    protected abstract fun getPropertyValue(propertyName: String): String?
 
 
     @Synchronized

@@ -14,7 +14,11 @@ import java.util.concurrent.atomic.AtomicReference;
  * Contains property initial value.
  * Registers listener within {@link DynamicPropertySource}.
  * Listen for events from  {@link DynamicPropertySource}.
- * Update local value and propagates update events to subscribes.
+ * Update local value and propagates update events to it's subscribes.
+ * See {@link DynamicProperty#addAndCallListener(DynamicPropertyListener)}
+ *
+ * If instance of this class became weakly reachable it will stop receiving events from {@link DynamicPropertySource}
+ * Same effect will be archived through {@link DynamicProperty#close()}
  */
 public class SourcedProperty<T> implements DynamicProperty<T> {
 
