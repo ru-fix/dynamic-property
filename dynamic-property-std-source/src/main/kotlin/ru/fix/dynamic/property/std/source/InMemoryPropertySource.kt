@@ -17,5 +17,5 @@ class InMemoryPropertySource(
         invokePropertyListener(key, value)
     }
 
-    override fun getPropertyValue(propertyName: String) = properties[propertyName]
+    protected override fun getPropertyValue(propertyName: String) = properties[propertyName]
 }

@@ -1,5 +1,6 @@
 package ru.fix.dynamic.property.zk;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import ru.fix.dynamic.property.api.DynamicPropertySource;
@@ -9,6 +10,8 @@ import ru.fix.dynamic.property.source.SourcedProperty;
 import ru.fix.zookeeper.testing.ZKTestingServer;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
@@ -29,16 +32,30 @@ public class ZkDynamicPropertySourceTest {
 
     private ZKTestingServer zkTestingServer;
 
+    private ZkDynamicPropertySource source;
+
+
     @BeforeEach
-    public void beforeEach() throws Exception {
+    void beforeEach() throws Exception {
         zkTestingServer = new ZKTestingServer();
         zkTestingServer.start();
+
+        source = new ZkDynamicPropertySource(
+                zkTestingServer.getClient(),
+                PROPERTIES_LOCATION,
+                new JacksonDynamicPropertyMarshaller(),
+                Duration.of(1, ChronoUnit.MINUTES)
+        );
+    }
+
+    @AfterEach
+    void afterEach(){
+        source.close();
+        source = null;
     }
 
     @Test
     public void shouldIgnoreDefaultValueIfPropertyExists() throws Exception {
-        DynamicPropertySource source = createPropertySource();
-
         CountDownLatch propertyChanged = new CountDownLatch(1);
         AtomicReference<String> newPropertySlot = new AtomicReference<>();
 
@@ -59,8 +76,6 @@ public class ZkDynamicPropertySourceTest {
 
     @Test
     public void shouldFetchActualValueOfProperty() throws Exception {
-        DynamicPropertySource source = createPropertySource();
-
         setServerProperty(PROPERTIES_LOCATION + "/" + TEST_PROP_KEY, "some Value");
 
         CountDownLatch firstChange = new CountDownLatch(1);
@@ -92,8 +107,6 @@ public class ZkDynamicPropertySourceTest {
 
     @Test
     public void shouldListenChangeOfProperty() throws Exception {
-        DynamicPropertySource source = createPropertySource();
-
         CountDownLatch propertyAdd = new CountDownLatch(1);
         CountDownLatch propertyChanged = new CountDownLatch(1);
 
@@ -125,8 +138,6 @@ public class ZkDynamicPropertySourceTest {
 
     @Test
     public void shouldListenRemovingOfProperty() throws Exception {
-        DynamicPropertySource source = createPropertySource();
-
         CountDownLatch propertyAdd = new CountDownLatch(1);
         CountDownLatch propertyRemoved = new CountDownLatch(1);
         DynamicPropertySource.Subscription sub = source.subscribeAndCallListener(
@@ -150,8 +161,6 @@ public class ZkDynamicPropertySourceTest {
 
     @Test
     public void shouldFetchAllProperties() throws Exception {
-        ZkDynamicPropertySource source = createPropertySource();
-
         setServerProperty(PROPERTIES_LOCATION + "/propName1", "some Value 1");
         setServerProperty(PROPERTIES_LOCATION + "/propName2", "some Value 2");
 
@@ -164,8 +173,6 @@ public class ZkDynamicPropertySourceTest {
 
     @Test
     public void shouldNotFetchPropertiesIfNotPresent() throws Exception {
-        ZkDynamicPropertySource source = createPropertySource();
-
         Map<String, Object> allProperties = source.readAllProperties();
         assertNotNull(allProperties);
         assertEquals(allProperties.size(), 0);
@@ -173,8 +180,6 @@ public class ZkDynamicPropertySourceTest {
 
     @Test
     public void shouldGetActualValueFromHolder() throws Exception {
-        ZkDynamicPropertySource source = createPropertySource();
-
         String propertyNewValue = "some Value 2";
 
         CountDownLatch propertyAdded = new CountDownLatch(1);
@@ -224,8 +229,6 @@ public class ZkDynamicPropertySourceTest {
 
     @Test
     public void shouldGetDefaultValueFromHolder() throws Exception {
-        ZkDynamicPropertySource source = createPropertySource();
-
         SourcedProperty<String> holder = new SourcedProperty<String>(
                 source,
                 "unknown.property",
@@ -233,14 +236,6 @@ public class ZkDynamicPropertySourceTest {
                 DefaultValue.of("default Value")
         );
         assertEquals("default Value", holder.get());
-    }
-
-    private ZkDynamicPropertySource createPropertySource() throws Exception {
-        return new ZkDynamicPropertySource(
-                zkTestingServer.getClient(),
-                PROPERTIES_LOCATION,
-                new JacksonDynamicPropertyMarshaller()
-        );
     }
 
     private void setServerProperty(String propertyKey, String value) throws Exception {
