@@ -21,6 +21,7 @@ object Vers {
 }
 
 object Libs {
+
     //Plugins
     const val gradle_release_plugin = "ru.fix:gradle-release-plugin:${Vers.gradle_release_plugin}"
     const val dokka_gradle_plugin =  "org.jetbrains.dokka:dokka-gradle-plugin:${Vers.dokkav}"
@@ -32,6 +33,8 @@ object Libs {
     const val kotlin_stdlib = "org.jetbrains.kotlin:kotlin-stdlib:${Vers.kotlin}"
     const val kotlin_jdk8 = "org.jetbrains.kotlin:kotlin-stdlib-jdk8:${Vers.kotlin}"
     const val kotlin_reflect = "org.jetbrains.kotlin:kotlin-reflect:${Vers.kotlin}"
+
+    const val awaitility = "org.awaitility:awaitility:4.0.1"
 
     val jfix_stdlib_concurrency = "ru.fix:jfix-stdlib-concurrency:1.0.49"
 
@@ -64,7 +67,7 @@ object Libs {
     const val junit_api = "org.junit.jupiter:junit-jupiter-api:${Vers.junit}"
     const val junit_engine = "org.junit.jupiter:junit-jupiter-engine:${Vers.junit}"
 
-    const val jfix_zookeeper = "ru.fix:jfix-zookeeper:1.0.4"
+    const val jfix_zookeeper = "ru.fix:jfix-zookeeper:1.0.6"
 }
 
 enum class Projs{

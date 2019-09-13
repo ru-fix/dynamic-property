@@ -1,8 +1,8 @@
 package ru.fix.dynamic.property.zk
 
+import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import ru.fix.dynamic.property.jackson.JacksonDynamicPropertyMarshaller
@@ -12,40 +12,24 @@ import ru.fix.zookeeper.testing.ZKTestingServer
 import java.nio.charset.StandardCharsets
 import java.time.Duration
 import java.time.temporal.ChronoUnit
-import java.util.*
-import java.util.concurrent.*
-import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.atomic.AtomicReference
-import java.util.concurrent.locks.ReentrantLock
-import java.util.function.Supplier
-import kotlin.collections.ArrayList
-import kotlin.concurrent.withLock
+import java.util.concurrent.LinkedBlockingDeque
+import java.util.concurrent.TimeUnit
 
 
 class ZkDynamicPropertySourceTest {
-
     companion object {
-
         private val TEST_PROP_KEY = "test_prop_key"
         private val TEST_PROP_KEY_1 = "test_prop_key_1"
         private val PROPERTIES_LOCATION = "/zookeeper/p"
         private val TIMEOUT_SEC = 10
-
-
-        lateinit var zkTestingServer: ZKTestingServer
-
-        @JvmStatic
-        @BeforeAll
-        fun beforeAll() {
-            zkTestingServer = ZKTestingServer()
-            zkTestingServer.start()
-        }
     }
 
+    private lateinit var zkTestingServer: ZKTestingServer
     private lateinit var source: ZkDynamicPropertySource
 
     @BeforeEach
     fun beforeEach() {
+        zkTestingServer = ZKTestingServer().start()
         source = ZkDynamicPropertySource(
                 zkTestingServer.client,
                 PROPERTIES_LOCATION,
@@ -55,69 +39,52 @@ class ZkDynamicPropertySourceTest {
     }
 
     @AfterEach
-    internal fun afterEach() {
+    fun afterEach() {
         source.close()
+        zkTestingServer.close()
     }
 
     @Test
-    fun shouldIgnoreDefaultValueIfPropertyExists() {
-        val propertyChanged = Semaphore(0)
-        val newPropertySlot = AtomicReference<String>()
+    fun `property exist in store, ignore default value`() {
+        val slot = LinkedBlockingDeque<String>()
 
-        val sub = source.subscribeAndCallListener(
+        setServerProperty("$PROPERTIES_LOCATION/$TEST_PROP_KEY", "some Value")
+
+        val subscription = source.subscribeAndCallListener(
                 TEST_PROP_KEY,
                 String::class.java,
                 DefaultValue.of("zzz")
-        ) { newValue ->
-            newPropertySlot.set(newValue)
-            propertyChanged.release()
-        }
+        ) { slot.add(it) }
 
-        propertyChanged.drainPermits()
-
-        setServerProperty("$PROPERTIES_LOCATION/$TEST_PROP_KEY", "some Value")
-
-        propertyChanged.acquire()
-        assertEquals("some Value", newPropertySlot.get())
+        assertEquals("some Value", slot.removeFirst())
+        assertTrue(slot.isEmpty())
     }
 
     @Test
-    fun shouldFetchActualValueOfProperty() {
+    fun `property exist in store, ignore default value, react on property update`() {
         setServerProperty("$PROPERTIES_LOCATION/$TEST_PROP_KEY", "some Value")
 
-        val firstChange = CountDownLatch(1)
-        val secondChange = CountDownLatch(1)
+        val valueSlot = LinkedBlockingDeque<String>()
 
-        val valueSlot = AtomicReference<String>()
-
-        val sub = source!!.subscribeAndCallListener(
+        val subscription = source.subscribeAndCallListener(
                 TEST_PROP_KEY,
                 String::class.java,
-                DefaultValue.none()
-        ) { value ->
-            valueSlot.set(value)
-            if (1L == firstChange.count) {
-                firstChange.countDown()
-            } else {
-                secondChange.countDown()
-            }
-        }
+                DefaultValue.of("zzz")
+        ) { value -> valueSlot.add(value)}
 
-        firstChange.await()
-        assertEquals("some Value", valueSlot.get())
+        assertEquals("some Value", valueSlot.removeFirst())
 
         changeServerProperty("$PROPERTIES_LOCATION/$TEST_PROP_KEY", "some Value 2")
 
-        secondChange.await()
-        assertEquals("some Value 2", valueSlot.get())
+        assertEquals("some Value 2", valueSlot.takeFirst())
     }
 
 
     @Test
-    fun shouldListenChangeOfProperty() {
+    fun `start with default value and then listen for property creation and change`() {
         val valueSlot = LinkedBlockingDeque<String>()
 
-        val sub = source.subscribeAndCallListener(
+        val subscription = source.subscribeAndCallListener(
                 TEST_PROP_KEY_1,
                 String::class.java,
                 DefaultValue.of("zzz")
@@ -138,34 +105,35 @@ class ZkDynamicPropertySourceTest {
     }
 
     @Test
-    fun shouldListenRemovingOfProperty() {
-        val propertyAdd = CountDownLatch(1)
-        val propertyRemoved = CountDownLatch(1)
-        val sub = source!!.subscribeAndCallListener(
+    fun `property removed from source, use default value`() {
+        val slot = LinkedBlockingDeque<String>()
+
+        val sub = source.subscribeAndCallListener(
                 TEST_PROP_KEY_1,
                 String::class.java,
                 DefaultValue.of("default")
         ) { value ->
-            if ("default" == value) {
-                propertyRemoved.countDown()
-            } else {
-                propertyAdd.countDown()
-            }
+            slot.add(value)
         }
 
+        assertEquals("default", slot.removeFirst())
+        assertTrue(slot.isEmpty())
+
         setServerProperty("$PROPERTIES_LOCATION/$TEST_PROP_KEY_1", "some Value")
-        propertyAdd.await()
+        assertEquals("some Value", slot.takeFirst())
+        assertTrue(slot.isEmpty())
 
         removeServerProperty("$PROPERTIES_LOCATION/$TEST_PROP_KEY_1")
-        assertTrue(propertyRemoved.await(TIMEOUT_SEC.toLong(), TimeUnit.SECONDS))
+        assertEquals("default",  slot.takeFirst())
+        assertTrue(slot.isEmpty())
     }
 
     @Test
-    fun shouldFetchAllProperties() {
+    fun `read all properties`() {
         setServerProperty("$PROPERTIES_LOCATION/propName1", "some Value 1")
         setServerProperty("$PROPERTIES_LOCATION/propName2", "some Value 2")
 
-        val childProperties = source!!.readAllProperties()
+        val childProperties = source.readAllProperties()
         assertNotNull(childProperties)
         assertEquals(2, childProperties.size)
         assertEquals("some Value 1", childProperties["propName1"])
@@ -180,53 +148,36 @@ class ZkDynamicPropertySourceTest {
     }
 
     @Test
-    fun shouldGetActualValueFromHolder() {
-        val propertyNewValue = "some Value 2"
-
-        val propertyAdded = CountDownLatch(1)
-        val propertyRemoved = CountDownLatch(1)
-
-        val sub = source.subscribeAndCallListener(
-                "propName1",
-                String::class.java,
-                DefaultValue.of("default")
-        ) { value ->
-            if (value == "default") {
-                propertyRemoved.countDown()
-            } else {
-                propertyAdded.countDown()
-            }
-        }
+    fun `default value of one holder does not affect default value of another holder`() {
 
         val propertyHolder = SourcedProperty(
                 source,
                 "propName1",
                 String::class.java,
-                DefaultValue.none())
+                DefaultValue.of("defaultHolderValue"))
 
-        retryAssert(null, Supplier { propertyHolder.get() })
+        val propertyHolder2 = SourcedProperty(
+                source,
+                "propName1",
+                String::class.java,
+                DefaultValue.of("defaultHolderValue2"))
 
-        setServerProperty("$PROPERTIES_LOCATION/propName1", propertyNewValue)
-        propertyAdded.await()
-        retryAssert(propertyNewValue, Supplier { propertyHolder.get() })
+        assertEquals("defaultHolderValue", propertyHolder.get())
 
-        removeServerProperty("$PROPERTIES_LOCATION/propName1")
-        propertyRemoved.await()
-        retryAssert(null, Supplier { propertyHolder.get() })
-    }
+        setServerProperty("$PROPERTIES_LOCATION/propName1", "some Value 2")
 
-    fun <T> retryAssert(expectedValue: T?, actualVale: Supplier<T>) {
-        val assertEndTime = System.currentTimeMillis() + TIMEOUT_SEC
-
-        while (System.currentTimeMillis() <= assertEndTime) {
-            if (expectedValue == actualVale.get()) {
-                break
-            }
-            TimeUnit.MICROSECONDS.sleep(100)
+        await().atMost(10, TimeUnit.SECONDS).until {
+            propertyHolder.get() == "some Value 2"
         }
 
-        assertEquals(expectedValue, actualVale.get())
+        removeServerProperty("$PROPERTIES_LOCATION/propName1")
+
+        await().atMost(10, TimeUnit.SECONDS).until {
+            propertyHolder.get() == "defaultHolderValue"
+        }
     }
+
+
 
     @Test
     fun shouldGetDefaultValueFromHolder() {
@@ -241,67 +192,30 @@ class ZkDynamicPropertySourceTest {
 
 
     private fun setServerProperty(propertyKey: String, value: String) {
-        zkTestingServer!!.client.create().creatingParentsIfNeeded().forPath(
-                propertyKey,
-                value.toByteArray(StandardCharsets.UTF_8)
-        )
+        val data = value.toByteArray(StandardCharsets.UTF_8)
+        zkTestingServer.client
+                .create()
+                .creatingParentsIfNeeded()
+                .forPath(propertyKey, data)
+
+        await().atMost(10, TimeUnit.SECONDS).until {
+            zkTestingServer.client
+                    .getData()
+                    .forPath(propertyKey).contentEquals(data)
+        }
+    }
+
+    private fun getServerProperty(propertyKey: String){
+
     }
 
 
     private fun changeServerProperty(propertyKey: String, value: String) {
-        zkTestingServer!!.client.setData().forPath(propertyKey, value.toByteArray(StandardCharsets.UTF_8))
+        zkTestingServer.client.setData().forPath(propertyKey, value.toByteArray(StandardCharsets.UTF_8))
     }
 
 
     private fun removeServerProperty(propertyKey: String) {
-        zkTestingServer!!.client.delete().deletingChildrenIfNeeded().forPath(propertyKey)
+        zkTestingServer.client.delete().deletingChildrenIfNeeded().forPath(propertyKey)
     }
-
-
-}
-
-class AtomicSlot<T : Any?>(value: T? = null) {
-    private val lock = ReentrantLock()
-    private val changed = lock.newCondition()
-    private var ref: T? = value
-    private var version = 0
-
-    fun set(value: T) = lock.withLock {
-        ref = value
-        version++
-        changed.signalAll()
-    }
-
-    fun get() = lock.withLock { ref }
-
-    fun reset() = lock.withLock {
-        ref = null
-        version++
-    }
-
-    fun awaitChange(): Unit = lock.withLock {
-        val currentVersion = version
-        while (currentVersion == version) {
-            changed.await()
-        }
-    }
-
-    fun awaitChange(time: Long, unit: TimeUnit): Boolean = lock.withLock {
-        val currentVersion = version
-        val startTime = System.currentTimeMillis()
-        val timeoutMs = unit.toMillis(time)
-
-        while (currentVersion == version) {
-            val spentTime = System.currentTimeMillis() - startTime
-            val leftToWait = timeoutMs - spentTime
-
-            if (leftToWait <= 0) return@withLock false
-
-            changed.await(leftToWait, TimeUnit.MILLISECONDS)
-        }
-
-        return@withLock true
-    }
-
-
 }

@@ -22,4 +22,5 @@ dependencies {
     testImplementation(Libs.jfix_zookeeper)
     testImplementation(Libs.slf4j_over_log4j)
     testImplementation(Libs.log4j_core)
+    testImplementation(Libs.awaitility)
 }
