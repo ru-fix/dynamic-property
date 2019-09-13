@@ -27,5 +27,8 @@ public class PolledProperty<T> extends AtomicProperty<T>
         }
     }
 
-
+    @Override
+    public void close() {
+        super.close();
+    }
 }

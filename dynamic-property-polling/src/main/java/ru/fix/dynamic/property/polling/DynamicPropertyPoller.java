@@ -13,7 +13,7 @@ import java.util.WeakHashMap;
 import java.util.function.Supplier;
 
 public class DynamicPropertyPoller implements AutoCloseable {
-    private WeakHashMap<PolledProperty, Supplier> properties = new WeakHashMap<>();
+    private WeakHashMap<PolledProperty, Void> properties = new WeakHashMap<>();
     private ReschedulableScheduler scheduler;
     private DynamicProperty<Schedule> delay;
 
@@ -54,7 +54,7 @@ public class DynamicPropertyPoller implements AutoCloseable {
         PolledProperty<DType> property = new PolledProperty<>(retriever);
         property.poll();
         synchronized(properties) {
-            properties.put(property, retriever);
+            properties.put(property, null);
         }
         return property;
     }
