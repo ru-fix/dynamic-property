@@ -53,6 +53,8 @@ class ZkDynamicPropertySource(
                 zookeeperConfigPath
             }
 
+    private val rootPathPrefix = "$rootPath/"
+
     init {
 
         if (curatorFramework.state == CuratorFrameworkState.LATENT) {
@@ -133,6 +135,11 @@ class ZkDynamicPropertySource(
 
     private fun onZkTreeChanged(treeCacheEvent: TreeCacheEvent, newValue: String?) {
         val absolutePath = treeCacheEvent.data.path
+        if (!absolutePath.startsWith(rootPathPrefix)) {
+            return
+        }
+
+
         val propertyName = getPropertyNameFromAbsolutePath(absolutePath)
 
         log.info("Event type {} for node '{}'. New value is '{}'", treeCacheEvent.type, absolutePath, newValue)
