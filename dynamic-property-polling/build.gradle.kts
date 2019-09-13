@@ -7,15 +7,19 @@ plugins {
 }
 
 dependencies {
+    api(project(Projs.dynamic_property_api.dependency))
+    implementation(Libs.jfix_stdlib_concurrency){
+        exclude("ru.fix")
+    }
+
     testImplementation(Libs.junit_api)
     testRuntimeOnly(Libs.junit_engine)
-    testCompile(Libs.kotlin_jdk8)
-    testCompile(Libs.kotlin_stdlib)
-    testCompile(Libs.kotlin_reflect)
-    compile(Libs.jfix_stdlib_concurrency)
-    compile(project(":dynamic-property-api"))
+    testImplementation(Libs.kotlin_jdk8)
+    testImplementation(Libs.kotlin_stdlib)
+    testImplementation(Libs.kotlin_reflect)
 
-    testCompile(Libs.slf4j_simple)
+    testImplementation(Libs.slf4j_over_log4j)
+    testImplementation(Libs.log4j_core)
 }
 
 
