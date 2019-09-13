@@ -21,7 +21,6 @@ class ZkDynamicPropertySourceTest {
         private val TEST_PROP_KEY = "test_prop_key"
         private val TEST_PROP_KEY_1 = "test_prop_key_1"
         private val PROPERTIES_LOCATION = "/zookeeper/p"
-        private val TIMEOUT_SEC = 10
     }
 
     private lateinit var zkTestingServer: ZKTestingServer
@@ -178,7 +177,6 @@ class ZkDynamicPropertySourceTest {
     }
 
 
-
     @Test
     fun shouldGetDefaultValueFromHolder() {
         val holder = SourcedProperty(
@@ -204,11 +202,6 @@ class ZkDynamicPropertySourceTest {
                     .forPath(propertyKey).contentEquals(data)
         }
     }
-
-    private fun getServerProperty(propertyKey: String){
-
-    }
-
 
     private fun changeServerProperty(propertyKey: String, value: String) {
         zkTestingServer.client.setData().forPath(propertyKey, value.toByteArray(StandardCharsets.UTF_8))
