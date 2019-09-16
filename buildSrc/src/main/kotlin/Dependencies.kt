@@ -61,10 +61,6 @@ object Libs {
 
     const val hamkrest = "com.natpryce:hamkrest:1.7.0.0"
 
-    const val mockito = "org.mockito:mockito-all:1.10.19"
-    const val mockito_kotiln = "com.nhaarman:mockito-kotlin-kt1.1:1.5.0"
-    const val kotlin_logging = "io.github.microutils:kotlin-logging:1.4.9"
-
     const val junit_api = "org.junit.jupiter:junit-jupiter-api:${Vers.junit}"
     const val junit_engine = "org.junit.jupiter:junit-jupiter-engine:${Vers.junit}"
 
