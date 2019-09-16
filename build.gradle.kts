@@ -6,6 +6,8 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 import org.asciidoctor.gradle.AsciidoctorTask
+import java.time.Duration
+import java.time.temporal.ChronoUnit
 
 buildscript {
     repositories {
@@ -108,9 +110,9 @@ subprojects {
                 username.set("$repositoryUser")
                 password.set("$repositoryPassword")
                 useStaging.set(true)
-                stagingProfileId.set("1f0730098fd259")
             }
         }
+        clientTimeout.set(Duration.of(3, ChronoUnit.MINUTES))
     }
 
     project.afterEvaluate {
