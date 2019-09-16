@@ -1,5 +1,8 @@
 package ru.fix.dynamic.property.api;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
@@ -43,6 +46,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * @author Kamil Asfandiyarov
  */
 public class AtomicProperty<T> implements DynamicProperty<T> {
+    private static final Logger log = LoggerFactory.getLogger(AtomicProperty.class);
 
     private final AtomicReference<T> holder = new AtomicReference<>();
     private final List<DynamicPropertyListener<T>> listeners = new CopyOnWriteArrayList<>();
@@ -56,7 +60,13 @@ public class AtomicProperty<T> implements DynamicProperty<T> {
 
     public void set(T value) {
         holder.set(value);
-        listeners.forEach(listener -> listener.onPropertyChanged(value));
+        listeners.forEach(listener -> {
+            try {
+                listener.onPropertyChanged(value);
+            } catch (Exception exc) {
+                log.error("Failed to notify listener on property change. New value {}.", value, exc);
+            }
+        });
     }
 
     @Override
