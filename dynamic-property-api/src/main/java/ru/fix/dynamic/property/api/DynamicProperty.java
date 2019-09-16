@@ -126,6 +126,17 @@ public interface DynamicProperty<T> extends AutoCloseable {
     }
 
 
+    /**
+     * Builds one property based on another.
+     * <pre>{@code
+     *  val stringProperty: DynamicProperty<String>
+     *  val service = ServiceThatRequiresIntProperty( stringProperty.map { str -> str.toInt() } )
+     * }</pre>
+     * <pre>{@code
+     *  val bigConfigProperty: DynamicProperty<BigConfig>
+     *  val service = ServiceThatRequiresTimeoutInMilliseconds( bigConfigProperty.map { config -> config.timeoutInSeconds * 1000 } )
+     * }</pre>
+     */
     default <R> DynamicProperty<R> map(Function<T, R> map) {
         return new MappedProperty<>(this, map);
     }
