@@ -68,7 +68,7 @@ object Libs {
     const val junit_api = "org.junit.jupiter:junit-jupiter-api:${Vers.junit}"
     const val junit_engine = "org.junit.jupiter:junit-jupiter-engine:${Vers.junit}"
 
-    const val jfix_zookeeper = "ru.fix:jfix-zookeeper:1.0.6"
+    const val jfix_zookeeper = "ru.fix:jfix-zookeeper:1.0.7"
 }
 
 enum class Projs{
