@@ -9,6 +9,7 @@ import ru.fix.stdlib.concurrency.threads.ReschedulableScheduler;
 import ru.fix.stdlib.concurrency.threads.Schedule;
 
 import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.WeakHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -34,6 +35,14 @@ public class DynamicPropertyPoller implements AutoCloseable {
                 0,
                 this::pollAll);
         this.shutdownDelay = shutdownTimeout;
+    }
+
+    /**
+     * @see DynamicPropertyPoller#DynamicPropertyPoller(ReschedulableScheduler, DynamicProperty, DynamicProperty)
+     */
+    public DynamicPropertyPoller(ReschedulableScheduler scheduler,
+                                 DynamicProperty<Schedule> pollingSchedule) {
+        this(scheduler, pollingSchedule, DynamicProperty.of(Duration.of(5, ChronoUnit.MINUTES)));
     }
 
     @Override

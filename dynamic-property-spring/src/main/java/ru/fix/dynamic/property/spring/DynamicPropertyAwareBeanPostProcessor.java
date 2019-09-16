@@ -3,7 +3,7 @@ package ru.fix.dynamic.property.spring;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.beans.factory.config.DestructionAwareBeanPostProcessor;
 import org.springframework.util.ReflectionUtils;
 import ru.fix.dynamic.property.api.DynamicProperty;
 import ru.fix.dynamic.property.api.DynamicPropertySource;
@@ -14,35 +14,55 @@ import ru.fix.dynamic.property.source.SourcedProperty;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Objects;
+import java.util.WeakHashMap;
 import java.util.concurrent.atomic.LongAdder;
 
 /**
  * @author Kamil Asfandiyarov
  */
-public class DynamicPropertyAwareBeanPostProcessor implements BeanPostProcessor {
+public class DynamicPropertyAwareBeanPostProcessor implements DestructionAwareBeanPostProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(DynamicPropertyAwareBeanPostProcessor.class);
 
     private DynamicPropertySource propertySource;
     private LongAdder processingTime = new LongAdder();
 
+    private Map<Object, Object> constructedObjects = Collections.synchronizedMap(new WeakHashMap<>());
+
     public DynamicPropertyAwareBeanPostProcessor(DynamicPropertySource propertySource) {
         this.propertySource = propertySource;
+    }
+
+    @FunctionalInterface
+    private interface AnnotatedBeanProcessor {
+        void process(Object bean, Field field, PropertyId annotation) throws Exception;
+    }
+
+    private void doWithAnnotatedFields(Object bean, AnnotatedBeanProcessor fieldProcessor) {
+        ReflectionUtils.doWithFields(bean.getClass(), field -> {
+            field.setAccessible(true);
+
+            PropertyId propertyIdAnnotation = field.getAnnotation(PropertyId.class);
+            if (Objects.nonNull(propertyIdAnnotation)) {
+                try {
+                    fieldProcessor.process(bean, field, propertyIdAnnotation);
+                } catch (Exception e) {
+                    log.error("Failed to process bean {} field {} with annotation {}", bean, field, propertyIdAnnotation);
+                }
+            }
+        });
+
     }
 
     @Override
     public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
         final long startTime = System.currentTimeMillis();
 
-        ReflectionUtils.doWithFields(bean.getClass(), field -> {
-
-            field.setAccessible(true);
-
-            PropertyId propertyIdAnnotation = field.getAnnotation(PropertyId.class);
-            if (Objects.nonNull(propertyIdAnnotation)) {
-                field.set(bean, processDynamicProperty(bean, field, propertyIdAnnotation, beanName));
-            }
+        doWithAnnotatedFields(bean, (a_bean, field, annotation) -> {
+            field.set(bean, processDynamicProperty(a_bean, field, annotation, beanName));
         });
 
         final long currentProcessingTime = System.currentTimeMillis() - startTime;
@@ -51,6 +71,8 @@ public class DynamicPropertyAwareBeanPostProcessor implements BeanPostProcessor 
                         "Sum of processing times is equal {} ms now.",
                 beanName, currentProcessingTime, processingTime.sum()
         );
+
+        constructedObjects.put(bean, null);
 
         return bean;
     }
@@ -99,7 +121,7 @@ public class DynamicPropertyAwareBeanPostProcessor implements BeanPostProcessor 
             log.error("Error occurred when extracting value from field {}", field.getName());
         }
 
-        if(dynamicProperty != null){
+        if (dynamicProperty != null) {
             return DefaultValue.of(dynamicProperty.get());
         } else {
             return DefaultValue.none();
@@ -109,5 +131,25 @@ public class DynamicPropertyAwareBeanPostProcessor implements BeanPostProcessor 
     @Override
     public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
         return bean;
+    }
+
+    @Override
+    public boolean requiresDestruction(Object bean) {
+        return constructedObjects.containsKey(bean);
+    }
+
+    @Override
+    public void postProcessBeforeDestruction(Object bean, String beanName) throws BeansException {
+        if (!constructedObjects.containsKey(bean)) {
+            return;
+        }
+
+        doWithAnnotatedFields(bean, (a_bean, field, annotation) -> {
+            DynamicProperty property = (DynamicProperty) field.get(a_bean);
+            if (property != null) {
+                property.close();
+            }
+        });
+        constructedObjects.remove(bean);
     }
 }

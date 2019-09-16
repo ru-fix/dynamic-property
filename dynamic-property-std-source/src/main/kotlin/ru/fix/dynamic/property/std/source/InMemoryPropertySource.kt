@@ -4,7 +4,7 @@ import ru.fix.dynamic.property.api.marshaller.DynamicPropertyMarshaller
 import ru.fix.stdlib.concurrency.threads.ReferenceCleaner
 
 
-class InMemoryPropertySource(
+open class InMemoryPropertySource(
         private val marshaller: DynamicPropertyMarshaller,
         private val referenceCleaner: ReferenceCleaner = ReferenceCleaner.getInstance()) :
         AbstractPropertySource(marshaller, referenceCleaner) {
