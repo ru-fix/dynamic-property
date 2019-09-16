@@ -121,6 +121,9 @@ public interface DynamicProperty<T> extends AutoCloseable {
     DynamicProperty<T> removeListener(DynamicPropertyListener<T> listener);
 
 
+    /**
+     * @return DynamicProperty that holds given value and never changes
+     */
     static <T> DynamicProperty<T> of(T value) {
         return new ConstantProperty<>(value);
     }
