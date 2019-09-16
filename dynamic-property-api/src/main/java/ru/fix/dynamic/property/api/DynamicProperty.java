@@ -125,9 +125,6 @@ public interface DynamicProperty<T> extends AutoCloseable {
         return new ConstantProperty<>(value);
     }
 
-    static <T> DynamicProperty<T> of(Supplier<T> supplier) {
-        return new ConstantProperty<>(supplier.get());
-    }
 
     default <R> DynamicProperty<R> map(Function<T, R> map) {
         return new MappedProperty<>(this, map);
