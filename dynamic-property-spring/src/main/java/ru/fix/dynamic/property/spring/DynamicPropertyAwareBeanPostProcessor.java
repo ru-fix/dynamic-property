@@ -9,6 +9,7 @@ import ru.fix.dynamic.property.api.DynamicProperty;
 import ru.fix.dynamic.property.api.DynamicPropertySource;
 import ru.fix.dynamic.property.api.annotation.PropertyId;
 import ru.fix.dynamic.property.source.DefaultValue;
+import ru.fix.dynamic.property.source.DynamicPropertyNotFoundException;
 import ru.fix.dynamic.property.source.SourcedProperty;
 
 import java.lang.reflect.Field;
@@ -38,7 +39,7 @@ public class DynamicPropertyAwareBeanPostProcessor implements DestructionAwareBe
 
     @FunctionalInterface
     private interface AnnotatedBeanProcessor {
-        void process(Object bean, Field field, PropertyId annotation) throws Exception;
+        void process(Object bean, Field field, PropertyId annotation) throws IllegalAccessException, DynamicPropertyNotFoundException;
     }
 
     private void doWithAnnotatedFields(Object bean, AnnotatedBeanProcessor fieldProcessor) {
@@ -49,8 +50,13 @@ public class DynamicPropertyAwareBeanPostProcessor implements DestructionAwareBe
             if (Objects.nonNull(propertyIdAnnotation)) {
                 try {
                     fieldProcessor.process(bean, field, propertyIdAnnotation);
-                } catch (Exception e) {
-                    log.error("Failed to process bean {} field {} with annotation {}", bean, field, propertyIdAnnotation);
+                } catch (Exception exc) {
+                    log.error("Failed to process bean {} field {} with annotation {}",
+                            bean,
+                            field,
+                            propertyIdAnnotation,
+                            exc);
+                    throw exc;
                 }
             }
         });
@@ -143,7 +149,6 @@ public class DynamicPropertyAwareBeanPostProcessor implements DestructionAwareBe
         if (!constructedObjects.containsKey(bean)) {
             return;
         }
-
         doWithAnnotatedFields(bean, (a_bean, field, annotation) -> {
             DynamicProperty property = (DynamicProperty) field.get(a_bean);
             if (property != null) {
