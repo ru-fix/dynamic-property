@@ -21,7 +21,7 @@ import java.util.function.Supplier;
  * }</pre>
  * Different implementations provides different guarantees
  * in terms of atomicity subscription and listener invocation.<br>
- *
+ * <p>
  * Be aware of awkward behaviour due to a concurrent nature of dynamic property.<br>
  * Check for {@link DynamicProperty} implementation documentation
  * to clarify how and in which thread implementation invokes listeners.<br>
@@ -78,7 +78,7 @@ import java.util.function.Supplier;
  * }
  * }</pre>
  */
-public interface DynamicProperty<T>  extends AutoCloseable{
+public interface DynamicProperty<T> extends AutoCloseable {
 
     /**
      * @return current value of property
@@ -86,10 +86,14 @@ public interface DynamicProperty<T>  extends AutoCloseable{
     T get();
 
     /**
-     * Add listener to dynamic property
+     * Add listener to dynamic property. <br>
+     * It is implementation specific in what thread the listener will be invoked after subscription. <br>
+     * Be aware that usage of this method could lead to awkward behaviour in term of concurrency. <br>
+     * See DynamicProperty interface documentation for details.
+     * It is recommended to use {@link #addAndCallListener(DynamicPropertyListener)} that has more fine granted behaviour
+     * in term of concurrency and order of subscription and receiving notification.
      *
      * @param listener Listener is activated whenever property value changes.
-     *                 It is implementation specific in what thread listener will be invoked.
      */
     DynamicProperty<T> addListener(DynamicPropertyListener<T> listener);
 
@@ -115,7 +119,6 @@ public interface DynamicProperty<T>  extends AutoCloseable{
      * Unregister listener from the property.
      */
     DynamicProperty<T> removeListener(DynamicPropertyListener<T> listener);
-
 
 
     static <T> DynamicProperty<T> of(T value) {
