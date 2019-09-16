@@ -30,6 +30,7 @@ public class SourcedProperty<T> implements DynamicProperty<T> {
     private final List<DynamicPropertyListener<T>> listeners = new CopyOnWriteArrayList<>();
 
     private final DynamicPropertySource propertySource;
+    private final DynamicPropertySource.Subscription subscription;
 
     public SourcedProperty(DynamicPropertySource propertySource,
                            String name,
@@ -39,7 +40,7 @@ public class SourcedProperty<T> implements DynamicProperty<T> {
         this.type = type;
         this.propertySource = propertySource;
 
-        propertySource.subscribeAndCallListener(
+        subscription = propertySource.subscribeAndCallListener(
                 this.name,
                 this.type,
                 defaultValue,
@@ -95,9 +96,8 @@ public class SourcedProperty<T> implements DynamicProperty<T> {
 
     @Override
     public void close() {
-        //TODO:
-//        propertySource.removeListener()
-
+        this.subscription.close();
+        listeners.clear();
     }
 
     @Override
