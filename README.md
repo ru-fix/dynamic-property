@@ -13,8 +13,8 @@ class MyService{
     lateinit var setting: DynamicProperty<Setting> 
     
     init {
-        setting.addListener { newSetting ->
-            //update service state on settings change  
+        setting.addAndCallListener { newSetting ->
+            //initialize or update service state on settings change  
         }
     }
     
@@ -78,12 +78,12 @@ DynamicPropertyPoller poller = DynamicPropertyPoller(
 
 
 class UserClassWithDynamicPropertiesBackedByCustomDataSource {
-  DynamicProperty myProperty;
+  DynamicProperty<String> myProperty;
 
   public UserClass(DynamicPropertyPoller poller){
-     myProperty = poller.createProperty(()-> myBattsDatabaseMapper.selectValue(...));
-     myProperty.addListener(()->{
-         //on property changed
+     myProperty = poller.createProperty(()-> myDaoService.loadValueFromDatabase(...));
+     myProperty.addAndCallListener( value -> {
+         //init or update state based on property value
          ...
      });
   }
