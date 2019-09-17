@@ -15,6 +15,13 @@ class DynamicPropertyTest {
     }
 
     @Test
+    fun add_listener_and_get() {
+        val property = DynamicProperty.of(122)
+        val value = property.addListener { println(it) }.get()
+        assertEquals(122, value)
+    }
+
+    @Test
     fun atomic_property() {
 
         val property = AtomicProperty(122)

@@ -1,5 +1,5 @@
 rootProject.name = "dynamic-property"
-include("dynamic-property-api")
-include("dynamic-property-zk")
-include("dynamic-property-spring")
-include("dynamic-property-jackson")
+
+Projs.values().forEach {
+    include(it.directory)
+}

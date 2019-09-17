@@ -8,13 +8,19 @@ plugins {
 
 dependencies {
 
-    compile(Libs.curator_recipes)
-    compile(project(":dynamic-property-api"))
-    compile(project(":dynamic-property-jackson"))
+    api(project(Projs.dynamic_property_api.dependency))
+
+    implementation(Libs.curator_recipes)
+    implementation(Libs.jfix_stdlib_concurrency){
+        exclude("ru.fix", "dynamic-property-api")
+    }
+    implementation(project(Projs.dynamic_property_jackson.dependency))
+    implementation(project(Projs.dynamic_property_std_source.dependency))
 
     testImplementation(Libs.junit_api)
     testRuntimeOnly(Libs.junit_engine)
-    testCompile(Libs.jfix_zookeeper)
-
-    testCompile(Libs.slf4j_simple)
+    testImplementation(Libs.jfix_zookeeper)
+    testImplementation(Libs.slf4j_over_log4j)
+    testImplementation(Libs.log4j_core)
+    testImplementation(Libs.awaitility)
 }

@@ -1,68 +1,106 @@
 package ru.fix.dynamic.property.polling;
 
-/**
- *
- * @author Andrey Kiselev
- */
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import ru.fix.dynamic.property.api.AtomicProperty;
 import ru.fix.dynamic.property.api.DynamicProperty;
 import ru.fix.stdlib.concurrency.threads.ReschedulableScheduler;
 import ru.fix.stdlib.concurrency.threads.Schedule;
 
-import java.util.Map;
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.WeakHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 public class DynamicPropertyPoller implements AutoCloseable {
-    private Map<PolledProperty, Supplier> properties = new WeakHashMap<>();
+    private static final Logger log = LoggerFactory.getLogger(DynamicPropertyPoller.class);
+
+    private WeakHashMap<AtomicProperty, Supplier> properties = new WeakHashMap<>();
     private ReschedulableScheduler scheduler;
-    private DynamicProperty<Schedule> delay;
+    private DynamicProperty<Duration> shutdownDelay;
 
+    /**
+     * @param scheduler
+     * @param pollingSchedule how often properties values will be polled by retrievers
+     * @param shutdownTimeout how log {@link #close()} will wait for polling process to stop
+     */
     public DynamicPropertyPoller(ReschedulableScheduler scheduler,
-                                 DynamicProperty<Schedule> delay) {
+                                 DynamicProperty<Schedule> pollingSchedule,
+                                 DynamicProperty<Duration> shutdownTimeout) {
         this.scheduler = scheduler;
-        this.delay = delay;
-        
-        this.delay.addListener(newRate -> {
-                this.scheduler.shutdown();
-                this.scheduler.schedule(
-                    () -> newRate,
-                    0,
-                    this::pollAll);
-            });
-
         this.scheduler.schedule(
-            delay,
-            0,
-            this::pollAll);
+                pollingSchedule,
+                0,
+                this::pollAll);
+        this.shutdownDelay = shutdownTimeout;
+    }
+
+    /**
+     * @see DynamicPropertyPoller#DynamicPropertyPoller(ReschedulableScheduler, DynamicProperty, DynamicProperty)
+     */
+    public DynamicPropertyPoller(ReschedulableScheduler scheduler,
+                                 DynamicProperty<Schedule> pollingSchedule) {
+        this(scheduler, pollingSchedule, DynamicProperty.of(Duration.of(5, ChronoUnit.MINUTES)));
     }
 
     @Override
     public void close() {
-        this.scheduler.shutdown();
-        synchronized(properties) {
+        synchronized (properties) {
             this.properties.clear();
         }
-    }
-    
-    private void pollAll() {
-        synchronized(properties) {
-            properties.forEach((k, v) ->  k.poll());
+        this.scheduler.shutdown();
+        try {
+            if (!this.scheduler.awaitTermination(shutdownDelay.get().toMillis(), TimeUnit.MILLISECONDS)) {
+                log.error("Failed to await termination for {}", shutdownDelay.get());
+                this.scheduler.shutdownNow();
+            }
+        } catch (InterruptedException exc) {
+            log.error("Failed to properly close poller", exc);
         }
     }
-    
-    public <DType> PolledProperty<DType> createProperty(Supplier<DType> retriever) {
-        PolledProperty<DType> property = new PolledProperty<>(retriever);
-        property.poll();
-        synchronized(properties) {
+
+    private void pollAll() {
+        synchronized (properties) {
+            properties.forEach((property, retriever) -> {
+                retrieveAndUpdatePropertyValue(property, retriever);
+            });
+        }
+    }
+
+    private void retrieveAndUpdatePropertyValue(AtomicProperty property, Supplier retriever) {
+        try {
+            Object value = retriever.get();
+            property.set(value);
+        } catch (Exception exc) {
+            log.error("Failed to retrieve and update property", exc);
+        }
+    }
+
+    class PolledProperty<T> extends AtomicProperty<T> {
+        @Override
+        public void close() {
+            deleteProperty(this);
+            super.close();
+        }
+    }
+
+    public <T> DynamicProperty<T> createProperty(Supplier<T> retriever) {
+        PolledProperty<T> property = new PolledProperty<T>();
+
+        synchronized (properties) {
             properties.put(property, retriever);
         }
+
+        retrieveAndUpdatePropertyValue(property, retriever);
+
         return property;
     }
 
-    public void deleteProperty(PolledProperty pp) {
-        synchronized(properties) {
-            properties.remove(pp);
+    public void deleteProperty(DynamicProperty polledProperty) {
+        synchronized (properties) {
+            properties.remove(polledProperty);
         }
     }
 }
