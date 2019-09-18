@@ -36,7 +36,7 @@ object Libs {
     const val mockk = "io.mockk:mockk:1.9.3"
     const val awaitility = "org.awaitility:awaitility:4.0.1"
 
-    val jfix_stdlib_concurrency = "ru.fix:jfix-stdlib-concurrency:1.0.54"
+    val jfix_stdlib_concurrency = "ru.fix:jfix-stdlib-concurrency:1.0.56"
     val aggregating_profiler = "ru.fix:aggregating-profiler:1.5.16"
 
     const val slf4j_api = "org.slf4j:slf4j-api:${Vers.sl4j}"
