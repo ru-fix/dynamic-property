@@ -1,15 +1,20 @@
 package ru.fix.dynamic.property.api;
 
+import ru.fix.dynamic.property.api.source.DynamicPropertySource;
+
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
- * Holds property value and notify listeners when value is changed.<br>
- * Implementation should provide thread safe access to property value.<br>
+ * Holds property value and notifies listeners when value is changed.<br>
+ * Implementation should provide thread safe access to property value via {@link #get()}.<br>
+ * Be aware that it is allowed for implementation not to implement listeners functionality. <br>
+ * In case of {@link #of(Supplier)} returned {@link DynamicProperty} will allow to subscribe but actually
+ * does not provide listeners functionality and does not invoke client listeners. <br>
  * <br>
- * Example of service initialization and subscription<br>
- * <pre>
- * {@code
+ * Use {@link #addAndCallListener(DynamicPropertyListener)} to reuse same code block during first initialization
+ * and consequence updates: <br>
+ * <pre>{@code
  * MyService(DynamicProperty<String> property){
  *     property.addAndCallListener{ value ->
  *          // initialisation or reconfiguration logic
@@ -19,6 +24,18 @@ import java.util.function.Supplier;
  *     }
  * }
  * }</pre>
+ *
+ * Use {@link #get()} for thread safe access to current property value
+ * <pre>{@code
+ * val messageTemplate: DynamicProperty<String>
+ * fun doWork(){
+ *      ...
+ *     val message = buildMessage(messageTemplate.get())
+ *     ...
+ * }
+ * }</pre>
+ *
+ *
  * Different implementations provides different guarantees
  * in terms of atomicity subscription and listener invocation.<br>
  * <p>
@@ -30,8 +47,7 @@ import java.util.function.Supplier;
  * Suppose that current value of the property is 1.<br>
  * Value of property in the {@link DynamicProperty} implementation storage was changed from 1 to 2.<br>
  * Bad example of service initialization:<br>
- * <pre>
- * {@code
+ * <pre>{@code
  * // DO NOT DO THAT
  * MyService(DynamicProperty property){
  *     val value = property.get()
@@ -48,8 +64,7 @@ import java.util.function.Supplier;
  * Suppose that current value of the property is 1.<br>
  * Value of property in the {@link DynamicProperty} implementation storage was changed from 1 to 2.<br>
  * Example of service initialization with concurrent execution problem
- * <pre>
- * {@code
+ * <pre>{@code
  * // DO NOT DO THAT
  * MyService(DynamicProperty property){
  *     property.addListener{ newValue -> initialize(newValue) }
@@ -128,6 +143,39 @@ public interface DynamicProperty<T> extends AutoCloseable {
         return new ConstantProperty<>(value);
     }
 
+    /**
+     * Be aware that DynamicProperty created this way
+     * does not notify listeners through {@link java.beans.PropertyChangeListener}
+     * @return DynamicProperty proxy. All requests to {@link DynamicProperty#get()}
+     * will be delegated to {@link Supplier#get()} method of given supplier.
+     * <pre>{@code
+     *
+     * class Foo(supplier: Supplier<String>){
+     *     // will break since bar is actually needs listener support
+     *     val bar = Bar(DynamicProperty.of(supplier))
+     *
+     *     // will work correctly
+     *     val baz = Baz(DynamicProperty.of(supplier))
+     * }
+     *
+     * class Bar(property: DynamicProperty<String>){
+     *     property.addListener{value -> ...}
+     * }
+     *
+     * class Baz(property: DynamicProperty<String>){
+     *     fun doWork(){
+     *          if(property.get().contains(...))
+     *     }
+     * }
+     *
+     * }</pre>
+     * If you need a DynamicProperty with full listeners support backed up by {@link Supplier}
+     * use DynamicPropertyPoller instead
+     * @see ru.fix.dynamic.property.polling.DynamicPropertyPoller
+     */
+    static <T> DynamicProperty<T> of(Supplier<T> supplier) {
+        return new SuppliedProperty<>(supplier);
+    }
 
     /**
      * Builds one property based on another.

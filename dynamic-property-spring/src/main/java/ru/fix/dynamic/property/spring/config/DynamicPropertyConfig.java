@@ -3,7 +3,7 @@ package ru.fix.dynamic.property.spring.config;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import ru.fix.dynamic.property.api.DynamicPropertySource;
+import ru.fix.dynamic.property.api.source.DynamicPropertySource;
 import ru.fix.dynamic.property.spring.DynamicPropertyAwareBeanPostProcessor;
 
 /**

@@ -5,8 +5,8 @@ import ru.fix.stdlib.concurrency.threads.ReferenceCleaner
 
 
 open class InMemoryPropertySource(
-        private val marshaller: DynamicPropertyMarshaller,
-        private val referenceCleaner: ReferenceCleaner = ReferenceCleaner.getInstance()) :
+        marshaller: DynamicPropertyMarshaller,
+        referenceCleaner: ReferenceCleaner = ReferenceCleaner.getInstance()) :
         AbstractPropertySource(marshaller, referenceCleaner) {
 
     private val properties = HashMap<String, String>()
@@ -17,5 +17,15 @@ open class InMemoryPropertySource(
         invokePropertyListener(key, value)
     }
 
+    @Synchronized
+    fun remove(key: String) {
+        properties.remove(key)
+        invokePropertyListener(key, null)
+    }
+
+    fun propertyNames(): Set<String> = properties.keys
+
     protected override fun getPropertyValue(propertyName: String) = properties[propertyName]
+
+
 }

@@ -14,6 +14,19 @@ import java.util.WeakHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
+/**
+ * Creates {@link DynamicProperty} backed up by {@link Supplier}.<br>
+ * Single thread will regularly pool data from {@link Supplier} and will notify {@link DynamicProperty} listeners
+ * about property change if any.<br>
+ * Be aware that such {@link DynamicProperty} instance could miss changes that could occur behind the {@link Supplier}.<br>
+ * Suppose that {@link DynamicPropertyPoller} polls {@link Supplier} each 10 minute. <br>
+ * At 10:00 {@link DynamicPropertyPoller} gets value 120.<br>
+ * At 10:03 the source behind {@link Supplier} changes value from 123 to 140<br>
+ * At 10:10 {@link DynamicPropertyPoller} gets value 140 and notifies {@link DynamicProperty} listeners about the change.<br>
+ * At 10:14 the source behind {@link Supplier} changes value from 140 to 175<br>
+ * At 10:16 the source behind {@link Supplier} changes value from 175 back to 140<br>
+ * At 10:20 {@link DynamicPropertyPoller} gets value 140 and does not notifies anyone.<br>
+ */
 public class DynamicPropertyPoller implements AutoCloseable {
     private static final Logger log = LoggerFactory.getLogger(DynamicPropertyPoller.class);
 

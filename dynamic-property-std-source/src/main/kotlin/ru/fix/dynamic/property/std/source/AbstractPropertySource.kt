@@ -2,10 +2,10 @@ package ru.fix.dynamic.property.std.source
 
 import org.slf4j.LoggerFactory
 import ru.fix.dynamic.property.api.DynamicPropertyListener
-import ru.fix.dynamic.property.api.DynamicPropertySource
+import ru.fix.dynamic.property.api.source.DynamicPropertySource
 import ru.fix.dynamic.property.api.marshaller.DynamicPropertyMarshaller
-import ru.fix.dynamic.property.source.DefaultValue
-import ru.fix.dynamic.property.source.DynamicPropertyNotFoundException
+import ru.fix.dynamic.property.api.source.OptionalDefaultValue
+import ru.fix.dynamic.property.api.source.DynamicPropertyValueNotFoundException
 import ru.fix.stdlib.concurrency.threads.CleanableWeakReference
 import ru.fix.stdlib.concurrency.threads.ReferenceCleaner
 import java.util.concurrent.ConcurrentHashMap
@@ -22,7 +22,7 @@ abstract class AbstractPropertySource(
     private inner class Subscription(
             val propertyName: String,
             val propertyType: Class<Any>,
-            val defaultValue: DefaultValue<*>,
+            val defaultValue: OptionalDefaultValue<*>,
             val listener: DynamicPropertyListener<Any>) : DynamicPropertySource.Subscription {
 
         lateinit var cleanableReference: CleanableWeakReference<Subscription>
@@ -74,6 +74,7 @@ abstract class AbstractPropertySource(
 
     /**
      * @param newSerializedValue if null then property will be changed to default value
+     *                           if default value is absent, then property does not receive an update
      */
     protected fun invokePropertyListener(propertyName: String, newSerializedValue: String?) {
         Subscriptions[propertyName]?.forEach { subRef, _ ->
@@ -98,7 +99,7 @@ abstract class AbstractPropertySource(
     override fun <T> subscribeAndCallListener(
             propertyName: String,
             propertyType: Class<T>,
-            defaultValue: DefaultValue<T>,
+            defaultValue: OptionalDefaultValue<T>,
             listener: DynamicPropertyListener<T>): DynamicPropertySource.Subscription {
 
         val subscription = Subscription(
@@ -126,7 +127,7 @@ abstract class AbstractPropertySource(
             } ?: if (subscription.defaultValue.isPresent) {
                 subscription.defaultValue.get() as T
             } else {
-                throw DynamicPropertyNotFoundException(subscription.propertyName, subscription.propertyType)
+                throw DynamicPropertyValueNotFoundException(subscription.propertyName, subscription.propertyType)
             }
 
     override fun close() {

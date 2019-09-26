@@ -11,10 +11,10 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
 import ru.fix.dynamic.property.api.DynamicProperty
 import ru.fix.dynamic.property.api.DynamicPropertyListener
-import ru.fix.dynamic.property.api.DynamicPropertySource
+import ru.fix.dynamic.property.api.source.DynamicPropertySource
 import ru.fix.dynamic.property.api.annotation.PropertyId
 import ru.fix.dynamic.property.jackson.JacksonDynamicPropertyMarshaller
-import ru.fix.dynamic.property.source.DefaultValue
+import ru.fix.dynamic.property.api.source.OptionalDefaultValue
 import ru.fix.dynamic.property.spring.config.DynamicPropertyConfig
 import ru.fix.dynamic.property.std.source.InMemoryPropertySource
 import java.util.concurrent.atomic.AtomicInteger
@@ -66,7 +66,7 @@ class CloseResourcesTest {
         override fun <T> subscribeAndCallListener(
                 propertyName: String,
                 propertyType: Class<T>,
-                defaultValue: DefaultValue<T>,
+                defaultValue: OptionalDefaultValue<T>,
                 listener: DynamicPropertyListener<T>): DynamicPropertySource.Subscription {
 
             val subscription =  super.subscribeAndCallListener(propertyName, propertyType, defaultValue, listener)

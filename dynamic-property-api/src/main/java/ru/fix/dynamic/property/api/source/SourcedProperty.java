@@ -1,10 +1,9 @@
-package ru.fix.dynamic.property.source;
+package ru.fix.dynamic.property.api.source;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.fix.dynamic.property.api.DynamicProperty;
 import ru.fix.dynamic.property.api.DynamicPropertyListener;
-import ru.fix.dynamic.property.api.DynamicPropertySource;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -35,7 +34,7 @@ public class SourcedProperty<T> implements DynamicProperty<T> {
     public SourcedProperty(DynamicPropertySource propertySource,
                            String name,
                            Class<T> type,
-                           DefaultValue<T> defaultValue) {
+                           OptionalDefaultValue<T> defaultValue) {
         this.name = name;
         this.type = type;
         this.propertySource = propertySource;

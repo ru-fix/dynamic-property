@@ -7,14 +7,14 @@ plugins {
 }
 
 dependencies {
-    compile(Libs.slf4j_api)
+    implementation(Libs.slf4j_api)
 
     testImplementation(Libs.junit_api)
     testRuntimeOnly(Libs.junit_engine)
-    testCompile(Libs.kotlin_jdk8)
-    testCompile(Libs.kotlin_stdlib)
-    testCompile(Libs.kotlin_reflect)
-    testCompile(Libs.slf4j_simple)
+    testImplementation(Libs.kotlin_jdk8)
+    testImplementation(Libs.kotlin_stdlib)
+    testImplementation(Libs.kotlin_reflect)
+    testImplementation(Libs.slf4j_simple)
 }
 
 
