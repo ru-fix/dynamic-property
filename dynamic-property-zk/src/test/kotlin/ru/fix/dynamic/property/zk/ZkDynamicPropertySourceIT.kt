@@ -45,9 +45,6 @@ class ZkDynamicPropertySourceIT {
 
         generatedProperties.forEach {
             setServerProperty("$PROPERTIES_LOCATION/${it.key}", it.value)
-        }
-
-        generatedProperties.forEach {
             source.subscribeAndCallListener(
                     it.key,
                     String::class.java,
@@ -64,6 +61,7 @@ class ZkDynamicPropertySourceIT {
                 .create()
                 .creatingParentsIfNeeded()
                 .forPath(propertyKey, data)
+
     }
 
     private fun generateProperties(count: Int): Map<String, String> {
