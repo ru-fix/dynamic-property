@@ -6,8 +6,8 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.slf4j.LoggerFactory
+import ru.fix.dynamic.property.api.source.OptionalDefaultValue
 import ru.fix.dynamic.property.jackson.JacksonDynamicPropertyMarshaller
-import ru.fix.dynamic.property.source.DefaultValue
 import ru.fix.zookeeper.testing.ZKTestingServer
 import java.nio.charset.StandardCharsets
 import java.time.Duration
@@ -49,7 +49,7 @@ class ZkDynamicPropertySourceIT {
             source.subscribeAndCallListener(
                     it.key,
                     String::class.java,
-                    DefaultValue.of("default")
+                    OptionalDefaultValue.of("default")
             ) { value ->
                 Assertions.assertNotEquals("default", value)
             }
