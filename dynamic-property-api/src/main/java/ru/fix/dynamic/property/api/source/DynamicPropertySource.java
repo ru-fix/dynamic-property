@@ -1,6 +1,7 @@
-package ru.fix.dynamic.property.api;
+package ru.fix.dynamic.property.api.source;
 
-import ru.fix.dynamic.property.source.DefaultValue;
+import ru.fix.dynamic.property.api.DynamicProperty;
+import ru.fix.dynamic.property.api.DynamicPropertyListener;
 
 /**
  * Storage that stores {@link DynamicProperty} values and notify {@link DynamicProperty} instances when values changes.
@@ -13,7 +14,7 @@ public interface DynamicPropertySource extends AutoCloseable {
      * corresponding {@link DynamicPropertyListener} stops receiving events. <br>
      * Same happens if {@link Subscription} closed explicitly via {@link AutoCloseable} <br>
      * <br>
-     * See {@link #subscribeAndCallListener(String, Class, DefaultValue, DynamicPropertyListener)} <br>
+     * See {@link #subscribeAndCallListener(String, Class, OptionalDefaultValue, DynamicPropertyListener)} <br>
      */
     interface Subscription extends AutoCloseable {
         /**
@@ -43,7 +44,7 @@ public interface DynamicPropertySource extends AutoCloseable {
     <T> Subscription subscribeAndCallListener(
             String propertyName,
             Class<T> propertyType,
-            DefaultValue<T> defaultValue,
+            OptionalDefaultValue<T> defaultValue,
             DynamicPropertyListener<T> listener);
 
 }

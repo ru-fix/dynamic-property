@@ -1,5 +1,7 @@
 package ru.fix.dynamic.property.api;
 
+import ru.fix.dynamic.property.api.source.DynamicPropertySource;
+
 import java.util.function.Function;
 import java.util.function.Supplier;
 

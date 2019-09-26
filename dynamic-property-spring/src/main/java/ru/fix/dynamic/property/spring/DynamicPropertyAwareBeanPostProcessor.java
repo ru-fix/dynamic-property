@@ -6,11 +6,11 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.DestructionAwareBeanPostProcessor;
 import org.springframework.util.ReflectionUtils;
 import ru.fix.dynamic.property.api.DynamicProperty;
-import ru.fix.dynamic.property.api.DynamicPropertySource;
+import ru.fix.dynamic.property.api.source.DynamicPropertySource;
 import ru.fix.dynamic.property.api.annotation.PropertyId;
-import ru.fix.dynamic.property.source.DefaultValue;
-import ru.fix.dynamic.property.source.DynamicPropertyNotFoundException;
-import ru.fix.dynamic.property.source.SourcedProperty;
+import ru.fix.dynamic.property.api.source.OptionalDefaultValue;
+import ru.fix.dynamic.property.api.source.DynamicPropertyValueNotFoundException;
+import ru.fix.dynamic.property.api.source.SourcedProperty;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -39,7 +39,7 @@ public class DynamicPropertyAwareBeanPostProcessor implements DestructionAwareBe
 
     @FunctionalInterface
     private interface AnnotatedBeanProcessor {
-        void process(Object bean, Field field, PropertyId annotation) throws IllegalAccessException, DynamicPropertyNotFoundException;
+        void process(Object bean, Field field, PropertyId annotation) throws IllegalAccessException, DynamicPropertyValueNotFoundException;
     }
 
     private void doWithAnnotatedFields(Object bean, AnnotatedBeanProcessor fieldProcessor) {
@@ -92,7 +92,7 @@ public class DynamicPropertyAwareBeanPostProcessor implements DestructionAwareBe
             String propertyId = propertyIdAnnotation.value();
 
             Class propertyClass = extractPropertyClass(field);
-            DefaultValue<Object> propertyDefaultValue = extractDefaultValue(bean, field);
+            OptionalDefaultValue<Object> propertyDefaultValue = extractDefaultValue(bean, field);
 
             //noinspection unchecked
             return new SourcedProperty<>(propertySource, propertyId, propertyClass, propertyDefaultValue);
@@ -119,7 +119,7 @@ public class DynamicPropertyAwareBeanPostProcessor implements DestructionAwareBe
         return propertyClass;
     }
 
-    private DefaultValue<Object> extractDefaultValue(Object bean, Field field) {
+    private OptionalDefaultValue<Object> extractDefaultValue(Object bean, Field field) {
         DynamicProperty<?> dynamicProperty = null;
         try {
             dynamicProperty = (DynamicProperty<?>) field.get(bean);
@@ -128,9 +128,9 @@ public class DynamicPropertyAwareBeanPostProcessor implements DestructionAwareBe
         }
 
         if (dynamicProperty != null) {
-            return DefaultValue.of(dynamicProperty.get());
+            return OptionalDefaultValue.of(dynamicProperty.get());
         } else {
-            return DefaultValue.none();
+            return OptionalDefaultValue.none();
         }
     }
 

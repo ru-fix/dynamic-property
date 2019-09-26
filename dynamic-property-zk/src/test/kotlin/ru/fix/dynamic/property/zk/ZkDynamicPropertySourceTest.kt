@@ -6,8 +6,8 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import ru.fix.dynamic.property.jackson.JacksonDynamicPropertyMarshaller
-import ru.fix.dynamic.property.source.DefaultValue
-import ru.fix.dynamic.property.source.SourcedProperty
+import ru.fix.dynamic.property.api.source.OptionalDefaultValue
+import ru.fix.dynamic.property.api.source.SourcedProperty
 import ru.fix.zookeeper.testing.ZKTestingServer
 import java.nio.charset.StandardCharsets
 import java.time.Duration
@@ -52,7 +52,7 @@ class ZkDynamicPropertySourceTest {
         val subscription = source.subscribeAndCallListener(
                 TEST_PROP_KEY,
                 String::class.java,
-                DefaultValue.of("zzz")
+                OptionalDefaultValue.of("zzz")
         ) { slot.add(it) }
 
         assertEquals("some Value", slot.removeFirst())
@@ -68,7 +68,7 @@ class ZkDynamicPropertySourceTest {
         val subscription = source.subscribeAndCallListener(
                 TEST_PROP_KEY,
                 String::class.java,
-                DefaultValue.of("zzz")
+                OptionalDefaultValue.of("zzz")
         ) { value -> valueSlot.add(value)}
 
         assertEquals("some Value", valueSlot.removeFirst())
@@ -86,7 +86,7 @@ class ZkDynamicPropertySourceTest {
         val subscription = source.subscribeAndCallListener(
                 TEST_PROP_KEY_1,
                 String::class.java,
-                DefaultValue.of("zzz")
+                OptionalDefaultValue.of("zzz")
         ) { value ->
             valueSlot.add(value)
         }
@@ -110,7 +110,7 @@ class ZkDynamicPropertySourceTest {
         val sub = source.subscribeAndCallListener(
                 TEST_PROP_KEY_1,
                 String::class.java,
-                DefaultValue.of("default")
+                OptionalDefaultValue.of("default")
         ) { value ->
             slot.add(value)
         }
@@ -153,13 +153,13 @@ class ZkDynamicPropertySourceTest {
                 source,
                 "propName1",
                 String::class.java,
-                DefaultValue.of("defaultHolderValue"))
+                OptionalDefaultValue.of("defaultHolderValue"))
 
         val propertyHolder2 = SourcedProperty(
                 source,
                 "propName1",
                 String::class.java,
-                DefaultValue.of("defaultHolderValue2"))
+                OptionalDefaultValue.of("defaultHolderValue2"))
 
         assertEquals("defaultHolderValue", propertyHolder.get())
 
@@ -183,7 +183,7 @@ class ZkDynamicPropertySourceTest {
                 source!!,
                 "unknown.property",
                 String::class.java,
-                DefaultValue.of("default Value")
+                OptionalDefaultValue.of("default Value")
         )
         assertEquals("default Value", holder.get())
     }

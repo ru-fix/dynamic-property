@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import ru.fix.dynamic.property.api.DynamicProperty;
 import ru.fix.dynamic.property.api.annotation.PropertyId;
 import ru.fix.dynamic.property.jackson.JacksonDynamicPropertyMarshaller;
-import ru.fix.dynamic.property.source.DynamicPropertyNotFoundException;
+import ru.fix.dynamic.property.api.source.DynamicPropertyValueNotFoundException;
 import ru.fix.dynamic.property.std.source.InMemoryPropertySource;
 import ru.fix.stdlib.concurrency.threads.ReferenceCleaner;
 
@@ -85,7 +85,7 @@ class DynamicPropertyAwareBeanPostProcessorTest {
 
         PropertyWithoutDefaultValue bean = new PropertyWithoutDefaultValue();
 
-        assertThrows(DynamicPropertyNotFoundException.class, () ->
+        assertThrows(DynamicPropertyValueNotFoundException.class, () ->
                 processor.postProcessBeforeInitialization(bean, "propertyWithoutDefaultValue")
         );
     }

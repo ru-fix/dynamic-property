@@ -5,7 +5,7 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.hasSize
 import org.junit.jupiter.api.Test
 import ru.fix.dynamic.property.jackson.JacksonDynamicPropertyMarshaller
-import ru.fix.dynamic.property.source.DefaultValue
+import ru.fix.dynamic.property.api.source.OptionalDefaultValue
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -19,7 +19,7 @@ class InMemoryPropertySourceTest {
         val subscription = source.subscribeAndCallListener(
                 "foo",
                 Integer::class.java,
-                DefaultValue.of(Integer(12))
+                OptionalDefaultValue.of(Integer(12))
         ) {
             deque.add(it.toInt())
         }
