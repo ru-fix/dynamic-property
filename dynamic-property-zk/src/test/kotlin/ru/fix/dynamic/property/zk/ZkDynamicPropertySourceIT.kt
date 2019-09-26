@@ -42,7 +42,7 @@ class ZkDynamicPropertySourceIT {
 
     @Test
     fun `when loading a large number of properties`() {
-        val generatedProperties = generateProperties(10000)
+        val generatedProperties = generateProperties(200)
 
         generatedProperties.forEach {
             setServerProperty("$PROPERTIES_LOCATION/${it.key}", it.value)
