@@ -12,6 +12,7 @@ import ru.fix.zookeeper.testing.ZKTestingServer
 import java.nio.charset.StandardCharsets
 import java.time.Duration
 import java.time.temporal.ChronoUnit
+import java.util.concurrent.TimeUnit
 
 class ZkDynamicPropertySourceIT {
     companion object {
@@ -62,6 +63,11 @@ class ZkDynamicPropertySourceIT {
                 .creatingParentsIfNeeded()
                 .forPath(propertyKey, data)
 
+        Awaitility.await().atMost(10, TimeUnit.SECONDS).until {
+            zkTestingServer.client
+                    .data
+                    .forPath(propertyKey).contentEquals(data)
+        }
     }
 
     private fun generateProperties(count: Int): Map<String, String> {
