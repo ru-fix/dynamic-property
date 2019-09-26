@@ -9,6 +9,7 @@ dependencies {
     api(Libs.spring_beans)
     api(project(Projs.dynamic_property_api.dependency))
 
+    implementation(Libs.slf4j_api)
     implementation(Libs.spring_boot_auto_configure)
 
 
