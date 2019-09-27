@@ -10,7 +10,7 @@ public class CombinedProperty<R> implements DynamicProperty<R> {
     public CombinedProperty(Collection<DynamicProperty<?>> sources, Supplier<R> combiner) {
         property = new AtomicProperty<>(null);
         for (DynamicProperty<?> source : sources) {
-            source.addListener(any -> property.set(combiner.get()));
+            source.addListener((anyOldValue, anyNewValue) -> property.set(combiner.get()));
         }
         //This way we will not miss property update between initialization and subscription
         property.set(combiner.get());

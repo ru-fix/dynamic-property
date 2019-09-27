@@ -20,7 +20,7 @@ public class ConstantProperty<T> implements DynamicProperty<T> {
 
     @Override
     public DynamicProperty<T> addAndCallListener(DynamicPropertyListener<T> listener) {
-        listener.onPropertyChanged(value);
+        listener.onPropertyChanged(null, value);
         return this;
     }
 

@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.*
+import java.util.concurrent.atomic.AtomicReference
 
 class FilePropertySource(
         private val propertiesFile: DynamicProperty<Path>,
@@ -24,9 +25,23 @@ class FilePropertySource(
 
     init {
 
+        val previousPropertyFile = AtomicReference<Path>()
+
         //TODO: add FileWatcher and listen for property change
 
         propertiesFile.addAndCallListener { path ->
+
+            previousPropertyFile.get()
+                    ?.takeIf { it != path }
+                    .let {
+                        watcher.unregister(it)
+                        previousPropertyFile.set(path)
+                        watcher.regsiter(path) {
+                            //callback
+                        }
+                    }
+
+
             val props = Properties().apply {
                 load(Files.newBufferedReader(path, StandardCharsets.UTF_8))
             }
