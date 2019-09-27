@@ -21,28 +21,27 @@ class ZkDynamicPropertySourceIT {
     }
 
     private lateinit var zkTestingServer: ZKTestingServer
-    private lateinit var source: ZkDynamicPropertySource
 
     @BeforeEach
     fun beforeEach() {
         zkTestingServer = ZKTestingServer().start()
-        source = ZkDynamicPropertySource(
-                zkTestingServer.client,
-                PROPERTIES_LOCATION,
-                JacksonDynamicPropertyMarshaller(),
-                Duration.of(1, ChronoUnit.MINUTES)
-        )
     }
 
     @AfterEach
     fun afterEach() {
-        source.close()
         zkTestingServer.close()
     }
 
     @Test
     fun `when loading a large number of properties`() {
         val generatedProperties = generateProperties(200)
+
+        val source = ZkDynamicPropertySource(
+                zkTestingServer.client,
+                PROPERTIES_LOCATION,
+                JacksonDynamicPropertyMarshaller(),
+                Duration.of(1, ChronoUnit.MINUTES)
+        )
 
         generatedProperties.forEach {
             setServerProperty("$PROPERTIES_LOCATION/${it.key}", it.value)
@@ -54,6 +53,7 @@ class ZkDynamicPropertySourceIT {
                 Assertions.assertNotEquals("default", value)
             }
         }
+        source.close()
     }
 
     private fun setServerProperty(propertyKey: String, value: String) {
