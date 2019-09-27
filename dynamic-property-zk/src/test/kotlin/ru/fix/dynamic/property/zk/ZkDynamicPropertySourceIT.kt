@@ -5,7 +5,6 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.slf4j.LoggerFactory
 import ru.fix.dynamic.property.api.source.OptionalDefaultValue
 import ru.fix.dynamic.property.jackson.JacksonDynamicPropertyMarshaller
 import ru.fix.zookeeper.testing.ZKTestingServer
@@ -17,7 +16,6 @@ import java.util.concurrent.TimeUnit
 class ZkDynamicPropertySourceIT {
     companion object {
         private const val PROPERTIES_LOCATION = "/zookeeper/p"
-        private val log = LoggerFactory.getLogger(ZkDynamicPropertySource::class.java)
     }
 
     private lateinit var zkTestingServer: ZKTestingServer
@@ -33,7 +31,7 @@ class ZkDynamicPropertySourceIT {
     }
 
     @Test
-    fun `when loading a large number of properties`() {
+    fun `should return actual value instead of default when a large number of properties loaded`() {
         val generatedProperties = generateProperties(200)
 
         val source = ZkDynamicPropertySource(
@@ -66,17 +64,11 @@ class ZkDynamicPropertySourceIT {
         Awaitility.await().atMost(10, TimeUnit.SECONDS).until {
             zkTestingServer.client
                     .data
-                    .forPath(propertyKey).contentEquals(data)
+                    .forPath(propertyKey)!!.contentEquals(data)
         }
     }
 
     private fun generateProperties(count: Int): Map<String, String> {
-        val generatedProperties = HashMap<String, String>()
-
-        for (i in 0..count) {
-            generatedProperties["prop-$i"] = "value-$i"
-        }
-
-        return generatedProperties
+        return (0..count).map { i -> Pair("prop-$i", "value-$i") }.toMap()
     }
 }
