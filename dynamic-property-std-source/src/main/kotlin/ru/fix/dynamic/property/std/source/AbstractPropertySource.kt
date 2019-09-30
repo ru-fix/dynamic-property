@@ -23,7 +23,7 @@ abstract class AbstractPropertySource(
             val propertyName: String,
             val propertyType: Class<Any>,
             val defaultValue: OptionalDefaultValue<*>,
-            val listener: DynamicPropertyListener<Any>) : DynamicPropertySource.Subscription {
+            val listener: DynamicPropertySource.Listener<Any>) : DynamicPropertySource.Subscription {
 
         lateinit var cleanableReference: CleanableWeakReference<Subscription>
 
@@ -100,13 +100,13 @@ abstract class AbstractPropertySource(
             propertyName: String,
             propertyType: Class<T>,
             defaultValue: OptionalDefaultValue<T>,
-            listener: DynamicPropertyListener<T>): DynamicPropertySource.Subscription {
+            listener: DynamicPropertySource.Listener<T>): DynamicPropertySource.Subscription {
 
         val subscription = Subscription(
                 propertyName,
                 propertyType as Class<Any>,
                 defaultValue,
-                listener as DynamicPropertyListener<Any>)
+                listener as DynamicPropertySource.Listener<Any>)
 
         val subRef = referenceCleaner.register(subscription, propertyName) { a_ref, a_propName ->
             Subscriptions.removeSubRef(a_propName, a_ref)
