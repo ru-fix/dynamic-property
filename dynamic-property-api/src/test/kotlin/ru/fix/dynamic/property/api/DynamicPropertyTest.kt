@@ -16,8 +16,9 @@ class DynamicPropertyTest {
 
     @Test
     fun add_listener_and_get() {
+
         val property = DynamicProperty.of(122)
-        val value = property.addListener { println(it) }.get()
+        val value = property.addListenerAndGet { old, new -> ; }
         assertEquals(122, value)
     }
 
@@ -28,14 +29,19 @@ class DynamicPropertyTest {
         assertEquals(122, property.get())
 
 
-        val listenerAcceptedValue = AtomicReference<Int>()
+        val listenerAcceptedNewValue = AtomicReference<Int>()
+        val listenerAcceptedOldValue = AtomicReference<Int>()
 
-        property.addListener { listenerAcceptedValue.set(it) }
+        property.addListener { old, new ->
+            listenerAcceptedOldValue.set(old)
+            listenerAcceptedNewValue.set(new)
+        }
 
         property.set(123)
 
         assertEquals(123, property.get())
-        assertEquals(123, listenerAcceptedValue.get())
+        assertEquals(122, listenerAcceptedOldValue.get())
+        assertEquals(123, listenerAcceptedNewValue.get())
     }
 
     @Test
@@ -47,13 +53,19 @@ class DynamicPropertyTest {
 
         assertEquals(159, intProperty.get())
 
-        val captor = AtomicReference(0)
-        intProperty.addListener { captor.set(it) }
+        val captorOld = AtomicReference(0)
+        val captorNew = AtomicReference(0)
+
+        intProperty.addListener { old, new ->
+            captorOld.set(old)
+            captorNew.set(new)
+        }
 
 
         stringProperty.set("305")
 
-        assertEquals(305, captor.get())
+        assertEquals(305, captorNew.get())
+        assertEquals(159, captorOld.get())
     }
 
     @Test

@@ -16,11 +16,11 @@ import java.util.function.Supplier;
  * and consequence updates: <br>
  * <pre>{@code
  * MyService(DynamicProperty<String> property){
- *     property.addAndCallListener{ value ->
+ *     property.addAndCallListener{ oldValue, newValue ->
  *          // initialisation or reconfiguration logic
  *          // will be invoked first time with current value of the property
  *          // and then each time on property change
- *         initializeOrUpdateMyService(value)
+ *         initializeOrUpdateMyService(newValue)
  *     }
  * }
  * }</pre>
@@ -35,7 +35,7 @@ import java.util.function.Supplier;
  * }
  * }</pre>
  *
- *
+ * <br>
  * Different implementations provides different guarantees
  * in terms of atomicity subscription and listener invocation.<br>
  * <p>
@@ -53,7 +53,7 @@ import java.util.function.Supplier;
  *     val value = property.get()
  *     initialize(value)
  *     //-- we could miss property update here --
- *     property.addListener{ newValue -> initialize(newValue)}
+ *     property.addListener{ oldValue, newValue -> initialize(newValue)}
  * }
  * }</pre>
  * It is possible that during first invocation of property.get() we will see value 1. <br>
@@ -67,7 +67,7 @@ import java.util.function.Supplier;
  * <pre>{@code
  * // DO NOT DO THAT
  * MyService(DynamicProperty property){
- *     property.addListener{ newValue -> initialize(newValue) }
+ *     property.addListener{ oldValue, newValue -> initialize(newValue) }
  *     val value = property.get()
  *     //-- we could launch initialize method concurrently from user thread and listener thread --
  *     initialize(value)
@@ -85,7 +85,7 @@ import java.util.function.Supplier;
  * // DO NOT DO THAT
  * String nonVolatileNonAtomicField = ""
  * MyService(DynamicProperty property){
- *     property.addListener{ newValue ->
+ *     property.addListener{ oldValue, newValue ->
  *          // listener invoked in Listener thread
  *          // non thread safe field should be replaced by volatile or atomic field.
  *          nonVolatileNonAtomicField = newValue
@@ -114,6 +114,8 @@ public interface DynamicProperty<T> extends AutoCloseable {
 
     /**
      * Add listener to dynamic property and invokes it with current value of the property.
+     * During first invocation of the listener {@link DynamicPropertyListener#onPropertyChanged(Object, Object)}
+     * oldValue is going to be null.
      *
      * @param listener Listener is activated first time with current value of the property and then
      *                 each time when property changes.

@@ -24,6 +24,10 @@ public interface DynamicPropertySource extends AutoCloseable {
         void close();
     }
 
+    @FunctionalInterface
+    interface Listener<T> {
+        void onPropertyChanged(T newValue);
+    }
 
     /**
      * Subscribe listener and immediately invokes listener with current property value.
@@ -45,6 +49,6 @@ public interface DynamicPropertySource extends AutoCloseable {
             String propertyName,
             Class<T> propertyType,
             OptionalDefaultValue<T> defaultValue,
-            DynamicPropertyListener<T> listener);
+            Listener<T> listener);
 
 }

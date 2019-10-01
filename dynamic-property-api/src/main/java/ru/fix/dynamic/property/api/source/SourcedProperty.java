@@ -45,10 +45,11 @@ public class SourcedProperty<T> implements DynamicProperty<T> {
                 defaultValue,
                 newValue -> {
                     synchronized (SourcedProperty.this) {
-                        currentValue.set(newValue);
+                        T oldValue = currentValue.getAndSet(newValue);
+
                         listeners.forEach(listener -> {
                             try {
-                                listener.onPropertyChanged(newValue);
+                                listener.onPropertyChanged(oldValue, newValue);
                             } catch (Exception e) {
                                 log.error("Failed to update property {} with value {}", this.name, newValue, e);
                             }
@@ -77,7 +78,7 @@ public class SourcedProperty<T> implements DynamicProperty<T> {
     @Override
     public synchronized DynamicProperty<T> addAndCallListener(DynamicPropertyListener<T> listener) {
         listeners.add(listener);
-        listener.onPropertyChanged(currentValue.get());
+        listener.onPropertyChanged(null, currentValue.get());
         return this;
     }
 

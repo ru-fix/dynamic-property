@@ -31,7 +31,7 @@ public class SuppliedProperty<T> implements DynamicProperty<T> {
 
     @Override
     public DynamicProperty<T> addAndCallListener(DynamicPropertyListener<T> listener) {
-        listener.onPropertyChanged(supplier.get());
+        listener.onPropertyChanged(null, supplier.get());
         return this;
     }
 

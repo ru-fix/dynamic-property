@@ -58,13 +58,14 @@ public class AtomicProperty<T> implements DynamicProperty<T> {
         this.holder.set(value);
     }
 
-    public void set(T value) {
-        holder.set(value);
+    public void set(T newValue) {
+        T oldValue = holder.getAndSet(newValue);
         listeners.forEach(listener -> {
             try {
-                listener.onPropertyChanged(value);
+                listener.onPropertyChanged(oldValue, newValue);
             } catch (Exception exc) {
-                log.error("Failed to notify listener on property change. New value {}.", value, exc);
+                log.error("Failed to notify listener on property change. Old value{}, new value {}.",
+                        oldValue, newValue, exc);
             }
         });
     }
@@ -83,7 +84,7 @@ public class AtomicProperty<T> implements DynamicProperty<T> {
     @Override
     public DynamicProperty<T> addAndCallListener(DynamicPropertyListener<T> listener) {
         listeners.add(listener);
-        listener.onPropertyChanged(holder.get());
+        listener.onPropertyChanged(null, holder.get());
         return null;
     }
 
