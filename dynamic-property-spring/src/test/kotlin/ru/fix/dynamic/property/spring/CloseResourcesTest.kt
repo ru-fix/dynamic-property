@@ -67,7 +67,7 @@ class CloseResourcesTest {
                 propertyName: String,
                 propertyType: Class<T>,
                 defaultValue: OptionalDefaultValue<T>,
-                listener: DynamicPropertyListener<T>): DynamicPropertySource.Subscription {
+                listener: DynamicPropertySource.Listener<T>): DynamicPropertySource.Subscription {
 
             val subscription =  super.subscribeAndCallListener(propertyName, propertyType, defaultValue, listener)
 
