@@ -10,8 +10,8 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.util.*
 
-object PropertiesFileParser {
-    fun parsePropertiesFile(filePath: Path): Map<String, String> {
+object PropertiesFileParser: FilePropertySource.Parser {
+    override fun parsePropertiesFile(filePath: Path): Map<String, String> {
         val javaProps = Properties().apply {
             load(Files.newBufferedReader(filePath, StandardCharsets.UTF_8))
         }
@@ -20,11 +20,16 @@ object PropertiesFileParser {
 }
 
 class FilePropertySource(
-        private val propertiesFile: DynamicProperty<Path>,
-        private val propertyParser: (Path) -> Map<String, String> = PropertiesFileParser::parsePropertiesFile,
+        private val sourceFilePath: DynamicProperty<Path>,
+        private val propertyParser: Parser = PropertiesFileParser,
         marshaller: DynamicPropertyMarshaller,
         referenceCleaner: ReferenceCleaner = ReferenceCleaner.getInstance()) :
         DynamicPropertySource {
+
+    @FunctionalInterface
+    interface Parser{
+        fun parsePropertiesFile(filePath: Path): Map<String, String>
+    }
 
     private val inMemorySource = InMemoryPropertySource(
             marshaller,
@@ -32,7 +37,7 @@ class FilePropertySource(
     )
 
     private fun updateProperties(newPath: Path) {
-        val newProperties = propertyParser(newPath)
+        val newProperties = propertyParser.parsePropertiesFile(newPath)
 
         newProperties.forEach { (key, value) ->
             inMemorySource[key] = value
@@ -46,7 +51,7 @@ class FilePropertySource(
 
     init {
 
-        propertiesFile.addAndCallListener { prevPath, newPath ->
+        sourceFilePath.addAndCallListener { prevPath, newPath ->
             //TODO: add FileWatcher and listen for property change
 //            if (newPath != prevPath) {
 //                if(prevPath != null){

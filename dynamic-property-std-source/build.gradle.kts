@@ -22,6 +22,7 @@ dependencies {
     testRuntimeOnly(Libs.slf4j_simple)
 
     testImplementation(Libs.hamkrest)
+    testImplementation(Libs.awaitility)
 
     testImplementation(project(Projs.dynamic_property_jackson.dependency))
 }
