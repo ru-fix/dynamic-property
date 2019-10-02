@@ -39,8 +39,6 @@ object Libs {
     val jfix_stdlib_concurrency = "ru.fix:jfix-stdlib-concurrency:1.0.59"
     val jfix_stdlib_files = "ru.fix:jfix-stdlib-files:1.0.59"
 
-    val aggregating_profiler = "ru.fix:aggregating-profiler:1.5.16"
-
     const val slf4j_api = "org.slf4j:slf4j-api:${Vers.sl4j}"
     const val slf4j_simple = "org.slf4j:slf4j-simple:${Vers.sl4j}"
 
