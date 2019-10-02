@@ -34,15 +34,18 @@ class ZkDynamicPropertySourceIT {
     fun `should return actual value instead of default when a large number of properties loaded`() {
         val generatedProperties = generateProperties(200)
 
+        generatedProperties.forEach {
+            setServerProperty("$PROPERTIES_LOCATION/${it.key}", it.value)
+        }
+
         val source = ZkDynamicPropertySource(
-                zkTestingServer.client,
+                zkTestingServer.createClient(),
                 PROPERTIES_LOCATION,
                 JacksonDynamicPropertyMarshaller(),
                 Duration.of(1, ChronoUnit.MINUTES)
         )
 
         generatedProperties.forEach {
-            setServerProperty("$PROPERTIES_LOCATION/${it.key}", it.value)
             source.subscribeAndCallListener(
                     it.key,
                     String::class.java,
@@ -51,6 +54,7 @@ class ZkDynamicPropertySourceIT {
                 Assertions.assertNotEquals("default", value)
             }
         }
+
         source.close()
     }
 
