@@ -46,12 +46,21 @@ public class SourcedProperty<T> implements DynamicProperty<T> {
                 newValue -> {
                     synchronized (SourcedProperty.this) {
                         T oldValue = currentValue.getAndSet(newValue);
-
+                        if(log.isTraceEnabled()){
+                            log.trace("Sourced property update: name: {}, oldValue: {}, newValue: {}",
+                                    name,
+                                    oldValue,
+                                    newValue);
+                        }
                         listeners.forEach(listener -> {
                             try {
                                 listener.onPropertyChanged(oldValue, newValue);
                             } catch (Exception e) {
-                                log.error("Failed to update property {} with value {}", this.name, newValue, e);
+                                log.error("Failed to update property {} from oldValue {} to newValue {}",
+                                        this.name,
+                                        oldValue,
+                                        newValue,
+                                        e);
                             }
                         });
                     }

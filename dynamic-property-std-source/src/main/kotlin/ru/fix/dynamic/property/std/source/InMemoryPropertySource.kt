@@ -3,7 +3,10 @@ package ru.fix.dynamic.property.std.source
 import ru.fix.dynamic.property.api.marshaller.DynamicPropertyMarshaller
 import ru.fix.stdlib.concurrency.threads.ReferenceCleaner
 
-
+/**
+ * Keep properties in memory.
+ * All listeners will be invoked during [set] invocation within same thread.
+ */
 open class InMemoryPropertySource(
         marshaller: DynamicPropertyMarshaller,
         referenceCleaner: ReferenceCleaner = ReferenceCleaner.getInstance()) :
@@ -26,6 +29,4 @@ open class InMemoryPropertySource(
     fun propertyNames(): Set<String> = properties.keys
 
     protected override fun getPropertyValue(propertyName: String) = properties[propertyName]
-
-
 }

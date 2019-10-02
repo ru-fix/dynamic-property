@@ -12,7 +12,11 @@ dependencies {
     implementation(Libs.jfix_stdlib_concurrency){
         exclude("ru.fix", "dynamic-property-api")
     }
+    implementation(Libs.jfix_stdlib_files){
+        exclude("ru.fix", "dynamic-property-api")
+    }
 
+    implementation(Libs.log4j_kotlin)
 
     api(project(Projs.dynamic_property_api.dependency))
 

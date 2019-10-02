@@ -6,7 +6,7 @@ import org.apache.curator.framework.imps.CuratorFrameworkState
 import org.apache.curator.framework.recipes.cache.TreeCache
 import org.apache.curator.framework.recipes.cache.TreeCacheEvent
 import org.apache.curator.framework.recipes.cache.TreeCacheListener
-import org.slf4j.LoggerFactory
+import org.apache.logging.log4j.kotlin.Logging
 import ru.fix.dynamic.property.api.marshaller.DynamicPropertyMarshaller
 import ru.fix.dynamic.property.std.source.AbstractPropertySource
 import ru.fix.stdlib.concurrency.threads.ReferenceCleaner
@@ -41,9 +41,7 @@ class ZkDynamicPropertySource(
 
         AbstractPropertySource(marshaller, ReferenceCleaner.getInstance()) {
 
-    companion object {
-        private val log = LoggerFactory.getLogger(ZkDynamicPropertySource::class.java)
-    }
+    companion object: Logging
 
     private val treeCache: TreeCache
     private val rootPath: String =
@@ -66,9 +64,9 @@ class ZkDynamicPropertySource(
 
         treeCache.listenable.addListener(TreeCacheListener { currentFramework, treeCacheEvent ->
 
-            log.trace("TreeCache event received: {}", treeCacheEvent)
+            logger.trace("Received TreeCache event: $treeCacheEvent")
 
-            when (treeCacheEvent.getType()) {
+            when (treeCacheEvent.type) {
                 TreeCacheEvent.Type.NODE_ADDED,
                 TreeCacheEvent.Type.NODE_UPDATED -> {
                     try {
@@ -77,7 +75,7 @@ class ZkDynamicPropertySource(
                                 treeCacheEvent.toString()
                         ))
                     } catch (exc: Exception) {
-                        log.error("Zk property updating error for event {}", treeCacheEvent, exc)
+                        logger.error("Zk property updating error for event $treeCacheEvent", exc)
                     }
                 }
                 TreeCacheEvent.Type.NODE_REMOVED -> {
@@ -86,8 +84,10 @@ class ZkDynamicPropertySource(
                 TreeCacheEvent.Type.INITIALIZED -> {
                     treeCacheInitialized.countDown()
                 }
-                else -> {
-
+                TreeCacheEvent.Type.CONNECTION_LOST,
+                TreeCacheEvent.Type.CONNECTION_SUSPENDED,
+                TreeCacheEvent.Type.CONNECTION_RECONNECTED -> {
+                    //do nothing
                 }
             }
         })
@@ -128,7 +128,7 @@ class ZkDynamicPropertySource(
                         data,
                         StandardCharsets.UTF_8)
             } catch (exc: Exception) {
-                log.error("Failed to read string value from zk node. {}", logDetails, exc)
+                logger.error("Failed to read string value from zk node. $logDetails", exc)
                 null
             }
 
@@ -142,7 +142,7 @@ class ZkDynamicPropertySource(
 
         val propertyName = getPropertyNameFromAbsolutePath(absolutePath)
 
-        log.info("Event type {} for node '{}'. New value is '{}'", treeCacheEvent.type, absolutePath, newValue)
+        logger.info("Zk property change: type: ${treeCacheEvent.type}, node: $absolutePath. New value is '$newValue'")
         invokePropertyListener(propertyName, newValue)
     }
 
@@ -165,7 +165,7 @@ class ZkDynamicPropertySource(
 
     override fun close() {
         super.close()
-        treeCache!!.close()
+        treeCache.close()
     }
 
 

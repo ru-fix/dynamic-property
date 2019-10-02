@@ -1,7 +1,6 @@
 package ru.fix.dynamic.property.std.source
 
 import org.slf4j.LoggerFactory
-import ru.fix.dynamic.property.api.DynamicPropertyListener
 import ru.fix.dynamic.property.api.source.DynamicPropertySource
 import ru.fix.dynamic.property.api.marshaller.DynamicPropertyMarshaller
 import ru.fix.dynamic.property.api.source.OptionalDefaultValue
@@ -16,7 +15,7 @@ abstract class AbstractPropertySource(
         private val referenceCleaner: ReferenceCleaner = ReferenceCleaner.getInstance()) : DynamicPropertySource {
 
     companion object {
-        private val log = LoggerFactory.getLogger(AbstractPropertySource::class.java)
+        private val logger = LoggerFactory.getLogger(AbstractPropertySource::class.java)
     }
 
     private inner class Subscription(
@@ -83,7 +82,7 @@ abstract class AbstractPropertySource(
                     val newValue = extractPropertyValueOrDefault<Any?>(newSerializedValue, sub)
                     sub.listener.onPropertyChanged(newValue)
                 } catch (exc: Exception) {
-                    log.error("Failed to update property {}", propertyName, exc)
+                    logger.error("Failed to update property {}", propertyName, exc)
                 }
             }
         }

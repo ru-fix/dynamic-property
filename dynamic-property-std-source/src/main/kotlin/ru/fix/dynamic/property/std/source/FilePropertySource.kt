@@ -1,5 +1,6 @@
 package ru.fix.dynamic.property.std.source
 
+import ru.fix.crudility.infra.FileWatcher
 import ru.fix.dynamic.property.api.DynamicProperty
 import ru.fix.dynamic.property.api.marshaller.DynamicPropertyMarshaller
 import ru.fix.dynamic.property.api.source.DynamicPropertySource
@@ -10,7 +11,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.util.*
 
-object PropertiesFileParser: FilePropertySource.Parser {
+object PropertiesFileParser : FilePropertySource.Parser {
     override fun parsePropertiesFile(filePath: Path): Map<String, String> {
         val javaProps = Properties().apply {
             load(Files.newBufferedReader(filePath, StandardCharsets.UTF_8))
@@ -19,6 +20,10 @@ object PropertiesFileParser: FilePropertySource.Parser {
     }
 }
 
+/**
+ * Load properties from file.
+ * Watch for file modifications and update properties when content changes.
+ */
 class FilePropertySource(
         private val sourceFilePath: DynamicProperty<Path>,
         private val propertyParser: Parser = PropertiesFileParser,
@@ -27,7 +32,7 @@ class FilePropertySource(
         DynamicPropertySource {
 
     @FunctionalInterface
-    interface Parser{
+    interface Parser {
         fun parsePropertiesFile(filePath: Path): Map<String, String>
     }
 
@@ -35,6 +40,8 @@ class FilePropertySource(
             marshaller,
             referenceCleaner
     )
+
+    private val fileWatcher = FileWatcher()
 
     private fun updateProperties(newPath: Path) {
         val newProperties = propertyParser.parsePropertiesFile(newPath)
@@ -50,17 +57,15 @@ class FilePropertySource(
     }
 
     init {
-
         sourceFilePath.addAndCallListener { prevPath, newPath ->
-            //TODO: add FileWatcher and listen for property change
-//            if (newPath != prevPath) {
-//                if(prevPath != null){
-//                    watcher.unregister(prevPath)
-//                }
-//                watcher.register(newPath) {
-//                        updateProperties(newPath)
-//                }
-//            }
+            if (newPath != prevPath) {
+                if (prevPath != null) {
+                    fileWatcher.unregister(prevPath)
+                }
+                fileWatcher.register(newPath) {
+                    updateProperties(newPath)
+                }
+            }
             updateProperties(newPath)
         }
     }

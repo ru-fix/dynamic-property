@@ -10,6 +10,7 @@ dependencies {
 
     api(project(Projs.dynamic_property_api.dependency))
 
+    implementation(Libs.log4j_kotlin)
     implementation(Libs.curator_recipes)
     implementation(Libs.jfix_stdlib_concurrency){
         exclude("ru.fix", "dynamic-property-api")
