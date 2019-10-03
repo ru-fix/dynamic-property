@@ -18,9 +18,9 @@ import java.util.concurrent.TimeUnit
 
 class ZkDynamicPropertySourceTest {
     companion object {
-        private val TEST_PROP_KEY = "test_prop_key"
-        private val TEST_PROP_KEY_1 = "test_prop_key_1"
-        private val PROPERTIES_LOCATION = "/zookeeper/p"
+        private const val TEST_PROP_KEY = "test_prop_key"
+        private const val TEST_PROP_KEY_1 = "test_prop_key_1"
+        private const val PROPERTIES_LOCATION = "/zookeeper/p"
     }
 
     private lateinit var zkTestingServer: ZKTestingServer
@@ -180,7 +180,7 @@ class ZkDynamicPropertySourceTest {
     @Test
     fun shouldGetDefaultValueFromHolder() {
         val holder = SourcedProperty(
-                source!!,
+                source,
                 "unknown.property",
                 String::class.java,
                 OptionalDefaultValue.of("default Value")
@@ -188,6 +188,37 @@ class ZkDynamicPropertySourceTest {
         assertEquals("default Value", holder.get())
     }
 
+    @Test
+    fun `should return actual value instead of default when a large number of properties loaded`() {
+        val generatedProperties = generateProperties(200)
+
+        generatedProperties.forEach {
+            setServerProperty("${PROPERTIES_LOCATION}/${it.key}", it.value)
+        }
+
+        val source = ZkDynamicPropertySource(
+                zkTestingServer.createClient(),
+                PROPERTIES_LOCATION,
+                JacksonDynamicPropertyMarshaller(),
+                Duration.of(1, ChronoUnit.MINUTES)
+        )
+
+        generatedProperties.forEach {
+            source.subscribeAndCallListener(
+                    it.key,
+                    String::class.java,
+                    OptionalDefaultValue.of("default")
+            ) { value ->
+                assertNotEquals("default", value)
+            }
+        }
+
+        source.close()
+    }
+
+    private fun generateProperties(count: Int): Map<String, String> {
+        return (0..count).map { i -> Pair("prop-$i", "value-$i") }.toMap()
+    }
 
     private fun setServerProperty(propertyKey: String, value: String) {
         val data = value.toByteArray(StandardCharsets.UTF_8)
@@ -198,8 +229,8 @@ class ZkDynamicPropertySourceTest {
 
         await().atMost(10, TimeUnit.SECONDS).until {
             zkTestingServer.client
-                    .getData()
-                    .forPath(propertyKey).contentEquals(data)
+                    .data
+                    .forPath(propertyKey)!!.contentEquals(data)
         }
     }
 
