@@ -217,7 +217,7 @@ class ZkDynamicPropertySourceTest {
     }
 
     private fun generateProperties(count: Int): Map<String, String> {
-        return (0..count).map { i -> Pair("prop-$i", "value-$i") }.toMap()
+        return (1..count).map { i -> Pair("prop-$i", "value-$i") }.toMap()
     }
 
     private fun setServerProperty(propertyKey: String, value: String) {
