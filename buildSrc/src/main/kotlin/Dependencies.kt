@@ -18,6 +18,8 @@ object Vers {
     const val jackson = "2.9.9"
 
     const val log4j =  "2.12.0"
+
+    const val jfix_stdlib = "1.0.60"
 }
 
 object Libs {
@@ -36,8 +38,8 @@ object Libs {
     const val mockk = "io.mockk:mockk:1.9.3"
     const val awaitility = "org.awaitility:awaitility:4.0.1"
 
-    val jfix_stdlib_concurrency = "ru.fix:jfix-stdlib-concurrency:1.0.59"
-    val jfix_stdlib_files = "ru.fix:jfix-stdlib-files:1.0.59"
+    val jfix_stdlib_concurrency = "ru.fix:jfix-stdlib-concurrency:${Vers.jfix_stdlib}"
+    val jfix_stdlib_files = "ru.fix:jfix-stdlib-files:${Vers.jfix_stdlib}"
 
     const val slf4j_api = "org.slf4j:slf4j-api:${Vers.sl4j}"
     const val slf4j_simple = "org.slf4j:slf4j-simple:${Vers.sl4j}"
