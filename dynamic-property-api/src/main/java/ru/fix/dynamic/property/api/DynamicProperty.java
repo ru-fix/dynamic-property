@@ -146,18 +146,18 @@ public interface DynamicProperty<T> extends AutoCloseable {
     }
 
     /**
+     * Return DynamicProperty proxy that delegates {@link DynamicProperty#get()}  to given supplier. <br>
+     * <br>
      * Be aware that DynamicProperty created this way
-     * does not notify listeners through {@link java.beans.PropertyChangeListener}
-     * @return DynamicProperty proxy. All requests to {@link DynamicProperty#get()}
-     * will be delegated to {@link Supplier#get()} method of given supplier.
+     * does not notify listeners through {@link java.beans.PropertyChangeListener} <br>
+     * Here is an example of inappropriate usage of delegated property:
      * <pre>{@code
-     *
      * class Foo(supplier: Supplier<String>){
-     *     // will break since bar is actually needs listener support
-     *     val bar = Bar(DynamicProperty.of(supplier))
+     *     // will not work correctly since bar is actually needs listener support
+     *     val bar = Bar(DynamicProperty.delegated(supplier))
      *
      *     // will work correctly
-     *     val baz = Baz(DynamicProperty.of(supplier))
+     *     val baz = Baz(DynamicProperty.delegated(supplier))
      * }
      *
      * class Bar(property: DynamicProperty<String>){
@@ -173,10 +173,11 @@ public interface DynamicProperty<T> extends AutoCloseable {
      * }</pre>
      * If you need a DynamicProperty with full listeners support backed up by {@link Supplier}
      * use DynamicPropertyPoller instead
+     * @return DynamicProperty proxy.
      * @see ru.fix.dynamic.property.polling.DynamicPropertyPoller
      */
-    static <T> DynamicProperty<T> of(Supplier<T> supplier) {
-        return new SuppliedProperty<>(supplier);
+    static <T> DynamicProperty<T> delegated(Supplier<T> supplier) {
+        return new DelegatedProperty<>(supplier);
     }
 
     /**

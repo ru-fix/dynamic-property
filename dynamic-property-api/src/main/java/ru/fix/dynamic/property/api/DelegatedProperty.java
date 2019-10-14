@@ -1,5 +1,6 @@
 package ru.fix.dynamic.property.api;
 
+import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
@@ -11,11 +12,12 @@ import java.util.function.Supplier;
  * If you need a DynamicProperty with full listener support backed up by {@link Supplier} use DynamicPropertyPoller
  * @see ru.fix.dynamic.property.polling.DynamicPropertyPoller
  */
-public class SuppliedProperty<T> implements DynamicProperty<T> {
+public class DelegatedProperty<T> implements DynamicProperty<T> {
 
     private final Supplier<T> supplier;
 
-    public SuppliedProperty(Supplier<T> supplier) {
+    public DelegatedProperty(Supplier<T> supplier) {
+        Objects.requireNonNull(supplier);
         this.supplier = supplier;
     }
 

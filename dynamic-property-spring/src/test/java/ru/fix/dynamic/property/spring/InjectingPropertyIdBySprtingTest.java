@@ -18,7 +18,7 @@ import ru.fix.dynamic.property.spring.config.DynamicPropertyConfig;
 import ru.fix.dynamic.property.std.source.InMemoryPropertySource;
 import ru.fix.stdlib.concurrency.threads.ReferenceCleaner;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 
 /**
@@ -41,6 +41,9 @@ public class InjectingPropertyIdBySprtingTest {
         public DynamicProperty<String> getStatus() {
             return status;
         }
+
+        @PropertyId("nullable.property")
+        private DynamicProperty<String> nullableProperty = DynamicProperty.of(null);
     }
 
     @Configuration
@@ -69,4 +72,9 @@ public class InjectingPropertyIdBySprtingTest {
         assertEquals("Biribidjan", propertyContainer.getCity().get());
     }
 
+    @Test
+    public void nullable_property_initialized_by_default_with_null(){
+        assertNotNull(propertyContainer.nullableProperty);
+        assertNull(propertyContainer.nullableProperty.get());
+    }
 }
