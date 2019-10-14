@@ -2,6 +2,7 @@ package ru.fix.dynamic.property.api
 
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 import java.util.concurrent.atomic.AtomicReference
 
@@ -81,5 +82,17 @@ class DynamicPropertyTest {
 
         second.set("42")
         assertEquals("hi42", combine.get())
+    }
+
+    @Test
+    fun `delegated property`() {
+        val property = DynamicProperty.delegated { 12 }
+        assertEquals(12, property.get())
+    }
+
+    @Test
+    fun `constant property of null`() {
+        val property = DynamicProperty.of<String>(null)
+        assertNull(property.get())
     }
 }
