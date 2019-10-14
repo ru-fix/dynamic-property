@@ -40,11 +40,28 @@ public class JacksonDynamicPropertyMarshaller implements DynamicPropertyMarshall
 
     }
 
+    /**
+     * @param marshalledObject
+     * @return NULL if type is not supported
+     */
+    private String tryPrimitiveMarshall(Object marshalledObject){
+        if(Long.class.equals(marshalledObject.getClass())){
+            return marshalledObject.toString();
+        }
+        if (String.class.equals(marshalledObject.getClass()) ){
+            return marshalledObject.toString();
+        }
+        if(Duration.class.equals(marshalledObject.getClass())) {
+            return marshalledObject.toString();
+        }
+    }
+
+
     @Override
     public String marshall(Object marshalledObject) {
-        if (String.class.equals(marshalledObject.getClass()) ||
-                Duration.class.equals(marshalledObject.getClass())) {
-            return marshalledObject.toString();
+        String result = tryPrimitiveMarshall(marshalledObject);
+        if(result != null){
+            return result;
         }
 
         try {
