@@ -120,4 +120,26 @@ class JacksonDynamicPropertyMarshallerTest {
         assertEquals(USER.getSessionDuration(), deserialized.getSessionDuration());
         assertEquals(USER.getPhones(), deserialized.getPhones());
     }
+
+
+    @Test
+    public void marshal_and_unmarshal_relative_path_inside_complex_object() {
+        PathContainer obj = new PathContainer(Paths.get("location"));
+        String serialized = marshaller.marshall(obj);
+        assertEquals("{\"path\":\"location\"}", serialized);
+
+        PathContainer deserialized = marshaller.unmarshall(serialized, PathContainer.class);
+        assertEquals(obj.getPath(), deserialized.getPath());
+    }
+
+    @Test
+    public void marshal_and_unmarshal_absolute_path_inside_complex_object() {
+        PathContainer obj = new PathContainer(Paths.get("/some/location"));
+        String serialized = marshaller.marshall(obj);
+        assertEquals("{\"path\":\"/some/location\"}", serialized);
+
+        PathContainer deserialized = marshaller.unmarshall(serialized, PathContainer.class);
+        assertEquals(obj.getPath(), deserialized.getPath());
+    }
+
 }

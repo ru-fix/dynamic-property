@@ -10,6 +10,7 @@ import com.fasterxml.jackson.module.kotlin.KotlinModule;
 import ru.fix.dynamic.property.api.marshaller.DynamicPropertyMarshaller;
 import ru.fix.dynamic.property.api.marshaller.exception.DynamicPropertySerializationException;
 
+import java.nio.file.Path;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -37,6 +38,7 @@ public class JacksonDynamicPropertyMarshaller implements DynamicPropertyMarshall
 
         SimpleModule durationModule = new SimpleModule();
         durationModule.addSerializer(Duration.class, new DurationSerializer());
+        durationModule.addSerializer(Path.class, new PathSerializer());
         mapper.registerModules(localDatetimeModule, durationModule);
 
     }
