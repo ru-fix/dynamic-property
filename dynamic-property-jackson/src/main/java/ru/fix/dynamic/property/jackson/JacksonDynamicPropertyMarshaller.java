@@ -1,7 +1,6 @@
 package ru.fix.dynamic.property.jackson;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -11,18 +10,21 @@ import com.fasterxml.jackson.module.kotlin.KotlinModule;
 import ru.fix.dynamic.property.api.marshaller.DynamicPropertyMarshaller;
 import ru.fix.dynamic.property.api.marshaller.exception.DynamicPropertySerializationException;
 
-import java.io.IOException;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Objects;
+import java.util.Optional;
 
 
 /**
  * Implementation of {@link DynamicPropertyMarshaller} which provides serialization and deserialization by Jacskon.
  *
- * @author Ayrat Zulkarnyaev
  */
 public class JacksonDynamicPropertyMarshaller implements DynamicPropertyMarshaller {
+
+    private final StdSerializer stdSerializer = new StdSerializer();
 
     private final ObjectMapper mapper = new ObjectMapper()
             .setSerializationInclusion(JsonInclude.Include.NON_NULL)
@@ -36,42 +38,41 @@ public class JacksonDynamicPropertyMarshaller implements DynamicPropertyMarshall
 
         SimpleModule durationModule = new SimpleModule();
         durationModule.addSerializer(Duration.class, new DurationSerializer());
+        durationModule.addSerializer(Path.class, new PathSerializer());
         mapper.registerModules(localDatetimeModule, durationModule);
 
     }
 
     @Override
     public String marshall(Object marshalledObject) {
-        if (String.class.equals(marshalledObject.getClass()) ||
-                Duration.class.equals(marshalledObject.getClass())) {
-            return marshalledObject.toString();
-        }
-
+        Objects.requireNonNull(marshalledObject);
         try {
+            Optional<String> result = stdSerializer.marshall(marshalledObject);
+            if(result.isPresent()){
+                return result.get();
+            }
+
             return mapper.writeValueAsString(marshalledObject);
-        } catch (JsonProcessingException e) {
+        } catch (Exception e) {
             throw new DynamicPropertySerializationException(
-                    "Failed to marshalling pojo. Object details: " + marshalledObject, e);
+                    "Failed to serialize. Type: " + marshalledObject.getClass() + ". Instance: " + marshalledObject, e);
         }
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public <T> T unmarshall(String rawString, Class<T> clazz) {
-        if (String.class.equals(clazz)) {
-            return (T) rawString;
-        }
-
-        if (Duration.class.equals(clazz)) {
-            return (T) Duration.parse(rawString);
-        }
-
+    public <T> T unmarshall(String rawString, Class<T> type) {
+        Objects.requireNonNull(rawString);
+        Objects.requireNonNull(type);
         try {
-            return mapper.readValue(rawString, clazz);
-        } catch (IOException e) {
+            Optional<Object> result = stdSerializer.unmarshall(rawString, type);
+            if (result.isPresent()) {
+                return (T) result.get();
+            }
+
+            return mapper.readValue(rawString, type);
+        } catch (Exception e) {
             throw new DynamicPropertySerializationException(
-                    String.format("Failed to unmarshall json text to type %s. JSon: %s", clazz, rawString), e);
+                    "Failed to deserialize. Type: " + type + ". From " + rawString, e);
         }
     }
-
 }
