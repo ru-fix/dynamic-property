@@ -1,6 +1,7 @@
 package ru.fix.dynamic.property.jackson;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -29,7 +30,8 @@ public class JacksonDynamicPropertyMarshaller implements DynamicPropertyMarshall
     private final ObjectMapper mapper = new ObjectMapper()
             .setSerializationInclusion(JsonInclude.Include.NON_NULL)
             .registerModule(new JavaTimeModule())
-            .registerModule(new KotlinModule());
+            .registerModule(new KotlinModule())
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     public JacksonDynamicPropertyMarshaller() {
         SimpleModule localDatetimeModule = new SimpleModule();
