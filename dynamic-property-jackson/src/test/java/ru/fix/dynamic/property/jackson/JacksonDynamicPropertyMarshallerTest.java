@@ -96,6 +96,18 @@ class JacksonDynamicPropertyMarshallerTest {
             "\"sessionDuration\":\"PT1S\"" +
             "}";
 
+
+    private static final String USER_JSON_WITH_UNKNOWN_FIELD = "" +
+            "{" +
+            "\"name\":\"pretty name\"," +
+            "\"email\":{" +
+            "\"value\":\"test@mail.ua\"" +
+            "}," +
+            "\"phones\":[88005553535,11111111111]," +
+            "\"sessionDuration\":\"PT1S\"," +
+            "\"unknownField\":\"123\"" +
+            "}";
+
     private static final User USER = new User("pretty name", new Email("test@mail.ua"),
             Arrays.asList(BigInteger.valueOf(88005553535L), BigInteger.valueOf(11111111111L)), Duration.ofSeconds(1));
 
@@ -140,6 +152,15 @@ class JacksonDynamicPropertyMarshallerTest {
 
         PathContainer deserialized = marshaller.unmarshall(serialized, PathContainer.class);
         assertEquals(obj.getPath(), deserialized.getPath());
+    }
+
+    @Test
+    public void unmarshal_object_with_unknown_field(){
+        User deserialized = marshaller.unmarshall(USER_JSON_WITH_UNKNOWN_FIELD, User.class);
+        assertEquals(USER.getName(), deserialized.getName());
+        assertEquals(USER.getEmail().getValue(), deserialized.getEmail().getValue());
+        assertEquals(USER.getSessionDuration(), deserialized.getSessionDuration());
+        assertEquals(USER.getPhones(), deserialized.getPhones());
     }
 
 }
