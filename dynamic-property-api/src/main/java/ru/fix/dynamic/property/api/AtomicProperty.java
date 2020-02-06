@@ -85,7 +85,7 @@ public class AtomicProperty<T> implements DynamicProperty<T> {
     public DynamicProperty<T> addAndCallListener(DynamicPropertyListener<T> listener) {
         listeners.add(listener);
         listener.onPropertyChanged(null, holder.get());
-        return null;
+        return this;
     }
 
     @Override
