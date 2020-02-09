@@ -28,7 +28,7 @@ class MyService{
 }
 ``` 
 
-Support various PropertySource like simple files
+Support various property sources.
 
 ![](docs/dynamic-properties.png?raw=true)
 
