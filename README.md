@@ -14,7 +14,8 @@ class MyService{
     
     init {
         setting.addAndCallListener { newSetting ->
-            //initialize or update service state on settings change  
+            // initialize service
+            // or update state on settings change  
         }
     }
     
@@ -26,6 +27,10 @@ class MyService{
     }
 }
 ``` 
+
+Support various PropertySource like simple files
+
+![](docs/dynamic-properties.png?raw=true)
 
 ## Compose properties
 You can build one property based on another:
