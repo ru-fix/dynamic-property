@@ -18,7 +18,7 @@ dependencies {
 
     implementation(Libs.log4j_kotlin)
 
-    api(project(Projs.dynamic_property_api.dependency))
+    api(project(Projs.`dynamic-property-api`.dependency))
 
 
     testImplementation(Libs.junit_api)
@@ -28,7 +28,7 @@ dependencies {
     testImplementation(Libs.hamkrest)
     testImplementation(Libs.awaitility)
 
-    testImplementation(project(Projs.dynamic_property_jackson.dependency))
+    testImplementation(project(Projs.`dynamic-property-jackson`.dependency))
 }
 
 

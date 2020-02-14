@@ -7,14 +7,14 @@ plugins {
 }
 
 dependencies {
-    api(project(Projs.dynamic_property_api.dependency))
+    api(project(Projs.`dynamic-property-api`.dependency))
 
     implementation(Libs.slf4j_api)
-    implementation(Libs.jfix_stdlib_concurrency){
+    implementation(Libs.jfix_stdlib_concurrency) {
         exclude("ru.fix")
     }
 
-    testImplementation(project(Projs.dynamic_property_api.dependency))
+    testImplementation(project(Projs.`dynamic-property-api`.dependency))
 
     testImplementation(Libs.junit_api)
     testRuntimeOnly(Libs.junit_engine)

@@ -17,7 +17,7 @@ object Vers {
     const val spring_boot_auto_configure = "2.1.5.RELEASE"
     const val jackson = "2.9.9"
 
-    const val log4j =  "2.12.0"
+    const val log4j = "2.12.0"
 
     const val jfix_stdlib = "1.0.60"
 }
@@ -25,7 +25,7 @@ object Vers {
 object Libs {
     //Plugins
     const val gradle_release_plugin = "ru.fix:gradle-release-plugin:${Vers.gradle_release_plugin}"
-    const val dokka_gradle_plugin =  "org.jetbrains.dokka:dokka-gradle-plugin:${Vers.dokkav}"
+    const val dokka_gradle_plugin = "org.jetbrains.dokka:dokka-gradle-plugin:${Vers.dokkav}"
     const val asciidoctor = "org.asciidoctor:asciidoctor-gradle-plugin:${Vers.asciidoctor}"
     const val nexus_staging_plugin = "io.codearte.nexus-staging"
     const val nexus_publish_plugin = "de.marcphilipp.nexus-publish"
@@ -69,14 +69,13 @@ object Libs {
     const val jfix_zookeeper = "ru.fix:jfix-zookeeper:1.0.7"
 }
 
-enum class Projs{
-    dynamic_property_jackson,
-    dynamic_property_api,
-    dynamic_property_zk,
-    dynamic_property_spring,
-    dynamic_property_polling,
-    dynamic_property_std_source;
+enum class Projs {
+    `dynamic-property-jackson`,
+    `dynamic-property-api`,
+    `dynamic-property-zk`,
+    `dynamic-property-spring`,
+    `dynamic-property-polling`,
+    `dynamic-property-std-source`;
 
-    val directory get() = this.name.replace('_', '-')
-    val dependency get(): String = ":$directory"
+    val dependency: String get() = ":$name"
 }

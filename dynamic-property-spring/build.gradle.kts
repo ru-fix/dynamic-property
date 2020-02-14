@@ -7,7 +7,7 @@ plugins {
 
 dependencies {
     api(Libs.spring_beans)
-    api(project(Projs.dynamic_property_api.dependency))
+    api(project(Projs.`dynamic-property-api`.dependency))
 
     implementation(Libs.slf4j_api)
     implementation(Libs.spring_boot_auto_configure)
@@ -21,8 +21,8 @@ dependencies {
     testRuntimeOnly(Libs.slf4j_over_log4j)
     testRuntimeOnly(Libs.log4j_core)
 
-    testImplementation(project(Projs.dynamic_property_std_source.dependency))
-    testImplementation(project(Projs.dynamic_property_jackson.dependency))
+    testImplementation(project(Projs.`dynamic-property-std-source`.dependency))
+    testImplementation(project(Projs.`dynamic-property-jackson`.dependency))
     testImplementation(Libs.jfix_stdlib_concurrency){
         exclude("ru.fix")
     }
