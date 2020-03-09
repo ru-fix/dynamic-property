@@ -1,7 +1,5 @@
 package ru.fix.dynamic.property.api;
 
-import ru.fix.dynamic.property.api.source.DynamicPropertySource;
-
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -12,7 +10,7 @@ import java.util.function.Supplier;
  * In case of {@link #delegated(Supplier)}, returned {@link DynamicProperty} will allow subscriptions but actually
  * does not provide listeners functionality and does not invoke client listeners. <br>
  * <br>
- * Use {@link #callAndSubscribe(Object, PropertyListener)} to reuse same code block during first initialization
+ * Use {@link #subscribeAndCall(Object, PropertyListener)} to reuse same code block during first initialization
  * and consequence updates: <br>
  * <pre>{@code
  * final Subscription subscription;
@@ -25,7 +23,7 @@ import java.util.function.Supplier;
  *     }
  * }
  * }</pre>
- * Subscription instance returned by {@link #callAndSubscribe(Object, PropertyListener)} should be kept strongly reachable. <br/>
+ * Subscription instance returned by {@link #subscribeAndCall(Object, PropertyListener)} should be kept strongly reachable. <br/>
  * As soon as Subscription instance garbage collected, subscription canceled and {@link PropertyListener} stop being invoked. <br/>
  * You can cancel subscription via {@link PropertySubscription#close()} <br/>
  * <br/>
@@ -99,7 +97,7 @@ public interface DynamicProperty<T> extends AutoCloseable {
      * {@link PropertySubscription} gives an access to current {@link DynamicProperty} via
      * {@link PropertySubscription#get()}.
      */
-    PropertySubscription<T> callAndSubscribe(Object subscriber, PropertyListener<T> listener);
+    PropertySubscription<T> subscribeAndCall(Object subscriber, PropertyListener<T> listener);
 
     /**
      * @return DynamicProperty that holds given value and never changes.

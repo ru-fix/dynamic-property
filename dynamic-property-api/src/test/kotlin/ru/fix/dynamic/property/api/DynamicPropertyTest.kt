@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicReference
 class DynamicPropertyTest {
 
     class MyService(poolSize: DynamicProperty<Int>) {
-        private val poolSize: PropertySubscription<Int> = poolSize.callAndSubscribe(this) { oldValue, newValue ->
+        private val poolSize: PropertySubscription<Int> = poolSize.subscribeAndCall(this) { oldValue, newValue ->
             println("poolSize changed from $oldValue to $newValue")
         }
 
@@ -33,7 +33,7 @@ class DynamicPropertyTest {
         val listenerAcceptedNewValue = AtomicReference<Int>()
         val listenerAcceptedOldValue = AtomicReference<Int>()
 
-        val subscription = property.callAndSubscribe { old, new ->
+        val subscription = property.subscribeAndCall { old, new ->
             listenerAcceptedOldValue.set(old)
             listenerAcceptedNewValue.set(new)
         }
@@ -57,7 +57,7 @@ class DynamicPropertyTest {
         val captorOld = AtomicReference(0)
         val captorNew = AtomicReference(0)
 
-        val subscription = intProperty.callAndSubscribe { old, new ->
+        val subscription = intProperty.subscribeAndCall { old, new ->
             captorOld.set(old)
             captorNew.set(new)
         }

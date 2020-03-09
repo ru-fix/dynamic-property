@@ -13,7 +13,7 @@ public class CombinedProperty<R> implements DynamicProperty<R> {
     public CombinedProperty(Collection<DynamicProperty<?>> sources, Supplier<R> combiner) {
         property = new AtomicProperty<>(null);
         subscriptions = sources.stream()
-                .map(source -> source.callAndSubscribe(
+                .map(source -> source.subscribeAndCall(
                         (anyOldValue, anyNewValue) -> property.set(combiner.get())))
                 .collect(Collectors.toList());
     }
@@ -25,7 +25,7 @@ public class CombinedProperty<R> implements DynamicProperty<R> {
 
     @Override
     public Subscription callAndSubscribe(PropertyListener<R> listener) {
-        return property.callAndSubscribe(listener);
+        return property.subscribeAndCall(listener);
     }
 
     @Override

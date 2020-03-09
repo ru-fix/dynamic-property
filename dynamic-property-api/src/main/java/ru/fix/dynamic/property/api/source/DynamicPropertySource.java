@@ -1,7 +1,6 @@
 package ru.fix.dynamic.property.api.source;
 
 import ru.fix.dynamic.property.api.DynamicProperty;
-import ru.fix.dynamic.property.api.DynamicPropertyWeakListener;
 
 /**
  * Storage that stores {@link DynamicProperty} values and notify {@link DynamicProperty} instances when values changes.
@@ -11,22 +10,22 @@ public interface DynamicPropertySource extends AutoCloseable {
     /**
      * Subscription of {@link DynamicProperty} instance to {@link DynamicPropertySource} events. <br>
      * When {@link Subscription} instance became weakly reachable <br>
-     * corresponding {@link DynamicPropertyWeakListener} stops receiving events. <br>
+     * corresponding {@link Listener} stops receiving events. <br>
      * Same happens if {@link Subscription} closed explicitly via {@link AutoCloseable#close()} <br>
      * <br>
-     * See {@link #subscribeAndCallListener(String, Class, OptionalDefaultValue, Listener)} <br>
+     * See {@link #subscribeAndCall(String, Class, OptionalDefaultValue, Listener)} <br>
      */
-    interface XSubscription extends AutoCloseable {
+    interface Subscription extends AutoCloseable {
         /**
          * Stop subscription.
-         * Corresponding {@link DynamicPropertyWeakListener} stops receiving events.
+         * Corresponding {@link Listener} stops receiving events.
          */
         void close();
     }
 
     /**
      *
-     * See {@link #subscribeAndCallListener(String, Class, OptionalDefaultValue, Listener)}
+     * See {@link #subscribeAndCall(String, Class, OptionalDefaultValue, Listener)}
      * @param <T>
      */
     @FunctionalInterface
@@ -50,7 +49,7 @@ public interface DynamicPropertySource extends AutoCloseable {
      * This approach decouple {@link DynamicPropertySource} from listeners and allows GC to gather {@link DynamicProperty} instances
      * that no longer needed.
      */
-    <T> Subscription subscribeAndCallListener(
+    <T> Subscription subscribeAndCall(
             String propertyName,
             Class<T> propertyType,
             OptionalDefaultValue<T> defaultValue,

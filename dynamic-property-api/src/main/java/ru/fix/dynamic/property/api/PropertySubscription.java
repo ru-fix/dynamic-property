@@ -14,7 +14,7 @@ package ru.fix.dynamic.property.api;
  * }
  * }</pre>
  *
- * {@link DynamicProperty#callAndSubscribe(Object, PropertyListener)} creates a {@link PropertySubscription} instance.
+ * {@link DynamicProperty#subscribeAndCall(Object, PropertyListener)} creates a {@link PropertySubscription} instance.
  * {@link PropertyListener} will continue to receive notifications
  * as long as {@link PropertySubscription} instance stays strongly reachable.
  * {@link PropertySubscription} can be canceled via {@link PropertySubscription#close()}.

@@ -14,7 +14,7 @@ public interface PropertyListener<T> {
      * <p>
      * Be aware that it is possible for listener to be invoked with the same oldValue and newValue.
      * <p>
-     * Method {@link DynamicProperty#callAndSubscribe(Object, PropertyListener)}} invokes listener
+     * Method {@link DynamicProperty#subscribeAndCall(Object, PropertyListener)}} invokes listener
      * with null oldValue.
      *
      * @param oldValue previous value of the property or null if not existed before

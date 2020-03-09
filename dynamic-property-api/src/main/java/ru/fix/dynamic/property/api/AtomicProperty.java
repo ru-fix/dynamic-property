@@ -113,7 +113,7 @@ public class AtomicProperty<T> implements DynamicProperty<T> {
     }
 
     @Override
-    public PropertySubscription<T> callAndSubscribe(Object subscriber, PropertyListener<T> listener) {
+    public PropertySubscription<T> subscribeAndCall(Object subscriber, PropertyListener<T> listener) {
         synchronized (lock) {
             var listenerWeakReference = new WeakReference<>(listener);
             listeners.add(listenerWeakReference);
