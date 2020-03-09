@@ -1,19 +1,21 @@
 package ru.fix.dynamic.property.api;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public class CombinedProperty<R> implements DynamicProperty<R> {
 
     private final AtomicProperty<R> property;
+    private final List<Subscription> subscriptions;
 
     public CombinedProperty(Collection<DynamicProperty<?>> sources, Supplier<R> combiner) {
         property = new AtomicProperty<>(null);
-        for (DynamicProperty<?> source : sources) {
-            source.addListener((anyOldValue, anyNewValue) -> property.set(combiner.get()));
-        }
-        //This way we will not miss property update between initialization and subscription
-        property.set(combiner.get());
+        subscriptions = sources.stream()
+                .map(source -> source.callAndSubscribe(
+                        (anyOldValue, anyNewValue) -> property.set(combiner.get())))
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -22,23 +24,13 @@ public class CombinedProperty<R> implements DynamicProperty<R> {
     }
 
     @Override
-    public DynamicProperty<R> addAndCallListener(DynamicPropertyListener<R> listener) {
-        return property.addAndCallListener(listener);
+    public Subscription callAndSubscribe(PropertyListener<R> listener) {
+        return property.callAndSubscribe(listener);
     }
 
     @Override
-    public R addListenerAndGet(DynamicPropertyListener<R> listener) {
-        return property.addListenerAndGet(listener);
-    }
-
-    @Override
-    public DynamicProperty<R> removeListener(DynamicPropertyListener<R> listener) {
-        return property.removeListener(listener);
-    }
-
-    @Override
-    public DynamicProperty<R> addListener(DynamicPropertyListener<R> listener) {
-        return property.addListener(listener);
+    public void unsubscribe(PropertyListener<R> listener) {
+        property.unsubscribe(listener);
     }
 
     @Override

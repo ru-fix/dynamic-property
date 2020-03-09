@@ -3,8 +3,9 @@ package ru.fix.dynamic.property.api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.lang.ref.WeakReference;
+import java.util.Collection;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -22,7 +23,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * result = myService.doWork()
  * assertThat(result, ...)
  * }</pre>
- *
+ * <p>
  * Be aware that listeners invoked in same thread, that calls {@link #set(Object)} <br>
  * This class does not provide any synchronization except holding volatile variable in order to stay lightweight <br>
  * Here is an example that leads to race condition:
@@ -41,15 +42,17 @@ import java.util.concurrent.atomic.AtomicReference;
  * //Problem 4. MyService method initialize could be invoked twice and see wrong order of changes:
  * // at first it will see 2 and then 1.
  * }</pre>
- *
+ * <p>
  * In order to prevent all four problems user of AtomicProperty should organize proper thread safe usages of the property.
+ *
  * @author Kamil Asfandiyarov
  */
 public class AtomicProperty<T> implements DynamicProperty<T> {
     private static final Logger log = LoggerFactory.getLogger(AtomicProperty.class);
 
+    private final Object lock = new Object();
     private final AtomicReference<T> holder = new AtomicReference<>();
-    private final List<DynamicPropertyListener<T>> listeners = new CopyOnWriteArrayList<>();
+    private final Collection<WeakReference<PropertyListener<T>>> listeners = new ConcurrentLinkedDeque<>();
 
     public AtomicProperty() {
     }
@@ -59,15 +62,21 @@ public class AtomicProperty<T> implements DynamicProperty<T> {
     }
 
     public void set(T newValue) {
-        T oldValue = holder.getAndSet(newValue);
-        listeners.forEach(listener -> {
-            try {
-                listener.onPropertyChanged(oldValue, newValue);
-            } catch (Exception exc) {
-                log.error("Failed to notify listener on property change. Old value{}, new value {}.",
-                        oldValue, newValue, exc);
-            }
-        });
+        synchronized (lock) {
+            T oldValue = holder.getAndSet(newValue);
+            listeners.forEach(ref -> {
+                try {
+                    var listener = ref.get();
+                    if (listener != null) {
+                        listener.onPropertyChanged(oldValue, newValue);
+                    }
+                } catch (Exception exc) {
+                    log.error("Failed to notify listener on property change. Old value{}, new value {}.",
+                            oldValue, newValue, exc);
+                }
+            });
+        }
+        listeners.removeIf(ref -> ref.get() == null);
     }
 
     @Override
@@ -75,29 +84,52 @@ public class AtomicProperty<T> implements DynamicProperty<T> {
         return holder.get();
     }
 
-    @Override
-    public DynamicProperty<T> addListener(DynamicPropertyListener<T> listener) {
-        listeners.add(listener);
-        return this;
+    static class Subscription<T> implements PropertySubscription<T> {
+        private final AtomicProperty<T> sourceProperty;
+        private final WeakReference<PropertyListener<T>> listenerWeakReference;
+        private final PropertyListener<T> listener;
+        private final Object subscriber;
+
+        Subscription(
+                AtomicProperty<T> sourceProperty,
+                WeakReference<PropertyListener<T>> listenerWeakReference,
+                PropertyListener<T> listener, Object subscriber) {
+            this.sourceProperty = sourceProperty;
+            this.listenerWeakReference = listenerWeakReference;
+            this.listener = listener;
+            this.subscriber = subscriber;
+        }
+
+        @Override
+        public T get() {
+            return sourceProperty.get();
+        }
+
+        @Override
+        public void close() {
+            sourceProperty.listeners.remove(listenerWeakReference);
+            SubscriptionTracker.removeSubscription(subscriber, this);
+        }
     }
 
     @Override
-    public DynamicProperty<T> addAndCallListener(DynamicPropertyListener<T> listener) {
-        listeners.add(listener);
-        listener.onPropertyChanged(null, holder.get());
-        return this;
-    }
+    public PropertySubscription<T> callAndSubscribe(Object subscriber, PropertyListener<T> listener) {
+        synchronized (lock) {
+            var listenerWeakReference = new WeakReference<>(listener);
+            listeners.add(listenerWeakReference);
 
-    @Override
-    public T addListenerAndGet(DynamicPropertyListener<T> listener) {
-        listeners.add(listener);
-        return holder.get();
-    }
+            var subscription = new Subscription<T>(
+                    this,
+                    listenerWeakReference,
+                    listener,
+                    subscriber);
 
-    @Override
-    public DynamicProperty<T> removeListener(DynamicPropertyListener<T> listener) {
-        listeners.remove(listener);
-        return this;
+            SubscriptionTracker.registerSubscription(subscriber, subscription);
+
+            listener.onPropertyChanged(null, holder.get());
+
+            return subscription;
+        }
     }
 
     @Override

@@ -13,28 +13,21 @@ public class ConstantProperty<T> implements DynamicProperty<T> {
     }
 
     @Override
-    public ConstantProperty<T> addListener(DynamicPropertyListener<T> listener) {
-        //Constant property never changes
-        return this;
-    }
-
-    @Override
-    public DynamicProperty<T> addAndCallListener(DynamicPropertyListener<T> listener) {
+    public Subscription callAndSubscribe(PropertyListener<T> listener) {
         listener.onPropertyChanged(null, value);
-        return this;
+
+        return new Subscription() {
+            @Override
+            public void close() {
+            }
+        };
     }
 
     @Override
-    public T addListenerAndGet(DynamicPropertyListener<T> listener) {
-        return value;
+    public void unsubscribe(PropertyListener<T> listener) {
     }
 
     @Override
-    public DynamicProperty<T> removeListener(DynamicPropertyListener<T> listener) {
-        return this;
-    }
-
-    @Override
-    public void close(){
+    public void close() {
     }
 }

@@ -1,7 +1,7 @@
 package ru.fix.dynamic.property.api.source;
 
 import ru.fix.dynamic.property.api.DynamicProperty;
-import ru.fix.dynamic.property.api.DynamicPropertyListener;
+import ru.fix.dynamic.property.api.DynamicPropertyWeakListener;
 
 /**
  * Storage that stores {@link DynamicProperty} values and notify {@link DynamicProperty} instances when values changes.
@@ -9,28 +9,33 @@ import ru.fix.dynamic.property.api.DynamicPropertyListener;
 public interface DynamicPropertySource extends AutoCloseable {
 
     /**
-     * Represent subscription of  {@link DynamicProperty} to {@link DynamicPropertySource} events. <br>
+     * Subscription of {@link DynamicProperty} instance to {@link DynamicPropertySource} events. <br>
      * When {@link Subscription} instance became weakly reachable <br>
-     * corresponding {@link DynamicPropertyListener} stops receiving events. <br>
-     * Same happens if {@link Subscription} closed explicitly via {@link AutoCloseable} <br>
+     * corresponding {@link DynamicPropertyWeakListener} stops receiving events. <br>
+     * Same happens if {@link Subscription} closed explicitly via {@link AutoCloseable#close()} <br>
      * <br>
-     * See {@link #subscribeAndCallListener(String, Class, OptionalDefaultValue, DynamicPropertyListener)} <br>
+     * See {@link #subscribeAndCallListener(String, Class, OptionalDefaultValue, Listener)} <br>
      */
-    interface Subscription extends AutoCloseable {
+    interface XSubscription extends AutoCloseable {
         /**
          * Stop subscription.
-         * Corresponding {@link DynamicPropertyListener} stops receiving events.
+         * Corresponding {@link DynamicPropertyWeakListener} stops receiving events.
          */
         void close();
     }
 
+    /**
+     *
+     * See {@link #subscribeAndCallListener(String, Class, OptionalDefaultValue, Listener)}
+     * @param <T>
+     */
     @FunctionalInterface
     interface Listener<T> {
         void onPropertyChanged(T newValue);
     }
 
     /**
-     * Subscribe listener and immediately invokes listener with current property value.
+     * Subscribes listener for property source events and immediately invokes listener with current property value.
      * Listener will receive current or updated value from the source or defaultValue if source does not have defined property.
      * Listener will be triggered on add/update/remove events for specified property.
      *

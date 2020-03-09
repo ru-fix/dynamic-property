@@ -3,7 +3,7 @@ package ru.fix.dynamic.property.api.source;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.fix.dynamic.property.api.DynamicProperty;
-import ru.fix.dynamic.property.api.DynamicPropertyListener;
+import ru.fix.dynamic.property.api.DynamicPropertyWeakListener;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * Registers listener within {@link DynamicPropertySource}.
  * Listen for events from  {@link DynamicPropertySource}.
  * Update local value and propagates update events to it's subscribes.
- * See {@link DynamicProperty#addAndCallListener(DynamicPropertyListener)}
+ * See {@link DynamicProperty#addAndCallListener(DynamicPropertyWeakListener)}
  *
  * If instance of this class became weakly reachable it will stop receiving events from {@link DynamicPropertySource}
  * Same effect will be archived through {@link DynamicProperty#close()}
@@ -26,7 +26,7 @@ public class SourcedProperty<T> implements DynamicProperty<T> {
     private final String name;
     private final Class<T> type;
     private final AtomicReference<T> currentValue = new AtomicReference<>();
-    private final List<DynamicPropertyListener<T>> listeners = new CopyOnWriteArrayList<>();
+    private final List<DynamicPropertyWeakListener<T>> listeners = new CopyOnWriteArrayList<>();
 
     private final DynamicPropertySource propertySource;
     private final DynamicPropertySource.Subscription subscription;
@@ -79,26 +79,26 @@ public class SourcedProperty<T> implements DynamicProperty<T> {
      * @param listener Listener runs whenever property value changes.
      */
     @Override
-    public DynamicProperty<T> addListener(DynamicPropertyListener<T> listener) {
+    public DynamicProperty<T> addListener(DynamicPropertyWeakListener<T> listener) {
         listeners.add(listener);
         return this;
     }
 
     @Override
-    public synchronized DynamicProperty<T> addAndCallListener(DynamicPropertyListener<T> listener) {
+    public synchronized DynamicProperty<T> addAndCallListener(DynamicPropertyWeakListener<T> listener) {
         listeners.add(listener);
         listener.onPropertyChanged(null, currentValue.get());
         return this;
     }
 
     @Override
-    public synchronized T addListenerAndGet(DynamicPropertyListener<T> listener) {
+    public synchronized T addListenerAndGet(DynamicPropertyWeakListener<T> listener) {
         listeners.add(listener);
         return currentValue.get();
     }
 
     @Override
-    public DynamicProperty<T> removeListener(DynamicPropertyListener<T> listener) {
+    public DynamicProperty<T> removeListener(DynamicPropertyWeakListener<T> listener) {
         listeners.remove(listener);
         return this;
     }

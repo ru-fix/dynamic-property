@@ -4,10 +4,10 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 /**
- * Be aware that SupplierProperty
- * does not notify listeners through {@link java.beans.PropertyChangeListener}
+ * Be aware that DelegatedProperty
+ * does not notify listeners through {@link PropertyListener}
  * All requests to {@link DynamicProperty#get()}
- * will be delegated to {@link Supplier#get()} method of given supplier.
+ * will be delegated to {@link Supplier#get()} method of the given supplier.
  *
  * If you need a DynamicProperty with full listener support backed up by {@link Supplier} use DynamicPropertyPoller
  * @see ru.fix.dynamic.property.polling.DynamicPropertyPoller
@@ -27,24 +27,17 @@ public class DelegatedProperty<T> implements DynamicProperty<T> {
     }
 
     @Override
-    public DynamicProperty<T> addListener(DynamicPropertyListener<T> listener) {
-        return this;
-    }
-
-    @Override
-    public DynamicProperty<T> addAndCallListener(DynamicPropertyListener<T> listener) {
+    public Subscription callAndSubscribe(PropertyListener<T> listener) {
         listener.onPropertyChanged(null, supplier.get());
-        return this;
+        return new Subscription() {
+            @Override
+            public void close() {
+            }
+        };
     }
 
     @Override
-    public T addListenerAndGet(DynamicPropertyListener<T> listener) {
-        return supplier.get();
-    }
-
-    @Override
-    public DynamicProperty<T> removeListener(DynamicPropertyListener<T> listener) {
-        return this;
+    public void unsubscribe(PropertyListener<T> listener) {
     }
 
     @Override

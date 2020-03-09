@@ -10,7 +10,6 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
 import ru.fix.dynamic.property.api.DynamicProperty
-import ru.fix.dynamic.property.api.DynamicPropertyListener
 import ru.fix.dynamic.property.api.source.DynamicPropertySource
 import ru.fix.dynamic.property.api.annotation.PropertyId
 import ru.fix.dynamic.property.jackson.JacksonDynamicPropertyMarshaller

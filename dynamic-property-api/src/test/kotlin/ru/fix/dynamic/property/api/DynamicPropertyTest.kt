@@ -8,24 +8,24 @@ import java.util.concurrent.atomic.AtomicReference
 
 class DynamicPropertyTest {
 
+    class MyService(poolSize: DynamicProperty<Int>) {
+        private val poolSize: PropertySubscription<Int> = poolSize.callAndSubscribe(this) { oldValue, newValue ->
+            println("poolSize changed from $oldValue to $newValue")
+        }
+
+        fun doWork() {
+            println("doWork with poolSize: ${poolSize.get()}")
+        }
+    }
+
     @Test
     fun constant_property() {
-
         val property = DynamicProperty.of(122)
         assertEquals(122, property.get())
     }
 
     @Test
-    fun add_listener_and_get() {
-
-        val property = DynamicProperty.of(122)
-        val value = property.addListenerAndGet { old, new -> ; }
-        assertEquals(122, value)
-    }
-
-    @Test
     fun atomic_property() {
-
         val property = AtomicProperty(122)
         assertEquals(122, property.get())
 
@@ -33,7 +33,7 @@ class DynamicPropertyTest {
         val listenerAcceptedNewValue = AtomicReference<Int>()
         val listenerAcceptedOldValue = AtomicReference<Int>()
 
-        property.addListener { old, new ->
+        val subscription = property.callAndSubscribe { old, new ->
             listenerAcceptedOldValue.set(old)
             listenerAcceptedNewValue.set(new)
         }
@@ -57,11 +57,10 @@ class DynamicPropertyTest {
         val captorOld = AtomicReference(0)
         val captorNew = AtomicReference(0)
 
-        intProperty.addListener { old, new ->
+        val subscription = intProperty.callAndSubscribe { old, new ->
             captorOld.set(old)
             captorNew.set(new)
         }
-
 
         stringProperty.set("305")
 
