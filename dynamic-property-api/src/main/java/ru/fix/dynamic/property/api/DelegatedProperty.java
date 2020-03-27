@@ -1,5 +1,7 @@
 package ru.fix.dynamic.property.api;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Objects;
 import java.util.function.Supplier;
 
@@ -26,18 +28,20 @@ public class DelegatedProperty<T> implements DynamicProperty<T> {
         return supplier.get();
     }
 
+    @Nonnull
     @Override
-    public Subscription callAndSubscribe(PropertyListener<T> listener) {
+    public PropertySubscription<T> subscribeAndCall(@Nullable Object subscriber, @Nonnull PropertyListener<T> listener) {
         listener.onPropertyChanged(null, supplier.get());
-        return new Subscription() {
+        return new PropertySubscription<T>() {
             @Override
             public void close() {
             }
-        };
-    }
 
-    @Override
-    public void unsubscribe(PropertyListener<T> listener) {
+            @Override
+            public T get() {
+                return supplier.get();
+            }
+        };
     }
 
     @Override

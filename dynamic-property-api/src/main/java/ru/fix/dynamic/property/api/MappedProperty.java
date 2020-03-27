@@ -4,7 +4,7 @@ import java.util.function.Function;
 
 public class MappedProperty<T, R> extends AtomicProperty<R> implements DynamicProperty<R> {
 
-    private final PropertySubscription subscription;
+    private final PropertySubscription<T> subscription;
 
     public MappedProperty(DynamicProperty<T> source, Function<T, R> map) {
         this.subscription = source.subscribeAndCall(

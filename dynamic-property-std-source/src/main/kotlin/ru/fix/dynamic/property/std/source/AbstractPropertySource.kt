@@ -5,8 +5,11 @@ import ru.fix.dynamic.property.api.source.DynamicPropertySource
 import ru.fix.dynamic.property.api.marshaller.DynamicPropertyMarshaller
 import ru.fix.dynamic.property.api.source.OptionalDefaultValue
 import ru.fix.dynamic.property.api.source.DynamicPropertyValueNotFoundException
-import ru.fix.stdlib.concurrency.threads.CleanableWeakReference
-import ru.fix.stdlib.concurrency.threads.ReferenceCleaner
+import ru.fix.stdlib.reference.CleanableWeakReference
+import ru.fix.stdlib.reference.ReferenceCleaner
+import java.lang.ref.Cleaner
+import java.lang.ref.WeakReference
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 
@@ -32,13 +35,13 @@ abstract class AbstractPropertySource(
     }
 
     private object Subscriptions {
-        val store = ConcurrentHashMap<String, ConcurrentHashMap<CleanableWeakReference<Subscription>, Unit>>()
+        val store = ConcurrentHashMap<String, MutableSet<CleanableWeakReference<Subscription>>>()
 
         fun addSubRef(propertyName: String, subRef: CleanableWeakReference<Subscription>) =
-                store.compute(propertyName) { _, value ->
-                    (value ?: ConcurrentHashMap()).apply {
-                        put(subRef, Unit)
-                    }
+                store.compute(propertyName) { _, existingSet ->
+                    val newSet = existingSet ?: Collections.newSetFromMap(ConcurrentHashMap())
+                    newSet.add(subRef)
+                    newSet
                 }
 
         fun removeSubRef(propertyName: String, subRef: CleanableWeakReference<Subscription>) =
@@ -55,18 +58,32 @@ abstract class AbstractPropertySource(
                     }
                 }
 
-        operator fun get(propertyName: String) = store[propertyName]
+        fun removePrunedSubscriptionsAndGet(propertyName: String): MutableSet<CleanableWeakReference<Subscription>>? {
+            return store.compute(propertyName) { _, set ->
+                if (set != null) {
+                    set.removeIf { ref ->
+                        ref.get() == null
+                    }
+                    if (set.isEmpty()) {
+                        null
+                    } else {
+                        set
+                    }
+                } else {
+                    null
+                }
+            }
+        }
 
         fun removeAllSubRef() {
-            val propIter = store.iterator()
-            while (propIter.hasNext()) {
-                val subIter = propIter.next().value.iterator()
+            val propertyIter = store.iterator()
+            while (propertyIter.hasNext()) {
+                val subIter = propertyIter.next().value.iterator()
                 while (subIter.hasNext()) {
-                    val (ref, _) = subIter.next()
-                    ref.cancelCleaningOrder()
+                    subIter.next()
                     subIter.remove()
                 }
-                propIter.remove()
+                propertyIter.remove()
             }
         }
     }
@@ -76,7 +93,9 @@ abstract class AbstractPropertySource(
      *                           if default value is absent, then property does not receive an update
      */
     protected fun invokePropertyListener(propertyName: String, newSerializedValue: String?) {
-        Subscriptions[propertyName]?.forEach { subRef, _ ->
+        val subscriptoins = Subscriptions.removePrunedSubscriptionsAndGet(propertyName) ?: return
+
+        subscriptoins.forEach { subRef ->
             subRef.get()?.let { sub ->
                 try {
                     val newValue = extractPropertyValueOrDefault<Any?>(newSerializedValue, sub)
@@ -93,9 +112,7 @@ abstract class AbstractPropertySource(
      */
     protected abstract fun getPropertyValue(propertyName: String): String?
 
-
-    @Synchronized
-    override fun <T> subscribeAndCallListener(
+    override fun <T: Any?> subscribeAndCall(
             propertyName: String,
             propertyType: Class<T>,
             defaultValue: OptionalDefaultValue<T>,
@@ -106,7 +123,7 @@ abstract class AbstractPropertySource(
                 propertyType as Class<Any>,
                 defaultValue,
                 listener as DynamicPropertySource.Listener<Any>)
-
+//TODO: weak reference test
         val subRef = referenceCleaner.register(subscription, propertyName) { a_ref, a_propName ->
             Subscriptions.removeSubRef(a_propName, a_ref)
         }

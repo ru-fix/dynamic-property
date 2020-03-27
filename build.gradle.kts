@@ -114,6 +114,7 @@ subprojects {
             }
         }
         clientTimeout.set(Duration.of(3, ChronoUnit.MINUTES))
+        connectTimeout.set(Duration.of(3, ChronoUnit.MINUTES))
     }
 
     project.afterEvaluate {

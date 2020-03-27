@@ -1,5 +1,6 @@
 package ru.fix.dynamic.property.api.annotation;
 
+import javax.annotation.Nonnull;
 import java.lang.annotation.*;
 
 /**
@@ -13,6 +14,7 @@ public @interface PropertyId {
     /**
      * Property id
      */
+    @Nonnull
     String value();
 
 }

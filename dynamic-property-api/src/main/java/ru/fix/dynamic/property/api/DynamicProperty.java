@@ -1,5 +1,7 @@
 package ru.fix.dynamic.property.api;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -92,12 +94,13 @@ public interface DynamicProperty<T> extends AutoCloseable {
      *                 and then each time when property changes.
      *
      * @return Subscription instance that keeps listener active.
-     * As soon as {@link PropertySubscription} garbage collected, the listener stops receiving events.
-     * You can unsubscribe listener from events via {@link PropertySubscription#close()}
-     * {@link PropertySubscription} gives an access to current {@link DynamicProperty} via
+     * As soon as {@link PropertySubscription} garbage collected, the listener stops receiving events. <br>
+     * You can unsubscribe listener from events via {@link PropertySubscription#close()} <br>
+     * {@link PropertySubscription} gives an access to current {@link DynamicProperty} value via
      * {@link PropertySubscription#get()}.
      */
-    PropertySubscription<T> subscribeAndCall(Object subscriber, PropertyListener<T> listener);
+    @Nonnull
+    PropertySubscription<T> subscribeAndCall(@Nullable Object subscriber, @Nonnull PropertyListener<T> listener);
 
     /**
      * @return DynamicProperty that holds given value and never changes.

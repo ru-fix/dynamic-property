@@ -2,6 +2,9 @@ package ru.fix.dynamic.property.api.source;
 
 import ru.fix.dynamic.property.api.DynamicProperty;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 /**
  * Storage that stores {@link DynamicProperty} values and notify {@link DynamicProperty} instances when values changes.
  */
@@ -30,7 +33,7 @@ public interface DynamicPropertySource extends AutoCloseable {
      */
     @FunctionalInterface
     interface Listener<T> {
-        void onPropertyChanged(T newValue);
+        void onPropertyChanged(@Nullable T newValue);
     }
 
     /**
@@ -49,10 +52,15 @@ public interface DynamicPropertySource extends AutoCloseable {
      * This approach decouple {@link DynamicPropertySource} from listeners and allows GC to gather {@link DynamicProperty} instances
      * that no longer needed.
      */
+    @Nonnull
     <T> Subscription subscribeAndCall(
+            @Nonnull
             String propertyName,
+            @Nonnull
             Class<T> propertyType,
+            @Nonnull
             OptionalDefaultValue<T> defaultValue,
+            @Nonnull
             Listener<T> listener);
 
 }

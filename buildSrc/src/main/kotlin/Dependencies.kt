@@ -19,10 +19,11 @@ object Vers {
 
     const val log4j = "2.12.0"
 
-    const val jfix_stdlib = "1.0.60"
+    const val jfix_stdlib = "2.0.10"
 }
 
 object Libs {
+
     //Plugins
     const val gradle_release_plugin = "ru.fix:gradle-release-plugin:${Vers.gradle_release_plugin}"
     const val dokka_gradle_plugin = "org.jetbrains.dokka:dokka-gradle-plugin:${Vers.dokkav}"
@@ -36,9 +37,12 @@ object Libs {
     const val kotlin_reflect = "org.jetbrains.kotlin:kotlin-reflect:${Vers.kotlin}"
 
     const val mockk = "io.mockk:mockk:1.9.3"
-    const val awaitility = "org.awaitility:awaitility:4.0.1"
+    const val awaitility = "org.awaitility:awaitility:4.0.2"
+
+    const val javax_annotation_jsr305= "com.google.code.findbugs:jsr305:3.0.2"
 
     val jfix_stdlib_concurrency = "ru.fix:jfix-stdlib-concurrency:${Vers.jfix_stdlib}"
+    val jfix_stdlib_reference = "ru.fix:jfix-stdlib-reference:${Vers.jfix_stdlib}"
     val jfix_stdlib_files = "ru.fix:jfix-stdlib-files:${Vers.jfix_stdlib}"
 
     const val slf4j_api = "org.slf4j:slf4j-api:${Vers.sl4j}"

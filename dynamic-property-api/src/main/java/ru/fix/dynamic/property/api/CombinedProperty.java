@@ -1,5 +1,7 @@
 package ru.fix.dynamic.property.api;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Supplier;
@@ -8,12 +10,12 @@ import java.util.stream.Collectors;
 public class CombinedProperty<R> implements DynamicProperty<R> {
 
     private final AtomicProperty<R> property;
-    private final List<Subscription> subscriptions;
+    private final List<PropertySubscription<?>> subscriptions;
 
     public CombinedProperty(Collection<DynamicProperty<?>> sources, Supplier<R> combiner) {
-        property = new AtomicProperty<>(null);
+        property = new AtomicProperty<>();
         subscriptions = sources.stream()
-                .map(source -> source.subscribeAndCall(
+                .map(source -> source.subscribeAndCall(null,
                         (anyOldValue, anyNewValue) -> property.set(combiner.get())))
                 .collect(Collectors.toList());
     }
@@ -23,14 +25,10 @@ public class CombinedProperty<R> implements DynamicProperty<R> {
         return property.get();
     }
 
+    @Nonnull
     @Override
-    public Subscription callAndSubscribe(PropertyListener<R> listener) {
-        return property.subscribeAndCall(listener);
-    }
-
-    @Override
-    public void unsubscribe(PropertyListener<R> listener) {
-        property.unsubscribe(listener);
+    public PropertySubscription<R> subscribeAndCall(@Nullable Object subscriber, @Nonnull PropertyListener<R> listener) {
+        return property.subscribeAndCall(subscriber, listener);
     }
 
     @Override

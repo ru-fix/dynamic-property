@@ -1,5 +1,8 @@
 package ru.fix.dynamic.property.api;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 public class ConstantProperty<T> implements DynamicProperty<T> {
     private final T value;
 
@@ -12,19 +15,21 @@ public class ConstantProperty<T> implements DynamicProperty<T> {
         return value;
     }
 
+    @Nonnull
     @Override
-    public Subscription callAndSubscribe(PropertyListener<T> listener) {
+    public PropertySubscription<T> subscribeAndCall(@Nullable Object subscriber, @Nonnull PropertyListener<T> listener) {
         listener.onPropertyChanged(null, value);
 
-        return new Subscription() {
+        return new PropertySubscription<T>() {
+            @Override
+            public T get() {
+                return value;
+            }
+
             @Override
             public void close() {
             }
         };
-    }
-
-    @Override
-    public void unsubscribe(PropertyListener<T> listener) {
     }
 
     @Override

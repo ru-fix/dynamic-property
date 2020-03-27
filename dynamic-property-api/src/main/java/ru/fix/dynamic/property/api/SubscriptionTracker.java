@@ -1,7 +1,6 @@
 package ru.fix.dynamic.property.api;
 
-import ru.fix.dynamic.property.api.source.DynamicPropertySource;
-
+import java.lang.ref.WeakReference;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -10,10 +9,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class SubscriptionTracker {
 
-    private static final Map<Object, Set<PropertySubscription<?>>> activeSubscriptions =
+    private static final Map<WeakReference<Object>, Set<PropertySubscription<?>>> activeSubscriptions =
             Collections.synchronizedMap(new WeakHashMap<>());
 
-    public static void registerSubscription(Object subscriber, PropertySubscription<?> subscription) {
+    //CHECK WHY WE NEED THIS TRACKER
+    public static void registerSubscription(WeakReference<Object> subscriber, PropertySubscription<?> subscription) {
         activeSubscriptions.compute(
                 subscriber,
                 (key, set) -> {
@@ -25,7 +25,7 @@ public class SubscriptionTracker {
                 });
     }
 
-    public static void removeSubscription(Object subscriber, PropertySubscription<?> subscription) {
+    public static void removeSubscription(WeakReference<Object> subscriber, PropertySubscription<?> subscription) {
         activeSubscriptions.computeIfPresent(subscriber, (key, set) -> {
             set.remove(subscription);
             if (set.isEmpty()) {
@@ -34,5 +34,9 @@ public class SubscriptionTracker {
                 return set;
             }
         });
+    }
+
+    public static void removeAllSubscriptions(Object subscriber) {
+        activeSubscriptions.remove(subscriber);
     }
 }
