@@ -64,14 +64,15 @@ import java.util.function.Supplier;
 public interface DynamicProperty<T> extends AutoCloseable {
 
     /**
-     * @return current value of property
+     * @return current value of the property
      */
     T get();
 
     /**
+     * TODO: UPDATE text here
      * Subscribes listener for dynamic property update and invokes this listener with current value of the property.<br>
      * During first invocation of the listener {@link PropertyListener#onPropertyChanged(Object, Object)}
-     *  oldValue is going to be null.
+     * oldValue is going to be null.
      * It is implementation specific in which thread the listener will be invoked after subscription. <br>
      * Be aware that usage of this method could lead to awkward behaviour in term of concurrency. <br>
      * See DynamicProperty interface documentation for details.
@@ -90,8 +91,6 @@ public interface DynamicProperty<T> extends AutoCloseable {
      *      ...
      * }
      * }</pre>
-     * @param listener Listener is activated first time with current value of the property
-     *                 and then each time when property changes.
      *
      * @return Subscription instance that keeps listener active.
      * As soon as {@link PropertySubscription} garbage collected, the listener stops receiving events. <br>
@@ -103,40 +102,45 @@ public interface DynamicProperty<T> extends AutoCloseable {
     PropertySubscription<T> createSubscription();
 
     /**
-     * @return DynamicProperty that holds given value and never changes.
+     * @return constant DynamicProperty that holds given value and never changes.
      */
     static <T> DynamicProperty<T> of(T value) {
         return new ConstantProperty<>(value);
     }
 
     /**
-     * Return DynamicProperty proxy that delegates {@link DynamicProperty#get()}  to given supplier. <br>
+     * Return {@link DynamicProperty} proxy that delegates {@link DynamicProperty#get()}  to given supplier. <br>
      * <br>
      * Be aware that DynamicProperty created this way
-     * does not notify listeners through {@link PropertyListener} <br>
+     * does not notify listeners {@link PropertyListener} <br>
      * Here is an example of inappropriate usage of delegated property: <br>
-     * <b>Bad example:</b><br>
+     * <b>Good example:</b><br>
      * <pre>{@code
      * class Foo(supplier: Supplier<String>){
-     *     // will not work correctly since bar is actually needs listener support
-     *     val bar = Bar(DynamicProperty.delegated(supplier))
-     *
      *     // will work correctly
      *     val baz = Baz(DynamicProperty.delegated(supplier))
      * }
-     *
-     * class Bar(property: DynamicProperty<String>){
-     *     property.callAndSubscribe{value -> ...}
-     * }
-     *
      * class Baz(property: DynamicProperty<String>){
      *     fun doWork(){
      *          if(property.get().contains(...))
      *     }
      * }
      * }</pre>
+     * <b>Bad example:</b><br>
+     * <pre>{@code
+     * class Foo(supplier: Supplier<String>){
+     *     // will not work correctly since bar is actually needs listener support
+     *     val bar = Bar(DynamicProperty.delegated(supplier))
+     * }
+     *
+     * class Bar(property: DynamicProperty<String>){
+     *     subscription = property.createSubscription()
+     *             .setListenerAndCall{value -> ...}
+     * }
+     * }</pre>
      * If you need a DynamicProperty with full listeners support backed up by {@link Supplier}
      * use DynamicPropertyPoller instead
+     *
      * @return DynamicProperty backed up with {@link Supplier}.
      * @see ru.fix.dynamic.property.polling.DynamicPropertyPoller
      */
@@ -147,12 +151,13 @@ public interface DynamicProperty<T> extends AutoCloseable {
     /**
      * Builds one property based on another.
      * <pre>{@code
-     *  val stringProperty: DynamicProperty<String>
-     *  val service = ServiceThatRequiresIntProperty( stringProperty.map { str -> str.toInt() } )
+     *  DynamicProperty<String> stringProperty = ...;
+     *  val service = new ServiceThatRequiresIntProperty( stringProperty.map { str -> str.toInt() } )
      * }</pre>
      * <pre>{@code
-     *  val bigConfigProperty: DynamicProperty<BigConfig>
-     *  val service = ServiceThatRequiresTimeoutInMilliseconds( bigConfigProperty.map { config -> config.timeoutInSeconds * 1000 } )
+     *  DynamicProperty<BigConfig> bigConfigProperty = ...:
+     *  val service = new ServiceThatRequiresTimeoutInMilliseconds(
+     *          bigConfigProperty.map { config -> config.timeoutInSeconds * 1000 } )
      * }</pre>
      */
     default <R> DynamicProperty<R> map(Function<T, R> map) {
@@ -160,8 +165,10 @@ public interface DynamicProperty<T> extends AutoCloseable {
     }
 
     /**
-     * Close this instance of DynamicProperty.
-     * Unsubscribe all {@link PropertyListener} from this instance.
+     * Close this instance of {@link DynamicProperty}.
+     * Unsubscribe all {@link PropertySubscription} with {@link PropertyListener}s from this instance.
+     * This {@link DynamicProperty} instance will stay strongly reachable
+     * from all {@link PropertySubscription} instances its created
      */
     void close();
 }

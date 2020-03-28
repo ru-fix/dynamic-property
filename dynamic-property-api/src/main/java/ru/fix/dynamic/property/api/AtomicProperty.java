@@ -131,6 +131,7 @@ public class AtomicProperty<T> implements DynamicProperty<T> {
         public void close() {
             if(attachedSubscriptionReference != null) {
                 sourceProperty.detachSubscription(this);
+                attachedSubscriptionReference = null;
             }
         }
     }
@@ -143,6 +144,7 @@ public class AtomicProperty<T> implements DynamicProperty<T> {
 
     private void detachSubscription(Subscription<T> subscription) {
         subscriptions.remove(subscription);
+        subscription.attachedSubscriptionReference = null;
     }
 
     private void attachSubscriptionAndCallListener(Subscription<T> subscription){
