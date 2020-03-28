@@ -30,6 +30,7 @@ abstract class AbstractPropertySource(
         lateinit var cleanableReference: CleanableWeakReference<Subscription>
 
         override fun close() {
+            //TODO: remove cleanableReference, search itself by direct unreferencing
             Subscriptions.removeSubRef(propertyName, cleanableReference)
         }
     }
@@ -127,6 +128,8 @@ abstract class AbstractPropertySource(
         val subRef = referenceCleaner.register(subscription, propertyName) { a_ref, a_propName ->
             Subscriptions.removeSubRef(a_propName, a_ref)
         }
+
+        //TODO remove clenableReference
         subscription.cleanableReference = subRef
 
         Subscriptions.addSubRef(propertyName, subRef)

@@ -19,58 +19,41 @@ import javax.annotation.Nonnull;
  * If instance of this class became weakly reachable it will stop receiving events from {@link DynamicPropertySource}
  * Same effect will be archived through {@link DynamicProperty#close()}
  */
-public class SourcedProperty<T> implements DynamicProperty<T> {
+public class SourcedProperty<T>
+        extends AtomicProperty<T>
+        implements DynamicProperty<T> {
+
     private static final Logger log = LoggerFactory.getLogger(SourcedProperty.class);
 
-    private final String name;
     private final Class<T> type;
-    private final DynamicPropertySource propertySource;
-    private final DynamicPropertySource.Subscription subscription;
-    private final AtomicProperty<T> atomicProperty;
+    private final String name;
+    private final DynamicPropertySource.Subscription<T> subscription;
 
     public SourcedProperty(DynamicPropertySource propertySource,
                            String name,
                            Class<T> type,
                            OptionalDefaultValue<T> defaultValue) {
-        this.name = name;
         this.type = type;
-        this.propertySource = propertySource;
-        this.atomicProperty = new AtomicProperty<>();
-        this.atomicProperty.setName(name);
+        this.name = name;
+        super.setName(name);
 
-        subscription = propertySource.subscribeAndCall(
-                this.name,
-                this.type,
-                defaultValue,
-                newValue -> {
-                    T oldValue = atomicProperty.set(newValue);
-                    if (log.isTraceEnabled()) {
-                        log.trace("Sourced property update: name: {}, type: {}, oldValue: {}, newValue: {}",
-                                name,
-                                type,
-                                oldValue,
-                                newValue);
-                    }
-                }
-        );
-    }
-
-    @Override
-    public T get() {
-        return atomicProperty.get();
-    }
-
-    @Override
-    @Nonnull
-    public PropertySubscription<T> subscribeAndCall(@Nonnull Object subscriber,
-                                                    @Nonnull PropertyListener<T> listener) {
-        return atomicProperty.subscribeAndCall(subscriber, listener);
+        subscription = propertySource.createSubscription(name, type, defaultValue);
+        subscription.setAndCallListener(newValue -> {
+            T oldValue = this.set(newValue);
+            if (log.isTraceEnabled()) {
+                log.trace("Sourced property update: name: {}, type: {}, oldValue: {}, newValue: {}",
+                        name,
+                        type,
+                        oldValue,
+                        newValue);
+            }
+        });
     }
 
     @Override
     public void close() {
         this.subscription.close();
-        this.atomicProperty.close();
+        super.close();
     }
 
     @Override
@@ -78,7 +61,7 @@ public class SourcedProperty<T> implements DynamicProperty<T> {
         return "SourcedProperty{" +
                 "type=" + type +
                 ", name='" + name + "'" +
-                ", value=" + atomicProperty.get() +
+                ", value=" + super.get() +
                 '}';
     }
 }

@@ -2,12 +2,14 @@ package ru.fix.dynamic.property.api;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.fix.stdlib.reference.CleanableWeakReference;
 import ru.fix.stdlib.reference.ReferenceCleaner;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.lang.ref.WeakReference;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -53,9 +55,11 @@ import java.util.concurrent.atomic.AtomicReference;
 public class AtomicProperty<T> implements DynamicProperty<T> {
     private static final Logger log = LoggerFactory.getLogger(AtomicProperty.class);
 
-    private final Object lock = new Object();
-    private final AtomicReference<T> holder = new AtomicReference<>();
-    private final Collection<WeakReference<PropertyListener<T>>> listeners = new ConcurrentLinkedDeque<>();
+    private final Object changeValueAndAddListenerLock = new Object();
+    private final AtomicReference<T> valueHolder = new AtomicReference<>();
+    private final Set<CleanableWeakReference<Subscription<T>>> subscriptions =
+            Collections.newSetFromMap(new ConcurrentHashMap<>());
+
     private String name = null;
 
     private final ReferenceCleaner referenceCleaner = ReferenceCleaner.getInstance();
@@ -64,7 +68,7 @@ public class AtomicProperty<T> implements DynamicProperty<T> {
     }
 
     public AtomicProperty(T value) {
-        this.holder.set(value);
+        this.valueHolder.set(value);
     }
 
     public void setName(String name) {
@@ -77,13 +81,13 @@ public class AtomicProperty<T> implements DynamicProperty<T> {
      */
     public T set(T newValue) {
         T oldValue;
-        synchronized (lock) {
-            oldValue = holder.getAndSet(newValue);
-            listeners.forEach(ref -> {
+        synchronized (changeValueAndAddListenerLock) {
+            oldValue = valueHolder.getAndSet(newValue);
+            subscriptions.forEach(ref -> {
                 try {
-                    var listener = ref.get();
-                    if (listener != null) {
-                        listener.onPropertyChanged(oldValue, newValue);
+                    var subscription = ref.get();
+                    if (subscription != null) {
+                        subscription.listener.onPropertyChanged(oldValue, newValue);
                     }
                 } catch (Exception exc) {
                     log.error("Failed to notify listener on property change." +
@@ -92,30 +96,22 @@ public class AtomicProperty<T> implements DynamicProperty<T> {
                 }
             });
         }
-        listeners.removeIf(ref -> ref.get() == null);
+        subscriptions.removeIf(ref -> ref.get() == null);
         return oldValue;
     }
 
     @Override
     public T get() {
-        return holder.get();
+        return valueHolder.get();
     }
 
-    static class Subscription<T> implements PropertySubscription<T> {
+    private static class Subscription<T> implements PropertySubscription<T> {
         private final AtomicProperty<T> sourceProperty;
-        private final WeakReference<PropertyListener<T>> listenerWeakReference;
-        private final PropertyListener<T> listener;
-        private final WeakReference<Object> subscriber;
+        private PropertyListener<T> listener;
+        private CleanableWeakReference<Subscription<T>> attachedSubscriptionReference;
 
-        Subscription(
-                AtomicProperty<T> sourceProperty,
-                WeakReference<PropertyListener<T>> listenerWeakReference,
-                PropertyListener<T> listener,
-                WeakReference<Object> subscriber) {
+        Subscription(AtomicProperty<T> sourceProperty) {
             this.sourceProperty = sourceProperty;
-            this.listenerWeakReference = listenerWeakReference;
-            this.listener = listener;
-            this.subscriber = subscriber;
         }
 
         @Override
@@ -123,50 +119,60 @@ public class AtomicProperty<T> implements DynamicProperty<T> {
             return sourceProperty.get();
         }
 
+
+        @Override
+        public PropertySubscription<T> setAndCallListener(@Nonnull PropertyListener<T> listener) {
+            this.listener = listener;
+            this.sourceProperty.attachSubscriptionAndCallListener(this);
+            return this;
+        }
+
         @Override
         public void close() {
-            sourceProperty.listeners.remove(listenerWeakReference);
-            SubscriptionTracker.removeSubscription(subscriber, this);
+            if(attachedSubscriptionReference != null) {
+                sourceProperty.detachSubscription(this);
+            }
         }
     }
 
     @Override
     @Nonnull
-    public PropertySubscription<T> subscribeAndCall(@Nullable Object subscriber, @Nonnull PropertyListener<T> listener) {
-        synchronized (lock) {
-            var listenerWeakReference = new WeakReference<>(listener);
-            listeners.add(listenerWeakReference);
+    public PropertySubscription<T> createSubscription() {
+        return new Subscription<>(this);
+    }
 
-            var subscription = new Subscription<T>(
-                    this,
-                    listenerWeakReference,
-                    listener,
-                    subscriber);
+    private void detachSubscription(Subscription<T> subscription) {
+        subscriptions.remove(subscription);
+    }
 
-            if(subscriber != null) {
-                SubscriptionTracker.registerSubscription(subscriber, subscription);
-//                referenceCleaner.register(subscriber, null, ((reference, meta) ->
-//                        SubscriptionTracker.removeAllSubscriptions(subscriber))
-//                );
+    private void attachSubscriptionAndCallListener(Subscription<T> subscription){
+        synchronized (changeValueAndAddListenerLock) {
+
+            if(subscription.attachedSubscriptionReference != null){
+                subscriptions.remove(subscription.attachedSubscriptionReference);
+                subscription.attachedSubscriptionReference.cancelCleaningOrder();
+                subscription.attachedSubscriptionReference = null;
             }
 
-            referenceCleaner.register(subscription, null, (reference, meta) ->
-                    listeners.remove(listenerWeakReference)
+            CleanableWeakReference<Subscription<T>> cleanableWeakReference = referenceCleaner.register(
+                    subscription,
+                    null,
+                    (reference, meta) -> subscriptions.remove(reference)
             );
+            subscription.attachedSubscriptionReference = cleanableWeakReference;
+            subscriptions.add(cleanableWeakReference);
 
-            listener.onPropertyChanged(null, holder.get());
-
-            return subscription;
+            subscription.listener.onPropertyChanged(null, valueHolder.get());
         }
     }
 
     @Override
     public void close() {
-        listeners.clear();
+        subscriptions.clear();
     }
 
     @Override
     public String toString() {
-        return "AtomicProperty(" + holder.get() + ")";
+        return "AtomicProperty(" + valueHolder.get() + ")";
     }
 }

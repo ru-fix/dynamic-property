@@ -1,5 +1,8 @@
 package ru.fix.dynamic.property.api;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 /**
  * <pre>{@code
  * final PropertySubscription<Int> poolSize;
@@ -28,6 +31,9 @@ public interface PropertySubscription<T> extends AutoCloseable {
      * @return current value of the property to which this Subscription is subscribed.
      */
     T get();
+
+
+    PropertySubscription<T> setAndCallListener(@Nonnull PropertyListener<T> listener);
 
     /**
      * Listener linked with current subscription stops receiving events.

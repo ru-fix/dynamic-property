@@ -100,7 +100,7 @@ public interface DynamicProperty<T> extends AutoCloseable {
      * {@link PropertySubscription#get()}.
      */
     @Nonnull
-    PropertySubscription<T> subscribeAndCall(@Nullable Object subscriber, @Nonnull PropertyListener<T> listener);
+    PropertySubscription<T> createSubscription();
 
     /**
      * @return DynamicProperty that holds given value and never changes.

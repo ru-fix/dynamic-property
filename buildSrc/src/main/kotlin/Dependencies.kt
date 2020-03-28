@@ -19,7 +19,7 @@ object Vers {
 
     const val log4j = "2.12.0"
 
-    const val jfix_stdlib = "2.0.10"
+    const val jfix_stdlib = "2.0.13"
 }
 
 object Libs {

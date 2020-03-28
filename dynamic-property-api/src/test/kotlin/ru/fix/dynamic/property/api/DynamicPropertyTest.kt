@@ -3,20 +3,27 @@ package ru.fix.dynamic.property.api
 
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import ru.fix.stdlib.reference.GarbageGenerator
 import ru.fix.stdlib.reference.ReferenceCleaner
 import java.time.Duration
-import java.time.temporal.ChronoUnit
-import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
-import java.util.function.Supplier
 
 class DynamicPropertyTest {
 
+    val garbageGenerator = GarbageGenerator()
+            .setGarbageSizePerIterationMB(10)
+            .setDelay(Duration.ofMillis(100))
+            .setTimeout(Duration.ofMinutes(1))
+
+    val referenceCleaner = ReferenceCleaner.getInstance()
+
     class MyService(poolSize: DynamicProperty<Int>) {
-        private val poolSize: PropertySubscription<Int> = poolSize.subscribeAndCall(this) { oldValue, newValue ->
-            println("poolSize changed from $oldValue to $newValue")
-        }
+        private val poolSize: PropertySubscription<Int> = poolSize
+                .createSubscription()
+                .setAndCallListener { oldValue, newValue ->
+                    println("poolSize changed from $oldValue to $newValue")
+                }
 
         fun doWork() {
             println("doWork with poolSize: ${poolSize.get()}")
@@ -38,7 +45,7 @@ class DynamicPropertyTest {
         val listenerAcceptedNewValue = AtomicReference<Int>()
         val listenerAcceptedOldValue = AtomicReference<Int>()
 
-        val subscription = property.subscribeAndCall(null) { old, new ->
+        val subscription = property.createSubscription().setAndCallListener { old, new ->
             listenerAcceptedOldValue.set(old)
             listenerAcceptedNewValue.set(new)
         }
@@ -62,10 +69,12 @@ class DynamicPropertyTest {
         val captorOld = AtomicReference(0)
         val captorNew = AtomicReference(0)
 
-        val subscription = intProperty.subscribeAndCall(null) { old, new ->
-            captorOld.set(old)
-            captorNew.set(new)
-        }
+        val subscription = intProperty
+                .createSubscription()
+                .setAndCallListener { old, new ->
+                    captorOld.set(old)
+                    captorNew.set(new)
+                }
 
         stringProperty.set("305")
 
@@ -106,115 +115,26 @@ class DynamicPropertyTest {
     }
 
     @Test
-    fun `map method does not lead to OOM`() {
+    fun `map method release weakly reachable listeners and does not lead to OOM`() {
         val property = AtomicProperty(12)
 
-        fun functionTakesPropertyButDoesNotKeepReferenceOnIt(setting: DynamicProperty<String>): Int {
+        fun functionTakesPropertyButDoesNotKeepReferenceToIt(setting: DynamicProperty<String>): Int {
             return setting.get().length
         }
 
-        //TODO: add gc generator to the stdlib library
-        //TODO: fix looop
         var mappedProperty = property.map { it.toString() }
 
-        functionTakesPropertyButDoesNotKeepReferenceOnIt(mappedProperty)
+        functionTakesPropertyButDoesNotKeepReferenceToIt(mappedProperty)
 
         val referenceWasCleaned = AtomicBoolean(false)
-        ReferenceCleaner.getInstance().register(mappedProperty, null) { ref, meta ->
+        referenceCleaner.register(mappedProperty, null) { ref, meta ->
             referenceWasCleaned.set(true)
         }
         mappedProperty = null
 
-        val result = generateGarbageAndWaitForCondition(Duration.ofMinutes(10), Supplier{
+        val result = garbageGenerator.generateGarbageAndWaitForCondition {
             referenceWasCleaned.get()
-        })
-        assertTrue(result)
-
-
-    }
-
-
-    @Test
-    fun `listeners do not lead to OOM`() {
-        val property = AtomicProperty(12)
-
-        var listener: PropertyListener<Int>? = PropertyListener<Int>{ oldValue, newValue -> println("$oldValue -> $newValue")}
-
-        property.subscribeAndCall(null, listener!!)
-
-
-        val referenceWasCleaned = AtomicBoolean(false)
-        ReferenceCleaner.getInstance().register(listener, null) { ref, meta ->
-            referenceWasCleaned.set(true)
         }
-        listener = null
-
-        val result = generateGarbageAndWaitForCondition(Duration.ofMinutes(10), Supplier{
-            referenceWasCleaned.get()
-        })
         assertTrue(result)
-
-
     }
-
-
-    @Test
-    fun `listeners will be under gc`() {
-        val property = AtomicProperty(12)
-
-        var listener: PropertyListener<Int>? = PropertyListener<Int>{ oldValue, newValue -> println("$oldValue -> $newValue")}
-
-        val referenceWasCleaned = AtomicBoolean(false)
-        ReferenceCleaner.getInstance().register(listener, null) { ref, meta ->
-            referenceWasCleaned.set(true)
-        }
-        listener = null
-
-        val result = generateGarbageAndWaitForCondition(Duration.ofMinutes(10), Supplier{
-            referenceWasCleaned.get()
-        })
-        assertTrue(result)
-
-
-    }
-
-    @Test
-    fun `listeners will be under gc by OBJ`() {
-        val property = AtomicProperty(12)
-
-        var obj:Object? = Object()
-
-        val referenceWasCleaned = AtomicBoolean(false)
-        ReferenceCleaner.getInstance().register(obj, null) { ref, meta ->
-            referenceWasCleaned.set(true)
-        }
-        obj = null
-
-        val result = generateGarbageAndWaitForCondition(Duration.ofMinutes(10), Supplier{
-            referenceWasCleaned.get()
-        })
-        assertTrue(result)
-
-
-    }
-
-
-    private fun generateGarbageAndWaitForCondition(duration: Duration, condition: Supplier<Boolean>): Boolean {
-        val data = ArrayList<Any>()
-        val start = System.currentTimeMillis()
-        while (!condition.get() && System.currentTimeMillis() - start <= duration.toMillis()) {
-            println("Running time: " + Duration.of(System.currentTimeMillis() - start, ChronoUnit.MILLIS))
-            println("Occupied memory: " + (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 + " Kb")
-            for (mb in 0..9) {
-                for (kb in 0..1023) {
-                    val obj = IntArray(1024)
-                    data.add(obj)
-                }
-            }
-            data.clear()
-            Thread.sleep(500)
-        }
-        return condition.get()
-    }
-
 }

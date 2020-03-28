@@ -7,9 +7,9 @@ public class MappedProperty<T, R> extends AtomicProperty<R> implements DynamicPr
     private final PropertySubscription<T> subscription;
 
     public MappedProperty(DynamicProperty<T> source, Function<T, R> map) {
-        this.subscription = source.subscribeAndCall(
-                this,
-                (oldValue, newValue) -> this.set(map.apply(newValue)));
+        this.subscription = source
+                .createSubscription()
+                .setAndCallListener((oldValue, newValue) -> this.set(map.apply(newValue)));
     }
 
     @Override

@@ -18,7 +18,10 @@ public interface DynamicPropertySource extends AutoCloseable {
      * <br>
      * See {@link #subscribeAndCall(String, Class, OptionalDefaultValue, Listener)} <br>
      */
-    interface Subscription extends AutoCloseable {
+    interface Subscription<T> extends AutoCloseable {
+
+        Subscription setAndCallListener(@Nonnull Listener<T> listener);
+
         /**
          * Stop subscription.
          * Corresponding {@link Listener} stops receiving events.
@@ -53,14 +56,12 @@ public interface DynamicPropertySource extends AutoCloseable {
      * that no longer needed.
      */
     @Nonnull
-    <T> Subscription subscribeAndCall(
+    <T> Subscription<T> createSubscription(
             @Nonnull
             String propertyName,
             @Nonnull
             Class<T> propertyType,
             @Nonnull
-            OptionalDefaultValue<T> defaultValue,
-            @Nonnull
-            Listener<T> listener);
+            OptionalDefaultValue<T> defaultValue);
 
 }
