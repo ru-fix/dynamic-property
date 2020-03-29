@@ -10,17 +10,24 @@ import ru.fix.stdlib.reference.ReferenceCleaner
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
+interface PropertySourceReader {
+    /**
+     * @return null if there are no such property in PropertySource
+     */
+    fun getPropertyValue(propertyName: String): String?
+}
 
-abstract class AbstractPropertySource(
+class PropertySourcePublisher(
+        private val propertySourceReader: PropertySourceReader,
         private val marshaller: DynamicPropertyMarshaller,
         private val referenceCleaner: ReferenceCleaner = ReferenceCleaner.getInstance()) : DynamicPropertySource {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(AbstractPropertySource::class.java)
+        private val logger = LoggerFactory.getLogger(PropertySourcePublisher::class.java)
     }
 
     private inner class Subscription<T>(
-            val propertySource: AbstractPropertySource,
+            val propertySource: PropertySourcePublisher,
             val propertyName: String,
             val propertyType: Class<Any>,
             val defaultValue: OptionalDefaultValue<*>
@@ -100,7 +107,7 @@ abstract class AbstractPropertySource(
      *                           if default value is absent, then property does not receive an update
      */
     @Synchronized
-    protected fun invokePropertyListener(propertyName: String, newSerializedValue: String?) {
+    fun notifyAboutPropertyChange(propertyName: String, newSerializedValue: String?) {
         val subscriptoins = SubscriptionsRegistry.removePrunedSubscriptionsAndGet(propertyName) ?: return
 
         subscriptoins.forEach { subRef ->
@@ -115,12 +122,6 @@ abstract class AbstractPropertySource(
         }
     }
 
-    //TODO: Synchronized all required things
-
-    /**
-     * @return null if there are no such property in PropertySource
-     */
-    protected abstract fun getPropertyValue(propertyName: String): String?
 
     @Synchronized
     private fun <T> attachSubscriptionAndCallListener(subscription: Subscription<T>) {
@@ -139,7 +140,9 @@ abstract class AbstractPropertySource(
                 subscription.propertyName,
                 subRef as CleanableWeakReference<Subscription<Any?>>)
 
-        val value = extractPropertyValueOrDefault(getPropertyValue(subscription.propertyName), subscription)
+        val value = extractPropertyValueOrDefault(
+                propertySourceReader.getPropertyValue(subscription.propertyName),
+                subscription)
         subscription.listener!!.onPropertyChanged(value)
     }
 

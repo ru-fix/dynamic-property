@@ -59,11 +59,8 @@ public interface DynamicPropertySource extends AutoCloseable {
      */
     @Nonnull
     <T> Subscription<T> createSubscription(
-            @Nonnull
-                    String propertyName,
-            @Nonnull
-                    Class<T> propertyType,
-            @Nonnull
-                    OptionalDefaultValue<T> defaultValue);
+            @Nonnull String propertyName,
+            @Nonnull Class<T> propertyType,
+            @Nonnull OptionalDefaultValue<T> defaultValue);
 
 }

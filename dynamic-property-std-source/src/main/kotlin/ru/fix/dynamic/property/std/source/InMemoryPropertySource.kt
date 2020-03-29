@@ -1,7 +1,10 @@
 package ru.fix.dynamic.property.std.source
 
 import ru.fix.dynamic.property.api.marshaller.DynamicPropertyMarshaller
+import ru.fix.dynamic.property.api.source.DynamicPropertySource
+import ru.fix.dynamic.property.api.source.OptionalDefaultValue
 import ru.fix.stdlib.reference.ReferenceCleaner
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Keep properties in memory.
@@ -9,24 +12,40 @@ import ru.fix.stdlib.reference.ReferenceCleaner
  */
 open class InMemoryPropertySource(
         marshaller: DynamicPropertyMarshaller,
-        referenceCleaner: ReferenceCleaner = ReferenceCleaner.getInstance()) :
-        AbstractPropertySource(marshaller, referenceCleaner) {
+        referenceCleaner: ReferenceCleaner = ReferenceCleaner.getInstance()) : DynamicPropertySource {
 
-    private val properties = HashMap<String, String>()
+    private val properties = ConcurrentHashMap<String, String>()
 
-    @Synchronized
+    private val propertySourcePublisher = PropertySourcePublisher(
+            propertySourceReader = object : PropertySourceReader {
+                override fun getPropertyValue(propertyName: String): String? {
+                    return properties[propertyName]
+                }
+            },
+            marshaller = marshaller,
+            referenceCleaner = referenceCleaner
+    )
+
     operator fun set(key: String, value: String) {
         properties[key] = value
-        invokePropertyListener(key, value)
+        propertySourcePublisher.notifyAboutPropertyChange(key, value)
     }
 
-    @Synchronized
     fun remove(key: String) {
         properties.remove(key)
-        invokePropertyListener(key, null)
+        propertySourcePublisher.notifyAboutPropertyChange(key, null)
     }
 
     fun propertyNames(): Set<String> = properties.keys
 
-    protected override fun getPropertyValue(propertyName: String) = properties[propertyName]
+    override fun <T : Any?> createSubscription(
+            propertyName: String,
+            propertyType: Class<T>,
+            defaultValue: OptionalDefaultValue<T>): DynamicPropertySource.Subscription<T> =
+            propertySourcePublisher.createSubscription(propertyName, propertyType, defaultValue)
+
+    override fun close() {
+        properties.clear()
+        propertySourcePublisher.close()
+    }
 }

@@ -8,7 +8,7 @@ import org.apache.curator.framework.recipes.cache.TreeCacheEvent
 import org.apache.curator.framework.recipes.cache.TreeCacheListener
 import org.apache.logging.log4j.kotlin.Logging
 import ru.fix.dynamic.property.api.marshaller.DynamicPropertyMarshaller
-import ru.fix.dynamic.property.std.source.AbstractPropertySource
+import ru.fix.dynamic.property.std.source.PropertySourcePublisher
 import ru.fix.stdlib.concurrency.threads.ReferenceCleaner
 import java.nio.charset.StandardCharsets
 import java.time.Duration
@@ -39,7 +39,7 @@ class ZkDynamicPropertySource(
         marshaller: DynamicPropertyMarshaller,
         initializationTimeout: Duration) :
 
-        AbstractPropertySource(marshaller, ReferenceCleaner.getInstance()) {
+        PropertySourcePublisher(marshaller, ReferenceCleaner.getInstance()) {
 
     companion object: Logging
 
@@ -143,7 +143,7 @@ class ZkDynamicPropertySource(
         val propertyName = getPropertyNameFromAbsolutePath(absolutePath)
 
         logger.info("Zk property change: type: ${treeCacheEvent.type}, node: $absolutePath. New value is '$newValue'")
-        invokePropertyListener(propertyName, newValue)
+        notifyAboutPropertyChange(propertyName, newValue)
     }
 
 
