@@ -5,16 +5,12 @@ import org.slf4j.LoggerFactory;
 import ru.fix.dynamic.property.api.AtomicProperty;
 import ru.fix.dynamic.property.api.DynamicProperty;
 import ru.fix.dynamic.property.api.PropertyListener;
-import ru.fix.dynamic.property.api.PropertySubscription;
-
-import javax.annotation.Nonnull;
 
 /**
  * Contains property initial value.
  * Registers listener within {@link DynamicPropertySource}.
  * Listen for events from  {@link DynamicPropertySource}.
  * Update local value and propagates update events to it's subscribers.
- * See {@link DynamicProperty#subscribeAndCall(Object, PropertyListener)} <br>
  * <br>
  * If instance of this class became weakly reachable it will stop receiving events from {@link DynamicPropertySource}
  * Same effect will be archived through {@link DynamicProperty#close()}

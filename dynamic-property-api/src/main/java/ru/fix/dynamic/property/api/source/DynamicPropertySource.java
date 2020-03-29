@@ -6,7 +6,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
- * Storage that stores {@link DynamicProperty} values and notify {@link DynamicProperty} instances when values changes.
+ * Storage that stores {@link DynamicProperty} values and notify {@link DynamicProperty} instances
+ * when property values changes.
  */
 public interface DynamicPropertySource extends AutoCloseable {
 
@@ -16,10 +17,19 @@ public interface DynamicPropertySource extends AutoCloseable {
      * corresponding {@link Listener} stops receiving events. <br>
      * Same happens if {@link Subscription} closed explicitly via {@link AutoCloseable#close()} <br>
      * <br>
-     * See {@link #subscribeAndCall(String, Class, OptionalDefaultValue, Listener)} <br>
      */
     interface Subscription<T> extends AutoCloseable {
 
+        /**
+         * Subscribes listener for property source events and immediately invokes listener with current property value.
+         * Listener will receive current or updated value from the source or defaultValue
+         * if source does not have defined property.
+         * Listener will be triggered on add/update/remove events for specified property.
+         *
+         * @param listener listener that will be triggered first time during subscription and then each time when property
+         *                 changes it's value
+         * @return this instance of {@link Subscription}
+         */
         Subscription setAndCallListener(@Nonnull Listener<T> listener);
 
         /**
@@ -29,26 +39,18 @@ public interface DynamicPropertySource extends AutoCloseable {
         void close();
     }
 
-    /**
-     *
-     * See {@link #subscribeAndCall(String, Class, OptionalDefaultValue, Listener)}
-     * @param <T>
-     */
     @FunctionalInterface
     interface Listener<T> {
         void onPropertyChanged(@Nullable T newValue);
     }
 
     /**
-     * Subscribes listener for property source events and immediately invokes listener with current property value.
-     * Listener will receive current or updated value from the source or defaultValue if source does not have defined property.
-     * Listener will be triggered on add/update/remove events for specified property.
+     * Create subscription for a property.
+     * Use {@link Subscription#setAndCallListener(Listener)} to start listen for events.
      *
      * @param propertyName property name to identify property within PropertySource
      * @param propertyType Class of the property
      * @param defaultValue Value that will be used if property does not exist in the source.
-     * @param listener     listener that will be triggered first time during subscription and then each time when property
-     *                     changes it's value
      * @return subscription instance that control how long listener will continue to receive events.
      * If subscription instance became weakly reachable or subscription will be closed explicitly via {@link Subscription#close()}
      * the listener will stop receiving events.
@@ -58,10 +60,10 @@ public interface DynamicPropertySource extends AutoCloseable {
     @Nonnull
     <T> Subscription<T> createSubscription(
             @Nonnull
-            String propertyName,
+                    String propertyName,
             @Nonnull
-            Class<T> propertyType,
+                    Class<T> propertyType,
             @Nonnull
-            OptionalDefaultValue<T> defaultValue);
+                    OptionalDefaultValue<T> defaultValue);
 
 }

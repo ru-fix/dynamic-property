@@ -6,11 +6,9 @@ import ru.fix.stdlib.reference.CleanableWeakReference;
 import ru.fix.stdlib.reference.ReferenceCleaner;
 
 import javax.annotation.Nonnull;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -129,10 +127,7 @@ public class AtomicProperty<T> implements DynamicProperty<T> {
 
         @Override
         public void close() {
-            if(attachedSubscriptionReference != null) {
-                sourceProperty.detachSubscription(this);
-                attachedSubscriptionReference = null;
-            }
+            sourceProperty.detachSubscription(this);
         }
     }
 
@@ -143,11 +138,15 @@ public class AtomicProperty<T> implements DynamicProperty<T> {
     }
 
     private void detachSubscription(Subscription<T> subscription) {
-        subscriptions.remove(subscription);
-        subscription.attachedSubscriptionReference = null;
+        if(subscription.attachedSubscriptionReference != null) {
+            subscriptions.remove(subscription.attachedSubscriptionReference);
+            subscription.attachedSubscriptionReference = null;
+        }
     }
 
     private void attachSubscriptionAndCallListener(Subscription<T> subscription){
+        detachSubscription(subscription);
+
         synchronized (changeValueAndAddListenerLock) {
 
             if(subscription.attachedSubscriptionReference != null){
