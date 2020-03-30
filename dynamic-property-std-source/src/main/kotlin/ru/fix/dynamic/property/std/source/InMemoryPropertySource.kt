@@ -4,7 +4,8 @@ import ru.fix.dynamic.property.api.marshaller.DynamicPropertyMarshaller
 import ru.fix.dynamic.property.api.source.DynamicPropertySource
 import ru.fix.dynamic.property.api.source.OptionalDefaultValue
 import ru.fix.stdlib.reference.ReferenceCleaner
-import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 /**
  * Keep properties in memory.
@@ -14,12 +15,16 @@ open class InMemoryPropertySource(
         marshaller: DynamicPropertyMarshaller,
         referenceCleaner: ReferenceCleaner = ReferenceCleaner.getInstance()) : DynamicPropertySource {
 
-    private val properties = ConcurrentHashMap<String, String>()
+    private val readAndChangeLock = ReentrantLock()
+
+    private val properties = HashMap<String, String>()
 
     private val propertySourcePublisher = PropertySourcePublisher(
-            propertySourceReader = object : PropertySourceReader {
-                override fun getPropertyValue(propertyName: String): String? {
-                    return properties[propertyName]
+            propertySourceAccessor = object : PropertySourceAccessor {
+                override fun accessPropertyUnderLock(propertyName: String, accessor: (String?) -> Unit) {
+                    readAndChangeLock.withLock {
+                        accessor(properties[propertyName])
+                    }
                 }
             },
             marshaller = marshaller,
@@ -27,13 +32,17 @@ open class InMemoryPropertySource(
     )
 
     operator fun set(key: String, value: String) {
-        properties[key] = value
-        propertySourcePublisher.notifyAboutPropertyChange(key, value)
+        readAndChangeLock.withLock {
+            properties[key] = value
+            propertySourcePublisher.notifyAboutPropertyChange(key, value)
+        }
     }
 
     fun remove(key: String) {
-        properties.remove(key)
-        propertySourcePublisher.notifyAboutPropertyChange(key, null)
+        readAndChangeLock.withLock {
+            properties.remove(key)
+            propertySourcePublisher.notifyAboutPropertyChange(key, null)
+        }
     }
 
     fun propertyNames(): Set<String> = properties.keys
@@ -45,7 +54,6 @@ open class InMemoryPropertySource(
             propertySourcePublisher.createSubscription(propertyName, propertyType, defaultValue)
 
     override fun close() {
-        properties.clear()
         propertySourcePublisher.close()
     }
 }

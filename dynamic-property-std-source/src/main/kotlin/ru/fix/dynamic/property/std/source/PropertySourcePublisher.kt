@@ -10,15 +10,19 @@ import ru.fix.stdlib.reference.ReferenceCleaner
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
-interface PropertySourceReader {
+interface PropertySourceAccessor {
+
     /**
-     * @return null if there are no such property in PropertySource
+     * Locks property value
+     * Runs accessor
+     * Release property value
+     * During the lock PropertySource must no send any notification about property or change property value
      */
-    fun getPropertyValue(propertyName: String): String?
+    fun accessPropertyUnderLock(propertyName: String, accessor: (String?) -> Unit)
 }
 
 class PropertySourcePublisher(
-        private val propertySourceReader: PropertySourceReader,
+        private val propertySourceAccessor: PropertySourceAccessor,
         private val marshaller: DynamicPropertyMarshaller,
         private val referenceCleaner: ReferenceCleaner = ReferenceCleaner.getInstance()) : DynamicPropertySource {
 
@@ -103,10 +107,12 @@ class PropertySourcePublisher(
     }
 
     /**
+     * Method should be invoked under property lock
+     * in order to be consistent with [PropertySourceAccessor.accessPropertyUnderLock]
+     *
      * @param newSerializedValue if null then property will be changed to default value
      *                           if default value is absent, then property does not receive an update
      */
-    @Synchronized
     fun notifyAboutPropertyChange(propertyName: String, newSerializedValue: String?) {
         val subscriptoins = SubscriptionsRegistry.removePrunedSubscriptionsAndGet(propertyName) ?: return
 
@@ -122,8 +128,6 @@ class PropertySourcePublisher(
         }
     }
 
-
-    @Synchronized
     private fun <T> attachSubscriptionAndCallListener(subscription: Subscription<T>) {
         detachSubscription(subscription)
 
@@ -136,17 +140,19 @@ class PropertySourcePublisher(
         }
 
         subscription.cleanableReference = subRef
-        SubscriptionsRegistry.addSubRef(
-                subscription.propertyName,
-                subRef as CleanableWeakReference<Subscription<Any?>>)
 
-        val value = extractPropertyValueOrDefault(
-                propertySourceReader.getPropertyValue(subscription.propertyName),
-                subscription)
-        subscription.listener!!.onPropertyChanged(value)
+        propertySourceAccessor.accessPropertyUnderLock(subscription.propertyName) { propertyValue ->
+            SubscriptionsRegistry.addSubRef(
+                    subscription.propertyName,
+                    subRef as CleanableWeakReference<Subscription<Any?>>)
+
+            val value = extractPropertyValueOrDefault(propertyValue, subscription)
+
+            subscription.listener!!.onPropertyChanged(value)
+        }
     }
 
-    private fun <T: Any?> detachSubscription(subscription: Subscription<T>) {
+    private fun <T : Any?> detachSubscription(subscription: Subscription<T>) {
         if (subscription.cleanableReference != null) {
             SubscriptionsRegistry.removeSubRef(
                     subscription.propertyName,

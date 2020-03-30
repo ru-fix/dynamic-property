@@ -1,6 +1,7 @@
 package ru.fix.dynamic.property.std.source
 
 import ru.fix.dynamic.property.api.DynamicProperty
+import ru.fix.dynamic.property.api.PropertySubscription
 import ru.fix.dynamic.property.api.marshaller.DynamicPropertyMarshaller
 import ru.fix.dynamic.property.api.source.DynamicPropertySource
 import ru.fix.dynamic.property.api.source.OptionalDefaultValue
@@ -25,7 +26,7 @@ object PropertiesFileParser : FilePropertySource.Parser {
  * Watch for file modifications and update properties when content changes.
  */
 class FilePropertySource(
-        private val sourceFilePath: DynamicProperty<Path>,
+        sourceFilePath: DynamicProperty<Path>,
         private val propertyParser: Parser = PropertiesFileParser,
         marshaller: DynamicPropertyMarshaller,
         referenceCleaner: ReferenceCleaner = ReferenceCleaner.getInstance()) :
@@ -36,12 +37,30 @@ class FilePropertySource(
         fun parsePropertiesFile(filePath: Path): Map<String, String>
     }
 
+    private val sourceFilePath: PropertySubscription<Path>
+
     private val inMemorySource = InMemoryPropertySource(
             marshaller,
             referenceCleaner
     )
 
     private val fileWatcher = FileWatcher()
+
+    init {
+        this.sourceFilePath = sourceFilePath.createSubscription()
+                .setAndCallListener { prevPath, newPath ->
+                    if (newPath != prevPath) {
+                        if (prevPath != null) {
+                            fileWatcher.unregister(prevPath)
+                        }
+                        fileWatcher.register(newPath) {
+                            updateProperties(newPath)
+                        }
+                    }
+                    updateProperties(newPath)
+                }
+    }
+
 
     private fun updateProperties(newPath: Path) {
         val newProperties = propertyParser.parsePropertiesFile(newPath)
@@ -56,28 +75,15 @@ class FilePropertySource(
                 }
     }
 
-    init {
-        sourceFilePath.addAndCallListener { prevPath, newPath ->
-            if (newPath != prevPath) {
-                if (prevPath != null) {
-                    fileWatcher.unregister(prevPath)
-                }
-                fileWatcher.register(newPath) {
-                    updateProperties(newPath)
-                }
-            }
-            updateProperties(newPath)
-        }
-    }
+    override fun <T : Any?> createSubscription(propertyName: String,
+                                               propertyType: Class<T>,
+                                               defaultValue: OptionalDefaultValue<T>): DynamicPropertySource.Subscription<T> =
+            inMemorySource.createSubscription(propertyName, propertyType, defaultValue)
 
-    override fun <T : Any?> subscribeAndCallListener(
-            propertyName: String,
-            propertyType: Class<T>,
-            defaultValue: OptionalDefaultValue<T>,
-            listener: DynamicPropertySource.Listener<T>): DynamicPropertySource.Subscription =
-            inMemorySource.subscribeAndCallListener(propertyName, propertyType, defaultValue, listener)
 
     override fun close() {
+        sourceFilePath.close()
+        fileWatcher.close()
         inMemorySource.close()
     }
 }
