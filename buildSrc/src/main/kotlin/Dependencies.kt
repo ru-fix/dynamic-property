@@ -19,7 +19,8 @@ object Vers {
 
     const val log4j = "2.12.0"
 
-    const val jfix_stdlib = "2.0.13"
+    const val jfix_stdlib = "2.0.14"
+    const val aggregating_profiler = "1.5.21"
 }
 
 object Libs {
@@ -44,6 +45,7 @@ object Libs {
     val jfix_stdlib_concurrency = "ru.fix:jfix-stdlib-concurrency:${Vers.jfix_stdlib}"
     val jfix_stdlib_reference = "ru.fix:jfix-stdlib-reference:${Vers.jfix_stdlib}"
     val jfix_stdlib_files = "ru.fix:jfix-stdlib-files:${Vers.jfix_stdlib}"
+    val aggregating_profiler = "ru.fix:aggregating-profiler:${Vers.aggregating_profiler}"
 
     const val slf4j_api = "org.slf4j:slf4j-api:${Vers.sl4j}"
     const val slf4j_simple = "org.slf4j:slf4j-simple:${Vers.sl4j}"
