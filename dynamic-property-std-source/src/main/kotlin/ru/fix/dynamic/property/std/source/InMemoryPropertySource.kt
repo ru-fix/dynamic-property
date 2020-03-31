@@ -1,7 +1,11 @@
 package ru.fix.dynamic.property.std.source
 
 import ru.fix.dynamic.property.api.marshaller.DynamicPropertyMarshaller
-import ru.fix.stdlib.concurrency.threads.ReferenceCleaner
+import ru.fix.dynamic.property.api.source.DynamicPropertySource
+import ru.fix.dynamic.property.api.source.OptionalDefaultValue
+import ru.fix.stdlib.reference.ReferenceCleaner
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 /**
  * Keep properties in memory.
@@ -9,24 +13,47 @@ import ru.fix.stdlib.concurrency.threads.ReferenceCleaner
  */
 open class InMemoryPropertySource(
         marshaller: DynamicPropertyMarshaller,
-        referenceCleaner: ReferenceCleaner = ReferenceCleaner.getInstance()) :
-        AbstractPropertySource(marshaller, referenceCleaner) {
+        referenceCleaner: ReferenceCleaner = ReferenceCleaner.getInstance()) : DynamicPropertySource {
+
+    private val readAndChangeLock = ReentrantLock()
 
     private val properties = HashMap<String, String>()
 
-    @Synchronized
+    private val propertySourcePublisher = PropertySourcePublisher(
+            propertySourceAccessor = object : PropertySourceAccessor {
+                override fun accessPropertyUnderLock(propertyName: String, accessor: (String?) -> Unit) {
+                    readAndChangeLock.withLock {
+                        accessor(properties[propertyName])
+                    }
+                }
+            },
+            marshaller = marshaller,
+            referenceCleaner = referenceCleaner
+    )
+
     operator fun set(key: String, value: String) {
-        properties[key] = value
-        invokePropertyListener(key, value)
+        readAndChangeLock.withLock {
+            properties[key] = value
+            propertySourcePublisher.notifyAboutPropertyChange(key, value)
+        }
     }
 
-    @Synchronized
     fun remove(key: String) {
-        properties.remove(key)
-        invokePropertyListener(key, null)
+        readAndChangeLock.withLock {
+            properties.remove(key)
+            propertySourcePublisher.notifyAboutPropertyChange(key, null)
+        }
     }
 
     fun propertyNames(): Set<String> = properties.keys
 
-    protected override fun getPropertyValue(propertyName: String) = properties[propertyName]
+    override fun <T : Any?> createSubscription(
+            propertyName: String,
+            propertyType: Class<T>,
+            defaultValue: OptionalDefaultValue<T>): DynamicPropertySource.Subscription<T> =
+            propertySourcePublisher.createSubscription(propertyName, propertyType, defaultValue)
+
+    override fun close() {
+        propertySourcePublisher.close()
+    }
 }

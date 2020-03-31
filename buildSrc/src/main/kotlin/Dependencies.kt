@@ -4,25 +4,27 @@ import org.gradle.kotlin.dsl.project
 object Vers {
     //Plugins
     const val dokkav = "0.9.18"
-    const val gradle_release_plugin = "1.3.9"
+    const val gradle_release_plugin = "1.3.16"
     const val asciidoctor = "1.5.9.2"
 
     //Dependencies
     const val kotlin = "1.3.41"
     const val sl4j = "1.7.26"
     const val junit = "5.4.2"
-    const val curator_recipes = "4.2.0"
-    const val curator_test = "4.2.0"
+    const val curator_recipes = "4.3.0"
+    const val curator_test = "4.3.0"
     const val spring = "5.1.8.RELEASE"
     const val spring_boot_auto_configure = "2.1.5.RELEASE"
     const val jackson = "2.9.9"
 
     const val log4j = "2.12.0"
 
-    const val jfix_stdlib = "1.0.60"
+    const val jfix_stdlib = "2.0.14"
+    const val aggregating_profiler = "1.5.21"
 }
 
 object Libs {
+
     //Plugins
     const val gradle_release_plugin = "ru.fix:gradle-release-plugin:${Vers.gradle_release_plugin}"
     const val dokka_gradle_plugin = "org.jetbrains.dokka:dokka-gradle-plugin:${Vers.dokkav}"
@@ -36,10 +38,14 @@ object Libs {
     const val kotlin_reflect = "org.jetbrains.kotlin:kotlin-reflect:${Vers.kotlin}"
 
     const val mockk = "io.mockk:mockk:1.9.3"
-    const val awaitility = "org.awaitility:awaitility:4.0.1"
+    const val awaitility = "org.awaitility:awaitility:4.0.2"
+
+    const val javax_annotation_jsr305= "com.google.code.findbugs:jsr305:3.0.2"
 
     val jfix_stdlib_concurrency = "ru.fix:jfix-stdlib-concurrency:${Vers.jfix_stdlib}"
+    val jfix_stdlib_reference = "ru.fix:jfix-stdlib-reference:${Vers.jfix_stdlib}"
     val jfix_stdlib_files = "ru.fix:jfix-stdlib-files:${Vers.jfix_stdlib}"
+    val aggregating_profiler = "ru.fix:aggregating-profiler:${Vers.aggregating_profiler}"
 
     const val slf4j_api = "org.slf4j:slf4j-api:${Vers.sl4j}"
     const val slf4j_simple = "org.slf4j:slf4j-simple:${Vers.sl4j}"

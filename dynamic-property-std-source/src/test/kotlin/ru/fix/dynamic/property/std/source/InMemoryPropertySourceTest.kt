@@ -16,12 +16,12 @@ class InMemoryPropertySourceTest {
         val deque = Collections.synchronizedList(ArrayList<Int>())
         val source = InMemoryPropertySource(JacksonDynamicPropertyMarshaller())
 
-        val subscription = source.subscribeAndCallListener(
+        val subscription = source.createSubscription(
                 "foo",
                 Integer::class.java,
                 OptionalDefaultValue.of(Integer(12))
-        ) {
-            deque.add(it.toInt())
+        ).setAndCallListener {
+            deque.add(it!!.toInt())
         }
 
         assertThat(deque, hasSize(equalTo(1)))

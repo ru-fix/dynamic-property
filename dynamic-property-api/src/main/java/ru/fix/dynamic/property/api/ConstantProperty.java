@@ -1,5 +1,7 @@
 package ru.fix.dynamic.property.api;
 
+import javax.annotation.Nonnull;
+
 public class ConstantProperty<T> implements DynamicProperty<T> {
     private final T value;
 
@@ -12,29 +14,28 @@ public class ConstantProperty<T> implements DynamicProperty<T> {
         return value;
     }
 
+    @Nonnull
     @Override
-    public ConstantProperty<T> addListener(DynamicPropertyListener<T> listener) {
-        //Constant property never changes
-        return this;
+    public PropertySubscription<T> createSubscription(){
+        return new PropertySubscription<T>() {
+            @Override
+            public PropertySubscription<T> setAndCallListener(@Nonnull PropertyListener<T> listener) {
+                listener.onPropertyChanged(null, value);
+                return this;
+            }
+
+            @Override
+            public T get() {
+                return value;
+            }
+
+            @Override
+            public void close() {
+            }
+        };
     }
 
     @Override
-    public DynamicProperty<T> addAndCallListener(DynamicPropertyListener<T> listener) {
-        listener.onPropertyChanged(null, value);
-        return this;
-    }
-
-    @Override
-    public T addListenerAndGet(DynamicPropertyListener<T> listener) {
-        return value;
-    }
-
-    @Override
-    public DynamicProperty<T> removeListener(DynamicPropertyListener<T> listener) {
-        return this;
-    }
-
-    @Override
-    public void close(){
+    public void close() {
     }
 }

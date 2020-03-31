@@ -8,9 +8,10 @@ import ru.fix.dynamic.property.api.DynamicProperty;
 import ru.fix.stdlib.concurrency.threads.ReschedulableScheduler;
 import ru.fix.stdlib.concurrency.threads.Schedule;
 
+import java.lang.ref.WeakReference;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
-import java.util.WeakHashMap;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
@@ -30,7 +31,7 @@ import java.util.function.Supplier;
 public class DynamicPropertyPoller implements AutoCloseable {
     private static final Logger log = LoggerFactory.getLogger(DynamicPropertyPoller.class);
 
-    private WeakHashMap<AtomicProperty, Supplier> properties = new WeakHashMap<>();
+    private ConcurrentLinkedDeque<WeakReference<PolledProperty>> createdPolledProperties = new ConcurrentLinkedDeque<>();
     private ReschedulableScheduler scheduler;
     private DynamicProperty<Duration> shutdownDelay;
 
@@ -46,7 +47,7 @@ public class DynamicPropertyPoller implements AutoCloseable {
         this.scheduler.schedule(
                 pollingSchedule,
                 0,
-                this::pollAll);
+                this::pollAllAndExpungeStale);
         this.shutdownDelay = shutdownTimeout;
     }
 
@@ -60,9 +61,7 @@ public class DynamicPropertyPoller implements AutoCloseable {
 
     @Override
     public void close() {
-        synchronized (properties) {
-            this.properties.clear();
-        }
+        this.createdPolledProperties.clear();
         this.scheduler.shutdown();
         try {
             if (!this.scheduler.awaitTermination(shutdownDelay.get().toMillis(), TimeUnit.MILLISECONDS)) {
@@ -74,24 +73,37 @@ public class DynamicPropertyPoller implements AutoCloseable {
         }
     }
 
-    private void pollAll() {
-        synchronized (properties) {
-            properties.forEach((property, retriever) -> {
-                retrieveAndUpdatePropertyValue(property, retriever);
-            });
-        }
+    private void pollAllAndExpungeStale() {
+        createdPolledProperties.removeIf(ref -> ref.get() == null);
+
+        createdPolledProperties.forEach(ref -> {
+            var property = ref.get();
+            if (property != null) {
+                property.retrieveAndUpdatePropertyValue();
+            }
+        });
     }
 
-    private void retrieveAndUpdatePropertyValue(AtomicProperty property, Supplier retriever) {
-        try {
-            Object value = retriever.get();
-            property.set(value);
-        } catch (Exception exc) {
-            log.error("Failed to retrieve and update property", exc);
-        }
-    }
 
     class PolledProperty<T> extends AtomicProperty<T> {
+
+        private final Supplier<T> retriever;
+        private WeakReference<PolledProperty<T>> reference;
+
+        PolledProperty(Supplier<T> retriever) {
+            this.retriever = retriever;
+        }
+
+        private void retrieveAndUpdatePropertyValue() {
+            try {
+                T value = retriever.get();
+                this.set(value);
+            } catch (Exception exc) {
+                log.error("Failed to retrieve and update property", exc);
+            }
+        }
+
+
         @Override
         public void close() {
             deleteProperty(this);
@@ -99,21 +111,24 @@ public class DynamicPropertyPoller implements AutoCloseable {
         }
     }
 
+    /**
+     * @param retriever
+     * @param <T>
+     * @return
+     * @see #deleteProperty(DynamicProperty)
+     */
     public <T> DynamicProperty<T> createProperty(Supplier<T> retriever) {
-        PolledProperty<T> property = new PolledProperty<T>();
-
-        synchronized (properties) {
-            properties.put(property, retriever);
-        }
-
-        retrieveAndUpdatePropertyValue(property, retriever);
-
+        PolledProperty<T> property = new PolledProperty<T>(retriever);
+        property.reference = new WeakReference<>(property);
+        createdPolledProperties.add((WeakReference<PolledProperty>) (WeakReference) property.reference);
+        property.retrieveAndUpdatePropertyValue();
         return property;
     }
 
+    /**
+     * @param polledProperty DynamicProperty created by this {@link DynamicPropertyPoller}
+     */
     public void deleteProperty(DynamicProperty polledProperty) {
-        synchronized (properties) {
-            properties.remove(polledProperty);
-        }
+        createdPolledProperties.remove(((PolledProperty) polledProperty).reference);
     }
 }

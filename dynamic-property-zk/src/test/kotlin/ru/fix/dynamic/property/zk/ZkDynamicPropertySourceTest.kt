@@ -49,11 +49,11 @@ class ZkDynamicPropertySourceTest {
 
         setServerProperty("$PROPERTIES_LOCATION/$TEST_PROP_KEY", "some Value")
 
-        val subscription = source.subscribeAndCallListener(
+        val subscription = source.createSubscription(
                 TEST_PROP_KEY,
                 String::class.java,
                 OptionalDefaultValue.of("zzz")
-        ) { slot.add(it) }
+        ).setAndCallListener { slot.add(it) }
 
         assertEquals("some Value", slot.removeFirst())
         assertTrue(slot.isEmpty())
@@ -65,11 +65,11 @@ class ZkDynamicPropertySourceTest {
 
         val valueSlot = LinkedBlockingDeque<String>()
 
-        val subscription = source.subscribeAndCallListener(
+        val subscription = source.createSubscription(
                 TEST_PROP_KEY,
                 String::class.java,
                 OptionalDefaultValue.of("zzz")
-        ) { value -> valueSlot.add(value)}
+        ).setAndCallListener { value -> valueSlot.add(value)}
 
         assertEquals("some Value", valueSlot.removeFirst())
 
@@ -83,11 +83,11 @@ class ZkDynamicPropertySourceTest {
     fun `start with default value and then listen for property creation and change`() {
         val valueSlot = LinkedBlockingDeque<String>()
 
-        val subscription = source.subscribeAndCallListener(
+        val subscription = source.createSubscription(
                 TEST_PROP_KEY_1,
                 String::class.java,
                 OptionalDefaultValue.of("zzz")
-        ) { value ->
+        ).setAndCallListener { value ->
             valueSlot.add(value)
         }
 
@@ -107,11 +107,11 @@ class ZkDynamicPropertySourceTest {
     fun `property removed from source, use default value`() {
         val slot = LinkedBlockingDeque<String>()
 
-        val sub = source.subscribeAndCallListener(
+        val sub = source.createSubscription(
                 TEST_PROP_KEY_1,
                 String::class.java,
                 OptionalDefaultValue.of("default")
-        ) { value ->
+        ).setAndCallListener { value ->
             slot.add(value)
         }
 
@@ -203,12 +203,12 @@ class ZkDynamicPropertySourceTest {
                 Duration.of(1, ChronoUnit.MINUTES)
         )
 
-        generatedProperties.forEach {
-            source.subscribeAndCallListener(
+        val subscriptions = generatedProperties.map {
+            source.createSubscription(
                     it.key,
                     String::class.java,
                     OptionalDefaultValue.of("default")
-            ) { value ->
+            ).setAndCallListener { value ->
                 assertNotEquals("default", value)
             }
         }

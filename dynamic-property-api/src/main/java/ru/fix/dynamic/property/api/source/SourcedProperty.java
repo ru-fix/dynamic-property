@@ -2,119 +2,62 @@ package ru.fix.dynamic.property.api.source;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.fix.dynamic.property.api.AtomicProperty;
 import ru.fix.dynamic.property.api.DynamicProperty;
-import ru.fix.dynamic.property.api.DynamicPropertyListener;
-
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicReference;
+import ru.fix.dynamic.property.api.PropertyListener;
 
 /**
  * Contains property initial value.
  * Registers listener within {@link DynamicPropertySource}.
  * Listen for events from  {@link DynamicPropertySource}.
- * Update local value and propagates update events to it's subscribes.
- * See {@link DynamicProperty#addAndCallListener(DynamicPropertyListener)}
- *
+ * Update local value and propagates update events to it's subscribers.
+ * <br>
  * If instance of this class became weakly reachable it will stop receiving events from {@link DynamicPropertySource}
  * Same effect will be archived through {@link DynamicProperty#close()}
  */
-public class SourcedProperty<T> implements DynamicProperty<T> {
+public class SourcedProperty<T>
+        extends AtomicProperty<T>
+        implements DynamicProperty<T> {
 
     private static final Logger log = LoggerFactory.getLogger(SourcedProperty.class);
 
-    private final String name;
     private final Class<T> type;
-    private final AtomicReference<T> currentValue = new AtomicReference<>();
-    private final List<DynamicPropertyListener<T>> listeners = new CopyOnWriteArrayList<>();
-
-    private final DynamicPropertySource propertySource;
-    private final DynamicPropertySource.Subscription subscription;
+    private final String name;
+    private final DynamicPropertySource.Subscription<T> subscription;
 
     public SourcedProperty(DynamicPropertySource propertySource,
                            String name,
                            Class<T> type,
                            OptionalDefaultValue<T> defaultValue) {
-        this.name = name;
         this.type = type;
-        this.propertySource = propertySource;
+        this.name = name;
+        super.setName(name);
 
-        subscription = propertySource.subscribeAndCallListener(
-                this.name,
-                this.type,
-                defaultValue,
-                newValue -> {
-                    synchronized (SourcedProperty.this) {
-                        T oldValue = currentValue.getAndSet(newValue);
-                        if(log.isTraceEnabled()){
-                            log.trace("Sourced property update: name: {}, oldValue: {}, newValue: {}",
-                                    name,
-                                    oldValue,
-                                    newValue);
-                        }
-                        listeners.forEach(listener -> {
-                            try {
-                                listener.onPropertyChanged(oldValue, newValue);
-                            } catch (Exception e) {
-                                log.error("Failed to update property {} from oldValue {} to newValue {}",
-                                        this.name,
-                                        oldValue,
-                                        newValue,
-                                        e);
-                            }
-                        });
-                    }
-                }
-        );
-    }
-
-    @Override
-    public T get() {
-        return currentValue.get();
-    }
-
-    /**
-     * Listener callback runs in the {@link DynamicPropertySource} thread.
-     *
-     * @param listener Listener runs whenever property value changes.
-     */
-    @Override
-    public DynamicProperty<T> addListener(DynamicPropertyListener<T> listener) {
-        listeners.add(listener);
-        return this;
-    }
-
-    @Override
-    public synchronized DynamicProperty<T> addAndCallListener(DynamicPropertyListener<T> listener) {
-        listeners.add(listener);
-        listener.onPropertyChanged(null, currentValue.get());
-        return this;
-    }
-
-    @Override
-    public synchronized T addListenerAndGet(DynamicPropertyListener<T> listener) {
-        listeners.add(listener);
-        return currentValue.get();
-    }
-
-    @Override
-    public DynamicProperty<T> removeListener(DynamicPropertyListener<T> listener) {
-        listeners.remove(listener);
-        return this;
+        subscription = propertySource.createSubscription(name, type, defaultValue);
+        subscription.setAndCallListener(newValue -> {
+            T oldValue = this.set(newValue);
+            if (log.isTraceEnabled()) {
+                log.trace("Sourced property update: name: {}, type: {}, oldValue: {}, newValue: {}",
+                        name,
+                        type,
+                        oldValue,
+                        newValue);
+            }
+        });
     }
 
     @Override
     public void close() {
         this.subscription.close();
-        listeners.clear();
+        super.close();
     }
 
     @Override
     public String toString() {
         return "SourcedProperty{" +
                 "type=" + type +
-                ", name='" + name + '\'' +
-                ", currentValue=" + currentValue +
+                ", name='" + name + "'" +
+                ", value=" + super.get() +
                 '}';
     }
 }

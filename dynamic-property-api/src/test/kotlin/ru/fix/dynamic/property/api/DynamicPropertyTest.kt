@@ -1,31 +1,43 @@
 package ru.fix.dynamic.property.api
 
 
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import ru.fix.stdlib.reference.GarbageGenerator
+import ru.fix.stdlib.reference.ReferenceCleaner
+import java.time.Duration
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
 class DynamicPropertyTest {
 
+    val garbageGenerator = GarbageGenerator()
+            .setGarbageSizePerIterationMB(10)
+            .setDelay(Duration.ofMillis(100))
+            .setTimeout(Duration.ofMinutes(1))
+
+    val referenceCleaner = ReferenceCleaner.getInstance()
+
+    class MyService(poolSize: DynamicProperty<Int>) {
+        private val poolSize: PropertySubscription<Int> = poolSize
+                .createSubscription()
+                .setAndCallListener { oldValue, newValue ->
+                    println("poolSize changed from $oldValue to $newValue")
+                }
+
+        fun doWork() {
+            println("doWork with poolSize: ${poolSize.get()}")
+        }
+    }
+
     @Test
     fun constant_property() {
-
         val property = DynamicProperty.of(122)
         assertEquals(122, property.get())
     }
 
     @Test
-    fun add_listener_and_get() {
-
-        val property = DynamicProperty.of(122)
-        val value = property.addListenerAndGet { old, new -> ; }
-        assertEquals(122, value)
-    }
-
-    @Test
     fun atomic_property() {
-
         val property = AtomicProperty(122)
         assertEquals(122, property.get())
 
@@ -33,7 +45,7 @@ class DynamicPropertyTest {
         val listenerAcceptedNewValue = AtomicReference<Int>()
         val listenerAcceptedOldValue = AtomicReference<Int>()
 
-        property.addListener { old, new ->
+        val subscription = property.createSubscription().setAndCallListener { old, new ->
             listenerAcceptedOldValue.set(old)
             listenerAcceptedNewValue.set(new)
         }
@@ -57,11 +69,12 @@ class DynamicPropertyTest {
         val captorOld = AtomicReference(0)
         val captorNew = AtomicReference(0)
 
-        intProperty.addListener { old, new ->
-            captorOld.set(old)
-            captorNew.set(new)
-        }
-
+        val subscription = intProperty
+                .createSubscription()
+                .setAndCallListener { old, new ->
+                    captorOld.set(old)
+                    captorNew.set(new)
+                }
 
         stringProperty.set("305")
 
@@ -94,5 +107,34 @@ class DynamicPropertyTest {
     fun `constant property of null`() {
         val property = DynamicProperty.of<String>(null)
         assertNull(property.get())
+    }
+
+    @Test
+    fun `to string`() {
+        assertEquals("AtomicProperty(12)", AtomicProperty(12).toString())
+    }
+
+    @Test
+    fun `map method release weakly reachable listeners and does not lead to OOM`() {
+        val property = AtomicProperty(12)
+
+        fun functionTakesPropertyButDoesNotKeepReferenceToIt(setting: DynamicProperty<String>): Int {
+            return setting.get().length
+        }
+
+        var mappedProperty = property.map { it.toString() }
+
+        functionTakesPropertyButDoesNotKeepReferenceToIt(mappedProperty)
+
+        val referenceWasCleaned = AtomicBoolean(false)
+        referenceCleaner.register(mappedProperty, null) { ref, meta ->
+            referenceWasCleaned.set(true)
+        }
+        mappedProperty = null
+
+        val result = garbageGenerator.generateGarbageAndWaitForCondition {
+            referenceWasCleaned.get()
+        }
+        assertTrue(result)
     }
 }
