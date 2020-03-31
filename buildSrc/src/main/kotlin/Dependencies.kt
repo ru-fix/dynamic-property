@@ -4,7 +4,7 @@ import org.gradle.kotlin.dsl.project
 object Vers {
     //Plugins
     const val dokkav = "0.9.18"
-    const val gradle_release_plugin = "1.3.9"
+    const val gradle_release_plugin = "1.3.16"
     const val asciidoctor = "1.5.9.2"
 
     //Dependencies
