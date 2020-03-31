@@ -4,17 +4,17 @@ import java.util.function.Function;
 
 public class MappedProperty<T, R> extends AtomicProperty<R> implements DynamicProperty<R> {
 
-    private final PropertySubscription<T> subscription;
+    private final DynamicProperty<T> dynamicProperty;
+    private final DynamicPropertyListener<T> listener;
 
-    public MappedProperty(DynamicProperty<T> source, Function<T, R> map) {
-        this.subscription = source
-                .createSubscription()
-                .setAndCallListener((oldValue, newValue) -> this.set(map.apply(newValue)));
+    public MappedProperty(DynamicProperty<T> dynamicProperty, Function<T, R> map) {
+        this.listener = (oldValue, newValue) -> this.set(map.apply(newValue));
+        this.dynamicProperty = dynamicProperty.addAndCallListener(listener);
     }
 
     @Override
     public void close() {
-        subscription.close();
         super.close();
+        dynamicProperty.removeListener(listener);
     }
 }

@@ -11,7 +11,6 @@ import java.time.temporal.ChronoUnit
 
 buildscript {
     repositories {
-        mavenLocal()
         jcenter()
         mavenCentral()
     }
@@ -29,8 +28,8 @@ plugins {
     kotlin("jvm") version Vers.kotlin apply false
     signing
     `maven-publish`
-    id(Libs.nexus_publish_plugin) version "0.4.0" apply false
-    id(Libs.nexus_staging_plugin) version "0.21.2"
+    id(Libs.nexus_publish_plugin) version "0.3.0" apply false
+    id(Libs.nexus_staging_plugin) version "0.21.0"
     id("org.asciidoctor.convert") version Vers.asciidoctor
 }
 
@@ -114,7 +113,6 @@ subprojects {
             }
         }
         clientTimeout.set(Duration.of(3, ChronoUnit.MINUTES))
-        connectTimeout.set(Duration.of(3, ChronoUnit.MINUTES))
     }
 
     project.afterEvaluate {

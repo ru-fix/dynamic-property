@@ -41,9 +41,7 @@ class FilePropertySourceTest {
         assertEquals("foo", property.get())
 
         val captor = AtomicReference<String>()
-        val subscription = property
-                .createSubscription()
-                .setAndCallListener{ _, new -> captor.set(new)}
+        property.addListener{ _, new -> captor.set(new)}
 
         path.set(f2)
 
@@ -73,8 +71,7 @@ class FilePropertySourceTest {
         assertEquals("foo", property.get())
 
         val captor = AtomicReference<String>()
-        val subscription = property.createSubscription()
-                .setAndCallListener{ _, new -> captor.set(new)}
+        property.addListener{ _, new -> captor.set(new)}
 
         Files.writeString(
                 f,

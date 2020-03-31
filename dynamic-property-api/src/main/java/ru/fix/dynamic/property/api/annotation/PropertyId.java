@@ -1,10 +1,8 @@
 package ru.fix.dynamic.property.api.annotation;
 
-import javax.annotation.Nonnull;
 import java.lang.annotation.*;
 
 /**
- * Unique identifies property within property source
  * @author Kamil Asfandiyarov
  */
 @Target(value = {ElementType.FIELD})
@@ -13,9 +11,8 @@ import java.lang.annotation.*;
 public @interface PropertyId {
 
     /**
-     * Property identifier
+     * Property id
      */
-    @Nonnull
     String value();
 
 }

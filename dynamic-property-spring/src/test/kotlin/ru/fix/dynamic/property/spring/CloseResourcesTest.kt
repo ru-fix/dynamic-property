@@ -10,6 +10,7 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
 import ru.fix.dynamic.property.api.DynamicProperty
+import ru.fix.dynamic.property.api.DynamicPropertyListener
 import ru.fix.dynamic.property.api.source.DynamicPropertySource
 import ru.fix.dynamic.property.api.annotation.PropertyId
 import ru.fix.dynamic.property.jackson.JacksonDynamicPropertyMarshaller
@@ -62,23 +63,17 @@ class CloseResourcesTest {
     object MockedPropertySource: InMemoryPropertySource(JacksonDynamicPropertyMarshaller()){
         val closedSubscriptions = AtomicInteger()
 
-        override fun <T> createSubscription(propertyName: String,
-                                            propertyType: Class<T>,
-                                            defaultValue: OptionalDefaultValue<T>): DynamicPropertySource.Subscription<T> {
+        override fun <T> subscribeAndCallListener(
+                propertyName: String,
+                propertyType: Class<T>,
+                defaultValue: OptionalDefaultValue<T>,
+                listener: DynamicPropertySource.Listener<T>): DynamicPropertySource.Subscription {
 
+            val subscription =  super.subscribeAndCallListener(propertyName, propertyType, defaultValue, listener)
 
-            val subscription =  super.createSubscription(propertyName, propertyType, defaultValue)
-
-            return object: DynamicPropertySource.Subscription<T> {
-                override fun setAndCallListener(listener: DynamicPropertySource.Listener<T>): DynamicPropertySource.Subscription<*> {
-                    subscription.setAndCallListener(listener)
-                    return this;
-                }
-
-                override fun close() {
-                    closedSubscriptions.incrementAndGet()
-                    subscription.close()
-                }
+            return DynamicPropertySource.Subscription {
+                closedSubscriptions.incrementAndGet()
+                subscription.close()
             }
         }
     }

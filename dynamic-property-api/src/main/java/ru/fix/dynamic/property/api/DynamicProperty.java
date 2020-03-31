@@ -1,108 +1,94 @@
 package ru.fix.dynamic.property.api;
 
-import javax.annotation.Nonnull;
+import ru.fix.dynamic.property.api.source.DynamicPropertySource;
+
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
- * Holds property value and notifies listeners when value changes.<br>
+ * Holds property value and notifies listeners when value is changed.<br>
  * Implementation should provide thread safe access to property value via {@link #get()}.<br>
  * Be aware that it is allowed for implementation not to implement listeners functionality. <br>
- * In case of {@link #delegated(Supplier)}, returned {@link DynamicProperty} will allow subscriptions but actually
+ * In case of {@link #of(Supplier)} returned {@link DynamicProperty} will allow to subscribe but actually
  * does not provide listeners functionality and does not invoke client listeners. <br>
- * In case of {@link #of(Object)}, returned {@link DynamicProperty} does not changes
- * and does not notifies client listeners.
  * <br>
- * Use {@link PropertySubscription#setAndCallListener(PropertyListener)}  to reuse same code block
- * during first initialization and consequence updates: <br>
+ * Use {@link #addAndCallListener(DynamicPropertyListener)} to reuse same code block during first initialization
+ * and consequence updates: <br>
  * <pre>{@code
- * final PropertySubscription<MyConfig> myConfig;
- * MyService(DynamicProperty<MyConfig> property){
- *     this.myConfig = property.createSubscription()
- *                             .setAndCallListener{ oldValue, newValue ->
+ * MyService(DynamicProperty<String> property){
+ *     property.addAndCallListener{ oldValue, newValue ->
  *          // initialisation or reconfiguration logic
  *          // will be invoked first time with current value of the property
  *          // and then each time on property change
  *         initializeOrUpdateMyService(newValue)
  *     }
- *     void initializeOrUpdateMyService(MyConfig config){
- *      ...
- *     }
  * }
  * }</pre>
- * {@link PropertySubscription} instance returned by {@link #createSubscription()} should be kept strongly reachable. <br/>
- * As soon as {@link PropertySubscription} instance garbage collected, subscription canceled
- * and {@link PropertyListener} stop being invoked. <br/>
- * You can cancel subscription via {@link PropertySubscription#close()} <br/>
- * <br/>
- * Use {@link #get()} for thread safe access to current property value.
+ *
+ * Use {@link #get()} for thread safe access to current property value
  * <pre>{@code
  * val messageTemplate: DynamicProperty<String>
  * fun doWork(){
- *     ...
+ *      ...
  *     val message = buildMessage(messageTemplate.get())
  *     ...
  * }
  * }</pre>
- * Use {@link PropertySubscription#get()} if you need both: subscription for updates
- * and ability to access current value of the property
- * <pre>{@code
- * final PropertySubscription<MyConfig> myConfigSubscription;
- * MyService(DynamicProperty<MyConfig> property){
- *     this.myConfigSubscription = property.createSubscription()
- *                             .setAndCallListener{ oldValue, newValue ->
- *          // initialisation or reconfiguration logic
- *          // will be invoked first time with current value of the property
- *          // and then each time on property change
- *         initializeOrUpdateMyService(newValue)
- *     }
- *     void initializeOrUpdateMyService(MyConfig config){
- *      ...
- *     }
- *     void doWork(){
- *          ...
- *          // access to current value of the property through it's subscription
- *          val currentConfig = myConfigSubscription.get()
- *          ...
- *     }
- * }
- * }</pre>
+ *
  * <br>
  * Different implementations provides different guarantees
- * in terms of atomicity for subscription and listener invocation.<br>
+ * in terms of atomicity subscription and listener invocation.<br>
  * <p>
  * Be aware of awkward behaviour due to a concurrent nature of dynamic property.<br>
  * Check for {@link DynamicProperty} implementation documentation
  * to clarify how and in which thread implementation invokes listeners.<br>
  * <br>
- * <b>Be aware:</b><br>
- * Bad example of service initialization with concurrent modification of state
+ * <b>Problem 1:</b><br>
+ * Suppose that current value of the property is 1.<br>
+ * Value of property in the {@link DynamicProperty} implementation storage was changed from 1 to 2.<br>
+ * Bad example of service initialization:<br>
+ * <pre>{@code
+ * // DO NOT DO THAT
+ * MyService(DynamicProperty property){
+ *     val value = property.get()
+ *     initialize(value)
+ *     //-- we could miss property update here --
+ *     property.addListener{ oldValue, newValue -> initialize(newValue)}
+ * }
+ * }</pre>
+ * It is possible that during first invocation of property.get() we will see value 1. <br>
+ * Then before subscribing our listener property update will occurs and we miss update from 1 to 2. <br>
+ * This lead to the situation when MyService thinks that property value is 1 but actually it is 2. <br>
+ * <br>
+ * <b>Problem 2:</b><br>
+ * Suppose that current value of the property is 1.<br>
+ * Value of property in the {@link DynamicProperty} implementation storage was changed from 1 to 2.<br>
+ * Example of service initialization with concurrent execution problem
+ * <pre>{@code
+ * // DO NOT DO THAT
+ * MyService(DynamicProperty property){
+ *     property.addListener{ oldValue, newValue -> initialize(newValue) }
+ *     val value = property.get()
+ *     //-- we could launch initialize method concurrently from user thread and listener thread --
+ *     initialize(value)
+ * }
+ * }</pre>
+ * User thread adds listener and then reads property value 1. <br>
+ * User thread starts to initialize service with value 1. <br>
+ * In same time DynamicProperty implementation calls concurrently listener and
+ * user listener starts to initialize service with value 2. <br>
+ * <br>
+ * <b>Problem 3:</b><br>
+ * Example of service initialization with concurrent modification of state
  * <pre>
  * {@code
  * // DO NOT DO THAT
  * String nonVolatileNonAtomicField = ""
- * PropertySubscription subscription;
- * MyService(DynamicProperty<String> property){
- *     subscription = property.createSubscription()
- *             .subscribeAndCall{ oldValue, newValue ->
- *          // listener will be invoked in Listener thread
+ * MyService(DynamicProperty property){
+ *     property.addListener{ oldValue, newValue ->
+ *          // listener invoked in Listener thread
  *          // non thread safe field should be replaced by volatile or atomic field.
  *          nonVolatileNonAtomicField = newValue
- *     }
- * }
- * }</pre>
- * Bad example of subscription when subscription canceled by garbage collector.
- * <pre>
- * {@code
- * // DO NOT DO THAT
- * MyService(DynamicProperty<MyConfig> property){
- *     // PropertySubscription instance created, but we do not store reference on it.
- *     // PropertySubscription instance garbage collected immediately and subscription canceled.
- *     // Listener will be invoked only once during initialization, and will stop receive new updates immediately.
- *     // Listener will not receive any more notifications.
- *     property.createSubscription()
- *             .subscribeAndCall{ oldValue, newValue ->
- *                  doImportantReconfiguration(newValue)
  *     }
  * }
  * }</pre>
@@ -110,80 +96,84 @@ import java.util.function.Supplier;
 public interface DynamicProperty<T> extends AutoCloseable {
 
     /**
-     * @return current value of the property
+     * @return current value of property
      */
     T get();
 
     /**
-     * Creates {@link PropertySubscription} that allows to subscribe a listener for dynamic property updates.
-     * Listener will continue to receive events as long as {@link PropertySubscription} instance
-     * stays strongly reachable.
-     * <pre>{@code
-     * final PropertySubscription mySize;
-     * MyService(DynamicProperty<String> mySize){
-     *     this.mySize = mySize.callAndSubscribe{ oldSize, newSize ->
-     *          // initialisation or reconfiguration logic
-     *          // will be invoked first time with current value of the property
-     *          // and then each time on property change
-     *         initializeOrUpdateMyService(newSize)
-     *     }
-     * }
-     * void doWork(){
-     *      var currentSize = this.mySize.get()
-     *      ...
-     * }
-     * }</pre>
+     * Add listener to dynamic property. <br>
+     * It is implementation specific in what thread the listener will be invoked after subscription. <br>
+     * Be aware that usage of this method could lead to awkward behaviour in term of concurrency. <br>
+     * See DynamicProperty interface documentation for details.
+     * It is recommended to use {@link #addAndCallListener(DynamicPropertyListener)} that has more fine granted behaviour
+     * in term of concurrency and order of subscription and receiving notification.
      *
-     * @return Subscription instance that keeps listener active.
-     * As soon as {@link PropertySubscription} garbage collected, the listener stops receiving events. <br>
-     * You can unsubscribe listener from events via {@link PropertySubscription#close()} <br>
-     * {@link PropertySubscription} gives an access to current {@link DynamicProperty} value via
-     * {@link PropertySubscription#get()}.
+     * @param listener Listener is activated whenever property value changes.
      */
-    @Nonnull
-    PropertySubscription<T> createSubscription();
+    DynamicProperty<T> addListener(DynamicPropertyListener<T> listener);
 
     /**
-     * @return constant DynamicProperty that holds given value and never changes.
+     * Add listener to dynamic property and invokes it with current value of the property.
+     * During first invocation of the listener {@link DynamicPropertyListener#onPropertyChanged(Object, Object)}
+     * oldValue is going to be null.
+     *
+     * @param listener Listener is activated first time with current value of the property and then
+     *                 each time when property changes.
+     * @return current instance of DynamicProperty
+     */
+    DynamicProperty<T> addAndCallListener(DynamicPropertyListener<T> listener);
+
+    /**
+     * Add listener to dynamic property.
+     * Returns current value of the property.
+     *
+     * @param listener Listener is activated each time when property changes.
+     * @return current value of the DynamicProperty
+     */
+    T addListenerAndGet(DynamicPropertyListener<T> listener);
+
+    /**
+     * Unregister listener from the property.
+     */
+    DynamicProperty<T> removeListener(DynamicPropertyListener<T> listener);
+
+
+    /**
+     * @return DynamicProperty that holds given value and never changes
      */
     static <T> DynamicProperty<T> of(T value) {
         return new ConstantProperty<>(value);
     }
 
     /**
-     * Return {@link DynamicProperty} proxy that delegates {@link DynamicProperty#get()}  to given supplier. <br>
+     * Return DynamicProperty proxy that delegates {@link DynamicProperty#get()}  to given supplier. <br>
      * <br>
      * Be aware that DynamicProperty created this way
-     * does not notify listeners {@link PropertyListener} <br>
-     * Here is an example of inappropriate usage of delegated property: <br>
-     * <b>Good example:</b><br>
+     * does not notify listeners through {@link java.beans.PropertyChangeListener} <br>
+     * Here is an example of inappropriate usage of delegated property:
      * <pre>{@code
      * class Foo(supplier: Supplier<String>){
+     *     // will not work correctly since bar is actually needs listener support
+     *     val bar = Bar(DynamicProperty.delegated(supplier))
+     *
      *     // will work correctly
      *     val baz = Baz(DynamicProperty.delegated(supplier))
      * }
+     *
+     * class Bar(property: DynamicProperty<String>){
+     *     property.addListener{value -> ...}
+     * }
+     *
      * class Baz(property: DynamicProperty<String>){
      *     fun doWork(){
      *          if(property.get().contains(...))
      *     }
      * }
-     * }</pre>
-     * <b>Bad example:</b><br>
-     * <pre>{@code
-     * class Foo(supplier: Supplier<String>){
-     *     // will not work correctly since bar is actually needs listener support
-     *     val bar = Bar(DynamicProperty.delegated(supplier))
-     * }
      *
-     * class Bar(property: DynamicProperty<String>){
-     *     subscription = property.createSubscription()
-     *             .setListenerAndCall{value -> ...}
-     * }
      * }</pre>
      * If you need a DynamicProperty with full listeners support backed up by {@link Supplier}
      * use DynamicPropertyPoller instead
-     *
-     * @return DynamicProperty backed up with {@link Supplier}.
+     * @return DynamicProperty proxy.
      * @see ru.fix.dynamic.property.polling.DynamicPropertyPoller
      */
     static <T> DynamicProperty<T> delegated(Supplier<T> supplier) {
@@ -193,13 +183,12 @@ public interface DynamicProperty<T> extends AutoCloseable {
     /**
      * Builds one property based on another.
      * <pre>{@code
-     *  DynamicProperty<String> stringProperty = ...;
-     *  val service = new ServiceThatRequiresIntProperty( stringProperty.map { str -> str.toInt() } )
+     *  val stringProperty: DynamicProperty<String>
+     *  val service = ServiceThatRequiresIntProperty( stringProperty.map { str -> str.toInt() } )
      * }</pre>
      * <pre>{@code
-     *  DynamicProperty<BigConfig> bigConfigProperty = ...:
-     *  val service = new ServiceThatRequiresTimeoutInMilliseconds(
-     *          bigConfigProperty.map { config -> config.timeoutInSeconds * 1000 } )
+     *  val bigConfigProperty: DynamicProperty<BigConfig>
+     *  val service = ServiceThatRequiresTimeoutInMilliseconds( bigConfigProperty.map { config -> config.timeoutInSeconds * 1000 } )
      * }</pre>
      */
     default <R> DynamicProperty<R> map(Function<T, R> map) {
@@ -207,10 +196,8 @@ public interface DynamicProperty<T> extends AutoCloseable {
     }
 
     /**
-     * Close this instance of {@link DynamicProperty}.
-     * Unsubscribe all {@link PropertySubscription} with {@link PropertyListener}s from this instance.
-     * This {@link DynamicProperty} instance will stay strongly reachable
-     * from all {@link PropertySubscription} instances its created
+     * Close this instance of DynamicProperty.
+     * Unsubscribe it from {@link DynamicPropertySource}
      */
     void close();
 }
