@@ -62,17 +62,23 @@ class CloseResourcesTest {
     object MockedPropertySource: InMemoryPropertySource(JacksonDynamicPropertyMarshaller()){
         val closedSubscriptions = AtomicInteger()
 
-        override fun <T> subscribeAndCallListener(
-                propertyName: String,
-                propertyType: Class<T>,
-                defaultValue: OptionalDefaultValue<T>,
-                listener: DynamicPropertySource.Listener<T>): DynamicPropertySource.Subscription {
+        override fun <T> createSubscription(propertyName: String,
+                                            propertyType: Class<T>,
+                                            defaultValue: OptionalDefaultValue<T>): DynamicPropertySource.Subscription<T> {
 
-            val subscription =  super.subscribeAndCallListener(propertyName, propertyType, defaultValue, listener)
 
-            return DynamicPropertySource.Subscription {
-                closedSubscriptions.incrementAndGet()
-                subscription.close()
+            val subscription =  super.createSubscription(propertyName, propertyType, defaultValue)
+
+            return object: DynamicPropertySource.Subscription<T> {
+                override fun setAndCallListener(listener: DynamicPropertySource.Listener<T>): DynamicPropertySource.Subscription<*> {
+                    subscription.setAndCallListener(listener)
+                    return this;
+                }
+
+                override fun close() {
+                    closedSubscriptions.incrementAndGet()
+                    subscription.close()
+                }
             }
         }
     }

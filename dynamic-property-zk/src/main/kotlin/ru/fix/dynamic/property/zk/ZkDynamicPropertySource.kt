@@ -9,6 +9,7 @@ import org.apache.curator.framework.recipes.cache.TreeCacheListener
 import org.apache.logging.log4j.kotlin.Logging
 import ru.fix.dynamic.property.api.marshaller.DynamicPropertyMarshaller
 import ru.fix.dynamic.property.api.source.DynamicPropertySource
+import ru.fix.dynamic.property.api.source.OptionalDefaultValue
 import ru.fix.dynamic.property.std.source.PropertySourceAccessor
 import ru.fix.dynamic.property.std.source.PropertySourcePublisher
 import ru.fix.stdlib.reference.ReferenceCleaner
@@ -19,6 +20,8 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 
 
 /**
@@ -45,10 +48,20 @@ class ZkDynamicPropertySource(
 
     companion object : Logging
 
+    private val readTreeAndProcessNotificationLock = ReentrantLock()
+
     private val propertySourcePublisher = PropertySourcePublisher(
             propertySourceAccessor = object : PropertySourceAccessor {
                 override fun accessPropertyUnderLock(propertyName: String, accessor: (String?) -> Unit) {
-                    TODO("Not yet implemented")
+                    readTreeAndProcessNotificationLock.withLock {
+                        val path = getAbsolutePathForProperty(propertyName)
+                        val currentData = treeCache.getCurrentData(path)
+                        val currentValue = if (currentData == null)
+                            null
+                        else
+                            zkDataToStringOrNull(currentData.data, currentData.toString())
+                        accessor(currentValue)
+                    }
                 }
             },
             marshaller = marshaller,
@@ -72,7 +85,6 @@ class ZkDynamicPropertySource(
         }
         treeCache = TreeCache(this.curatorFramework, this.rootPath)
         val treeCacheInitialized = CountDownLatch(1)
-
 
         treeCache.listenable.addListener(TreeCacheListener { _, treeCacheEvent ->
 
@@ -116,6 +128,7 @@ class ZkDynamicPropertySource(
      */
     fun readAllProperties(): Map<String, Any> {
         val allProperties = ConcurrentHashMap<String, Any>()
+
         val exist = curatorFramework.checkExists().forPath(rootPath)
         if (exist != null) {
             val children = curatorFramework.children.forPath(rootPath)
@@ -153,19 +166,14 @@ class ZkDynamicPropertySource(
             return
         }
 
-
         val propertyName = getPropertyNameFromAbsolutePath(absolutePath)
 
         logger.info("Zk property change: type: ${treeCacheEvent.type}, node: $absolutePath. New value is '$newValue'")
-        notifyAboutPropertyChange(propertyName, newValue)
+        readTreeAndProcessNotificationLock.withLock {
+            propertySourcePublisher.notifyAboutPropertyChange(propertyName, newValue)
+        }
     }
 
-
-    protected override fun getPropertyValue(propertyName: String): String? {
-        val path = getAbsolutePathForProperty(propertyName)
-        val currentData = treeCache.getCurrentData(path)
-        return if (currentData == null) null else zkDataToStringOrNull(currentData.data, currentData.toString())
-    }
 
 
     private fun getAbsolutePathForProperty(propertyName: String): String {
@@ -177,8 +185,12 @@ class ZkDynamicPropertySource(
         return absolutePath.substring(rootPath.length + 1)
     }
 
+    override fun <T : Any?> createSubscription(propertyName: String, propertyType: Class<T>, defaultValue: OptionalDefaultValue<T>): DynamicPropertySource.Subscription<T> {
+        return propertySourcePublisher.createSubscription(propertyName, propertyType, defaultValue)
+    }
+
     override fun close() {
-        super.close()
+        propertySourcePublisher.close()
         treeCache.close()
     }
 
