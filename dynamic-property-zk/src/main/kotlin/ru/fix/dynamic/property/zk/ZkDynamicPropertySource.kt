@@ -9,7 +9,7 @@ import org.apache.curator.framework.recipes.cache.TreeCacheListener
 import org.apache.logging.log4j.kotlin.Logging
 import ru.fix.dynamic.property.api.marshaller.DynamicPropertyMarshaller
 import ru.fix.dynamic.property.std.source.AbstractPropertySource
-import ru.fix.stdlib.concurrency.threads.ReferenceCleaner
+import ru.fix.stdlib.reference.ReferenceCleaner
 import java.nio.charset.StandardCharsets
 import java.time.Duration
 import java.util.*

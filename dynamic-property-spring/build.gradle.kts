@@ -26,5 +26,8 @@ dependencies {
     testImplementation(Libs.jfix_stdlib_concurrency){
         exclude("ru.fix")
     }
+    testImplementation(Libs.jfix_stdlib_reference){
+        exclude("ru.fix")
+    }
 
 }

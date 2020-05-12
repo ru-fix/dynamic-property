@@ -16,7 +16,7 @@ import ru.fix.dynamic.property.api.annotation.PropertyId;
 import ru.fix.dynamic.property.jackson.JacksonDynamicPropertyMarshaller;
 import ru.fix.dynamic.property.spring.config.DynamicPropertyConfig;
 import ru.fix.dynamic.property.std.source.InMemoryPropertySource;
-import ru.fix.stdlib.concurrency.threads.ReferenceCleaner;
+import ru.fix.stdlib.reference.ReferenceCleaner;
 
 import static org.junit.jupiter.api.Assertions.*;
 
