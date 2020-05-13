@@ -15,9 +15,7 @@ dependencies {
     implementation(Libs.jfix_stdlib_concurrency){
         exclude("ru.fix", "dynamic-property-api")
     }
-    implementation(Libs.jfix_stdlib_reference){
-        exclude("ru.fix", "dynamic-property-api")
-    }
+    implementation(Libs.jfix_stdlib_reference)
     implementation(project(Projs.dynamic_property_jackson.dependency))
     implementation(project(Projs.dynamic_property_std_source.dependency))
 
