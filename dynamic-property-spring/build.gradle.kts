@@ -23,7 +23,7 @@ dependencies {
 
     testImplementation(project(Projs.dynamic_property_std_source.dependency))
     testImplementation(project(Projs.dynamic_property_jackson.dependency))
-    testImplementation(Libs.jfix_stdlib_concurrency){
+    testImplementation(Libs.jfix_stdlib_reference){
         exclude("ru.fix")
     }
 

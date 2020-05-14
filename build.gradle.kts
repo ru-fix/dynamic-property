@@ -192,6 +192,8 @@ subprojects {
             }
         }
         withType<Test> {
+            enabled = false
+
             useJUnitPlatform()
 
             maxParallelForks = 10
