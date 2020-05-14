@@ -12,7 +12,7 @@ dependencies {
 
     implementation(Libs.log4j_kotlin)
     implementation(Libs.curator_recipes)
-    implementation(Libs.jfix_stdlib_concurrency){
+    implementation(Libs.jfix_stdlib_reference){
         exclude("ru.fix", "dynamic-property-api")
     }
     implementation(project(Projs.dynamic_property_jackson.dependency))

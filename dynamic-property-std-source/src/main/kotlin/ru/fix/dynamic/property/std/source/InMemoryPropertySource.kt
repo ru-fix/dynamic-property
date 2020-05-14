@@ -1,7 +1,7 @@
 package ru.fix.dynamic.property.std.source
 
 import ru.fix.dynamic.property.api.marshaller.DynamicPropertyMarshaller
-import ru.fix.stdlib.concurrency.threads.ReferenceCleaner
+import ru.fix.stdlib.reference.ReferenceCleaner
 
 /**
  * Keep properties in memory.

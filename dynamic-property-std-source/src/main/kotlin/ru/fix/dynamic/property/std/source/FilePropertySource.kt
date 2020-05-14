@@ -4,8 +4,8 @@ import ru.fix.dynamic.property.api.DynamicProperty
 import ru.fix.dynamic.property.api.marshaller.DynamicPropertyMarshaller
 import ru.fix.dynamic.property.api.source.DynamicPropertySource
 import ru.fix.dynamic.property.api.source.OptionalDefaultValue
-import ru.fix.stdlib.concurrency.threads.ReferenceCleaner
 import ru.fix.stdlib.files.FileWatcher
+import ru.fix.stdlib.reference.ReferenceCleaner
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
