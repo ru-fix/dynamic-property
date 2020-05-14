@@ -9,7 +9,7 @@ dependencies {
 
     implementation(Libs.kotlin_stdlib)
     implementation(Libs.kotlin_jdk8)
-    implementation(Libs.jfix_stdlib_concurrency){
+    implementation(Libs.jfix_stdlib_reference){
         exclude("ru.fix", "dynamic-property-api")
     }
     implementation(Libs.jfix_stdlib_files){
