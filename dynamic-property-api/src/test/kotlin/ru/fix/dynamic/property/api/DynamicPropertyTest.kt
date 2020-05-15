@@ -1,7 +1,8 @@
 package ru.fix.dynamic.property.api
 
-
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 import ru.fix.stdlib.reference.GarbageGenerator
 import ru.fix.stdlib.reference.ReferenceCleaner
@@ -11,12 +12,12 @@ import java.util.concurrent.atomic.AtomicReference
 
 class DynamicPropertyTest {
 
-    val garbageGenerator = GarbageGenerator()
+    private val garbageGenerator = GarbageGenerator()
         .setGarbageSizePerIterationMB(10)
         .setDelay(Duration.ofMillis(100))
         .setTimeout(Duration.ofMinutes(1))
 
-    val referenceCleaner = ReferenceCleaner.getInstance()
+    private val referenceCleaner = ReferenceCleaner.getInstance()
 
     class MyService(poolSize: DynamicProperty<Int>) {
         private val poolSize: PropertySubscription<Int> = poolSize
@@ -127,7 +128,7 @@ class DynamicPropertyTest {
         functionTakesPropertyButDoesNotKeepReferenceToIt(mappedProperty)
 
         val referenceWasCleaned = AtomicBoolean(false)
-        referenceCleaner.register(mappedProperty, null) { ref, meta ->
+        referenceCleaner.register(mappedProperty, null) { _, _ ->
             referenceWasCleaned.set(true)
         }
         mappedProperty = null
@@ -136,5 +137,57 @@ class DynamicPropertyTest {
             referenceWasCleaned.get()
         }
         assertTrue(result)
+    }
+
+    /**
+     * ```
+     * ~root~
+     *    ↑
+     *    │
+     *    │ .map
+     *    │            subscription
+     * ~child1~ ←————————————————————————╮
+     *    ↑                              │
+     *    │ .map                      ~some_object~
+     *    │        implicit dependency   ╎
+     * ~child2~ ←╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╯
+     *               in subscription
+     * ```
+     *
+     * The case should be fixed via creating ~child2~ delegate (not map) dependency to ~child1~
+     */
+    @Disabled("unstable, undefined behavior")
+    @RepeatedTest(20)
+    fun `undefined behavior, mapped dynamic properties dependency graph`() {
+        val root = AtomicProperty(0L)
+        val child1 = root.map { it }
+        val child2 = child1.map { it }
+
+        // some business object with explicit dependency to child1 and implicit dependency to child2
+        child1.createSubscription().setAndCallListener { _, newValue ->
+            val child2Val = child2.get()
+            assertEquals(newValue, child2Val)
+        }
+
+        root.set(1)
+    }
+
+    /**
+     * see
+     * [ru.fix.dynamic.property.api.DynamicPropertyTest.`undefined behavior, mapped dynamic properties dependency graph`]
+     */
+    @RepeatedTest(20)
+    fun `dynamic properties dependency graph, delegated instead of mapped`() {
+        val root = AtomicProperty(0L)
+        val child1 = root.map { it }
+        val child2 = DynamicProperty.delegated { child1.get() }
+
+        // some business object with explicit dependency to child1 and implicit dependency to child2
+        child1.createSubscription().setAndCallListener { _, newValue ->
+            val child2Val = child2.get()
+            assertEquals(newValue, child2Val)
+        }
+
+        root.set(1)
     }
 }

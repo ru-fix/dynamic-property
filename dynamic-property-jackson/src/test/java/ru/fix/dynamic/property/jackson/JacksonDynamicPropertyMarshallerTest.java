@@ -12,8 +12,8 @@ import java.util.Arrays;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class JacksonDynamicPropertyMarshallerTest {
-    private JacksonDynamicPropertyMarshaller marshaller = new JacksonDynamicPropertyMarshaller();
 
+    private final JacksonDynamicPropertyMarshaller marshaller = new JacksonDynamicPropertyMarshaller();
 
     @Test
     public void marshallPrimitiveTypes() {

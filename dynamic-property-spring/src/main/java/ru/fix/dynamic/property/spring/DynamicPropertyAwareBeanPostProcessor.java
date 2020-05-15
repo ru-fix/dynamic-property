@@ -28,10 +28,10 @@ public class DynamicPropertyAwareBeanPostProcessor implements DestructionAwareBe
 
     private static final Logger log = LoggerFactory.getLogger(DynamicPropertyAwareBeanPostProcessor.class);
 
-    private DynamicPropertySource propertySource;
-    private LongAdder processingTime = new LongAdder();
+    private final DynamicPropertySource propertySource;
+    private final LongAdder processingTime = new LongAdder();
 
-    private Map<Object, Object> constructedObjects = Collections.synchronizedMap(new WeakHashMap<>());
+    private final Map<Object, Object> constructedObjects = Collections.synchronizedMap(new WeakHashMap<>());
 
     public DynamicPropertyAwareBeanPostProcessor(DynamicPropertySource propertySource) {
         this.propertySource = propertySource;
@@ -73,10 +73,12 @@ public class DynamicPropertyAwareBeanPostProcessor implements DestructionAwareBe
 
         final long currentProcessingTime = System.currentTimeMillis() - startTime;
         processingTime.add(currentProcessingTime);
-        log.debug("Resolving @PropertyId annotation for '{}' bean took {} ms. " +
-                        "Sum of processing times is equal {} ms now.",
-                beanName, currentProcessingTime, processingTime.sum()
-        );
+        if (log.isDebugEnabled()) {
+            log.debug("Resolving @PropertyId annotation for '{}' bean took {} ms. " +
+                            "Sum of processing times is equal {} ms now.",
+                    beanName, currentProcessingTime, processingTime.sum()
+            );
+        }
 
         constructedObjects.put(bean, null);
 

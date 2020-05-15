@@ -1,6 +1,5 @@
 package ru.fix.dynamic.property.spring;
 
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,20 +19,19 @@ import ru.fix.stdlib.reference.ReferenceCleaner;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-
 /**
  * @author Ayrat Zulkarnyaev
  */
 @ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = InjectingPropertyIdBySprtingTest.Config.class)
-public class InjectingPropertyIdBySprtingTest {
+@ContextConfiguration(classes = InjectingPropertyIdBySpringTest.Config.class)
+public class InjectingPropertyIdBySpringTest {
 
     public static class PropertyContainer {
 
-        private DynamicProperty<String> status = DynamicProperty.of("NEW");
+        private final DynamicProperty<String> status = DynamicProperty.of("NEW");
 
         @PropertyId("property.city")
-        private DynamicProperty<String> city = DynamicProperty.of("kazan");
+        private final DynamicProperty<String> city = DynamicProperty.of("kazan");
 
         public DynamicProperty<String> getCity() {
             return city;
@@ -44,7 +42,7 @@ public class InjectingPropertyIdBySprtingTest {
         }
 
         @PropertyId("nullable.property")
-        private DynamicProperty<String> nullableProperty = DynamicProperty.of(null);
+        private final DynamicProperty<String> nullableProperty = DynamicProperty.of(null);
     }
 
     @Configuration

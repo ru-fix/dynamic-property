@@ -73,7 +73,7 @@ class ZkDynamicPropertySource(
 
     private val rootPath: String =
         if (zookeeperConfigPath.endsWith('/')) {
-            zookeeperConfigPath.substring(0, zookeeperConfigPath.length - 1)
+            zookeeperConfigPath.dropLast(1)
         } else {
             zookeeperConfigPath
         }
@@ -90,7 +90,7 @@ class ZkDynamicPropertySource(
 
         treeCache.listenable.addListener(TreeCacheListener { _, treeCacheEvent ->
 
-            logger.trace("Received TreeCache event: $treeCacheEvent")
+            logger.trace { "Received TreeCache event: $treeCacheEvent" }
 
             when (treeCacheEvent.type!!) {
                 TreeCacheEvent.Type.NODE_ADDED,
@@ -98,7 +98,7 @@ class ZkDynamicPropertySource(
                     try {
                         onZkTreeChanged(
                             treeCacheEvent, zkDataToStringOrNull(
-                                treeCacheEvent.getData().getData(),
+                                treeCacheEvent.data.data,
                                 treeCacheEvent.toString()
                             )
                         )
@@ -136,10 +136,10 @@ class ZkDynamicPropertySource(
         val exist = curatorFramework.checkExists().forPath(rootPath)
         if (exist != null) {
             val children = curatorFramework.children.forPath(rootPath)
-            if (!children.isEmpty()) {
+            if (children.isNotEmpty()) {
                 val latch = CountDownLatch(children.size)
                 for (child in children) {
-                    curatorFramework.data.watched().inBackground { client, event ->
+                    curatorFramework.data.watched().inBackground { _, event ->
                         allProperties[child] = String(event.data, StandardCharsets.UTF_8)
                         latch.countDown()
                     }.forPath(getAbsolutePathForProperty(child))
@@ -155,10 +155,7 @@ class ZkDynamicPropertySource(
 
     private fun zkDataToStringOrNull(data: ByteArray, logDetails: String): String? =
         try {
-            String(
-                data,
-                StandardCharsets.UTF_8
-            )
+            String(data, StandardCharsets.UTF_8)
         } catch (exc: Exception) {
             logger.error("Failed to read string value from zk node. $logDetails", exc)
             null
@@ -173,7 +170,9 @@ class ZkDynamicPropertySource(
 
         val propertyName = getPropertyNameFromAbsolutePath(absolutePath)
 
-        logger.info("Zk property change: type: ${treeCacheEvent.type}, node: $absolutePath. New value is '$newValue'")
+        logger.info {
+            "Zk property change: type: ${treeCacheEvent.type}, node: $absolutePath. New value is '$newValue'"
+        }
         readTreeAndProcessNotificationLock.withLock {
             propertySourcePublisher.notifyAboutPropertyChange(propertyName, newValue)
         }

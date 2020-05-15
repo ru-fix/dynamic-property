@@ -70,7 +70,7 @@ class FilePropertySource(
             inMemorySource[key] = value
         }
         inMemorySource.propertyNames()
-            .filter { !newProperties.contains(it) }
+            .filter { it !in newProperties }
             .forEach { name ->
                 inMemorySource.remove(name)
             }

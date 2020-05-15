@@ -124,7 +124,7 @@ class PropertySourcePublisher(
         subscriptoins.forEach { subRef ->
             subRef.get()?.let { sub ->
                 try {
-                    val newValue = extractPropertyValueOrDefault<Any?>(newSerializedValue, sub)
+                    val newValue = extractPropertyValueOrDefault(newSerializedValue, sub)
                     sub.listener!!.onPropertyChanged(newValue)
                 } catch (exc: Exception) {
                     logger.error("Failed to update property {}", propertyName, exc)

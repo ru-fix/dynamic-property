@@ -18,19 +18,8 @@ class FilePropertySourceTest {
         val f1 = Files.createTempFile("test1", ".properties").apply { toFile().deleteOnExit() }
         val f2 = Files.createTempFile("test2", ".properties").apply { toFile().deleteOnExit() }
 
-        Files.writeString(
-            f1,
-            """
-                |name=foo
-                """.trimMargin()
-        )
-
-        Files.writeString(
-            f2,
-            """
-                |name=bar
-                """.trimMargin()
-        )
+        Files.writeString(f1, "name=foo")
+        Files.writeString(f2, "name=bar")
 
         val path = AtomicProperty(f1)
 
@@ -39,7 +28,7 @@ class FilePropertySourceTest {
             marshaller = JacksonDynamicPropertyMarshaller()
         )
 
-        val property = SourcedProperty<String>(source, "name", String::class.java, OptionalDefaultValue.none())
+        val property = SourcedProperty(source, "name", String::class.java, OptionalDefaultValue.none())
         assertEquals("foo", property.get())
 
         val captor = AtomicReference<String>()
@@ -60,32 +49,21 @@ class FilePropertySourceTest {
     fun `change property on file content change`() {
         val f = Files.createTempFile("test1", ".properties").apply { toFile().deleteOnExit() }
 
-        Files.writeString(
-            f,
-            """
-                |name=foo
-                """.trimMargin()
-        )
-
+        Files.writeString(f, "name=foo")
 
         val source = FilePropertySource(
             sourceFilePath = DynamicProperty.of(f),
             marshaller = JacksonDynamicPropertyMarshaller()
         )
 
-        val property = SourcedProperty<String>(source, "name", String::class.java, OptionalDefaultValue.none())
+        val property = SourcedProperty(source, "name", String::class.java, OptionalDefaultValue.none())
         assertEquals("foo", property.get())
 
         val captor = AtomicReference<String>()
         val subscription = property.createSubscription()
             .setAndCallListener { _, new -> captor.set(new) }
 
-        Files.writeString(
-            f,
-            """
-                |name=bar
-                """.trimMargin()
-        )
+        Files.writeString(f, "name=bar")
 
         await().until { property.get() == "bar" }
         await().until { captor.get() == "bar" }
