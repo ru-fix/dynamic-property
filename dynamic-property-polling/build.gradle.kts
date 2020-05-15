@@ -13,7 +13,9 @@ dependencies {
     implementation(Libs.jfix_stdlib_concurrency){
         exclude("ru.fix")
     }
+    implementation(Libs.jfix_stdlib_reference)
 
+    testImplementation(Libs.aggregating_profiler)
     testImplementation(project(Projs.dynamic_property_api.dependency))
 
     testImplementation(Libs.junit_api)

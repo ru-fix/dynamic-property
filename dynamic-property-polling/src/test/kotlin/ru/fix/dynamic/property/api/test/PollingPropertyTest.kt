@@ -23,7 +23,6 @@ class DynamicPropertyTest {
      */
     @Test
     fun polled_property() {
-
         val scheduler = mockk<ReschedulableScheduler>(relaxed = true)
         val pollingTask = slot<Runnable>()
         every {

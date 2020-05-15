@@ -15,6 +15,7 @@ dependencies {
     implementation(Libs.jfix_stdlib_files){
         exclude("ru.fix", "dynamic-property-api")
     }
+    implementation(Libs.jfix_stdlib_reference)
 
     implementation(Libs.log4j_kotlin)
 
