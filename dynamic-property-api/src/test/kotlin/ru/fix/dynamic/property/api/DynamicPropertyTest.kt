@@ -12,18 +12,18 @@ import java.util.concurrent.atomic.AtomicReference
 class DynamicPropertyTest {
 
     val garbageGenerator = GarbageGenerator()
-            .setGarbageSizePerIterationMB(10)
-            .setDelay(Duration.ofMillis(100))
-            .setTimeout(Duration.ofMinutes(1))
+        .setGarbageSizePerIterationMB(10)
+        .setDelay(Duration.ofMillis(100))
+        .setTimeout(Duration.ofMinutes(1))
 
     val referenceCleaner = ReferenceCleaner.getInstance()
 
     class MyService(poolSize: DynamicProperty<Int>) {
         private val poolSize: PropertySubscription<Int> = poolSize
-                .createSubscription()
-                .setAndCallListener { oldValue, newValue ->
-                    println("poolSize changed from $oldValue to $newValue")
-                }
+            .createSubscription()
+            .setAndCallListener { oldValue, newValue ->
+                println("poolSize changed from $oldValue to $newValue")
+            }
 
         fun doWork() {
             println("doWork with poolSize: ${poolSize.get()}")
@@ -70,11 +70,11 @@ class DynamicPropertyTest {
         val captorNew = AtomicReference(0)
 
         val subscription = intProperty
-                .createSubscription()
-                .setAndCallListener { old, new ->
-                    captorOld.set(old)
-                    captorNew.set(new)
-                }
+            .createSubscription()
+            .setAndCallListener { old, new ->
+                captorOld.set(old)
+                captorNew.set(new)
+            }
 
         stringProperty.set("305")
 

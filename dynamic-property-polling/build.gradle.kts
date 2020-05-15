@@ -1,6 +1,3 @@
-import org.gradle.kotlin.dsl.*
-
-
 plugins {
     java
     kotlin("jvm")
@@ -27,5 +24,3 @@ dependencies {
     testImplementation(Libs.log4j_core)
 
 }
-
-

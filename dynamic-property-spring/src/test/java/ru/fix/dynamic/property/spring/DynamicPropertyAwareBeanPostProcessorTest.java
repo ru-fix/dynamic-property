@@ -3,8 +3,8 @@ package ru.fix.dynamic.property.spring;
 import org.junit.jupiter.api.Test;
 import ru.fix.dynamic.property.api.DynamicProperty;
 import ru.fix.dynamic.property.api.annotation.PropertyId;
-import ru.fix.dynamic.property.jackson.JacksonDynamicPropertyMarshaller;
 import ru.fix.dynamic.property.api.source.DynamicPropertyValueNotFoundException;
+import ru.fix.dynamic.property.jackson.JacksonDynamicPropertyMarshaller;
 import ru.fix.dynamic.property.std.source.InMemoryPropertySource;
 import ru.fix.stdlib.reference.ReferenceCleaner;
 
@@ -25,6 +25,7 @@ class DynamicPropertyAwareBeanPostProcessorTest {
         public DynamicProperty<String> getCity() {
             return city;
         }
+
         public DynamicProperty<String> getStatus() {
             return status;
         }
@@ -56,9 +57,8 @@ class DynamicPropertyAwareBeanPostProcessorTest {
         PropertyContainer processedBean = (PropertyContainer) processor.postProcessBeforeInitialization(bean, "propertyContainer");
 
         assertEquals("Moscow", processedBean.getCity().get());
-        assertEquals( "NEW", processedBean.getStatus().get(), "Must initialize annotated by @PropertyId");
+        assertEquals("NEW", processedBean.getStatus().get(), "Must initialize annotated by @PropertyId");
     }
-
 
 
     @Test

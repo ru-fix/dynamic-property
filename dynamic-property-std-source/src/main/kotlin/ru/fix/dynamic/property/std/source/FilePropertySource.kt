@@ -5,8 +5,8 @@ import ru.fix.dynamic.property.api.PropertySubscription
 import ru.fix.dynamic.property.api.marshaller.DynamicPropertyMarshaller
 import ru.fix.dynamic.property.api.source.DynamicPropertySource
 import ru.fix.dynamic.property.api.source.OptionalDefaultValue
-import ru.fix.stdlib.reference.ReferenceCleaner
 import ru.fix.stdlib.files.FileWatcher
+import ru.fix.stdlib.reference.ReferenceCleaner
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
@@ -26,11 +26,12 @@ object PropertiesFileParser : FilePropertySource.Parser {
  * Watch for file modifications and update properties when content changes.
  */
 class FilePropertySource(
-        sourceFilePath: DynamicProperty<Path>,
-        private val propertyParser: Parser = PropertiesFileParser,
-        marshaller: DynamicPropertyMarshaller,
-        referenceCleaner: ReferenceCleaner = ReferenceCleaner.getInstance()) :
-        DynamicPropertySource {
+    sourceFilePath: DynamicProperty<Path>,
+    private val propertyParser: Parser = PropertiesFileParser,
+    marshaller: DynamicPropertyMarshaller,
+    referenceCleaner: ReferenceCleaner = ReferenceCleaner.getInstance()
+) :
+    DynamicPropertySource {
 
     @FunctionalInterface
     interface Parser {
@@ -40,25 +41,25 @@ class FilePropertySource(
     private val sourceFilePath: PropertySubscription<Path>
 
     private val inMemorySource = InMemoryPropertySource(
-            marshaller,
-            referenceCleaner
+        marshaller,
+        referenceCleaner
     )
 
     private val fileWatcher = FileWatcher()
 
     init {
         this.sourceFilePath = sourceFilePath.createSubscription()
-                .setAndCallListener { prevPath, newPath ->
-                    if (newPath != prevPath) {
-                        if (prevPath != null) {
-                            fileWatcher.unregister(prevPath)
-                        }
-                        fileWatcher.register(newPath) {
-                            updateProperties(newPath)
-                        }
+            .setAndCallListener { prevPath, newPath ->
+                if (newPath != prevPath) {
+                    if (prevPath != null) {
+                        fileWatcher.unregister(prevPath)
                     }
-                    updateProperties(newPath)
+                    fileWatcher.register(newPath) {
+                        updateProperties(newPath)
+                    }
                 }
+                updateProperties(newPath)
+            }
     }
 
 
@@ -69,16 +70,18 @@ class FilePropertySource(
             inMemorySource[key] = value
         }
         inMemorySource.propertyNames()
-                .filter { !newProperties.contains(it) }
-                .forEach { name ->
-                    inMemorySource.remove(name)
-                }
+            .filter { !newProperties.contains(it) }
+            .forEach { name ->
+                inMemorySource.remove(name)
+            }
     }
 
-    override fun <T : Any?> createSubscription(propertyName: String,
-                                               propertyType: Class<T>,
-                                               defaultValue: OptionalDefaultValue<T>): DynamicPropertySource.Subscription<T> =
-            inMemorySource.createSubscription(propertyName, propertyType, defaultValue)
+    override fun <T : Any?> createSubscription(
+        propertyName: String,
+        propertyType: Class<T>,
+        defaultValue: OptionalDefaultValue<T>
+    ): DynamicPropertySource.Subscription<T> =
+        inMemorySource.createSubscription(propertyName, propertyType, defaultValue)
 
 
     override fun close() {

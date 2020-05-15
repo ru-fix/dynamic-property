@@ -11,8 +11,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import ru.fix.dynamic.property.api.DynamicProperty;
-import ru.fix.dynamic.property.api.source.DynamicPropertySource;
 import ru.fix.dynamic.property.api.annotation.PropertyId;
+import ru.fix.dynamic.property.api.source.DynamicPropertySource;
 import ru.fix.dynamic.property.jackson.JacksonDynamicPropertyMarshaller;
 import ru.fix.dynamic.property.spring.config.DynamicPropertyConfig;
 import ru.fix.dynamic.property.std.source.InMemoryPropertySource;
@@ -38,6 +38,7 @@ public class InjectingPropertyIdBySprtingTest {
         public DynamicProperty<String> getCity() {
             return city;
         }
+
         public DynamicProperty<String> getStatus() {
             return status;
         }
@@ -73,7 +74,7 @@ public class InjectingPropertyIdBySprtingTest {
     }
 
     @Test
-    public void nullable_property_initialized_by_default_with_null(){
+    public void nullable_property_initialized_by_default_with_null() {
         assertNotNull(propertyContainer.nullableProperty);
         assertNull(propertyContainer.nullableProperty.get());
     }

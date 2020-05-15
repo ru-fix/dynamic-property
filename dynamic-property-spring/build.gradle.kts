@@ -1,5 +1,3 @@
-import org.gradle.kotlin.dsl.*
-
 plugins {
     java
     kotlin("jvm")
@@ -23,7 +21,7 @@ dependencies {
 
     testImplementation(project(Projs.`dynamic-property-std-source`.dependency))
     testImplementation(project(Projs.`dynamic-property-jackson`.dependency))
-    testImplementation(Libs.jfix_stdlib_concurrency){
+    testImplementation(Libs.jfix_stdlib_concurrency) {
         exclude("ru.fix")
     }
 

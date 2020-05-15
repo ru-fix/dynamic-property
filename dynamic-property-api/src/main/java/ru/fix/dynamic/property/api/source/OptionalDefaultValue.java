@@ -1,6 +1,6 @@
 package ru.fix.dynamic.property.api.source;
 
-public class OptionalDefaultValue<T>{
+public class OptionalDefaultValue<T> {
     final Boolean isPresent;
     final T value;
 
@@ -12,16 +12,17 @@ public class OptionalDefaultValue<T>{
     public static <T> OptionalDefaultValue<T> of(T value) {
         return new OptionalDefaultValue<>(true, value);
     }
-    public static <T> OptionalDefaultValue<T> none(){
+
+    public static <T> OptionalDefaultValue<T> none() {
         return new OptionalDefaultValue<>(false, null);
     }
 
-    public Boolean isPresent(){
+    public Boolean isPresent() {
         return isPresent;
     }
 
     public T get() {
-        if(!isPresent) throw new IllegalStateException("Default value is not present");
+        if (!isPresent) throw new IllegalStateException("Default value is not present");
         return value;
     }
 }

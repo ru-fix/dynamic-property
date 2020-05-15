@@ -12,23 +12,24 @@ import kotlin.concurrent.withLock
  * All listeners will be invoked during [set] invocation within same thread.
  */
 open class InMemoryPropertySource(
-        marshaller: DynamicPropertyMarshaller,
-        referenceCleaner: ReferenceCleaner = ReferenceCleaner.getInstance()) : DynamicPropertySource {
+    marshaller: DynamicPropertyMarshaller,
+    referenceCleaner: ReferenceCleaner = ReferenceCleaner.getInstance()
+) : DynamicPropertySource {
 
     private val readAndChangeLock = ReentrantLock()
 
     private val properties = HashMap<String, String>()
 
     private val propertySourcePublisher = PropertySourcePublisher(
-            propertySourceAccessor = object : PropertySourceAccessor {
-                override fun accessPropertyUnderLock(propertyName: String, accessor: (String?) -> Unit) {
-                    readAndChangeLock.withLock {
-                        accessor(properties[propertyName])
-                    }
+        propertySourceAccessor = object : PropertySourceAccessor {
+            override fun accessPropertyUnderLock(propertyName: String, accessor: (String?) -> Unit) {
+                readAndChangeLock.withLock {
+                    accessor(properties[propertyName])
                 }
-            },
-            marshaller = marshaller,
-            referenceCleaner = referenceCleaner
+            }
+        },
+        marshaller = marshaller,
+        referenceCleaner = referenceCleaner
     )
 
     operator fun set(key: String, value: String) {
@@ -48,10 +49,11 @@ open class InMemoryPropertySource(
     fun propertyNames(): Set<String> = properties.keys
 
     override fun <T : Any?> createSubscription(
-            propertyName: String,
-            propertyType: Class<T>,
-            defaultValue: OptionalDefaultValue<T>): DynamicPropertySource.Subscription<T> =
-            propertySourcePublisher.createSubscription(propertyName, propertyType, defaultValue)
+        propertyName: String,
+        propertyType: Class<T>,
+        defaultValue: OptionalDefaultValue<T>
+    ): DynamicPropertySource.Subscription<T> =
+        propertySourcePublisher.createSubscription(propertyName, propertyType, defaultValue)
 
     override fun close() {
         propertySourcePublisher.close()

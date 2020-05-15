@@ -6,10 +6,10 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.DestructionAwareBeanPostProcessor;
 import org.springframework.util.ReflectionUtils;
 import ru.fix.dynamic.property.api.DynamicProperty;
-import ru.fix.dynamic.property.api.source.DynamicPropertySource;
 import ru.fix.dynamic.property.api.annotation.PropertyId;
-import ru.fix.dynamic.property.api.source.OptionalDefaultValue;
+import ru.fix.dynamic.property.api.source.DynamicPropertySource;
 import ru.fix.dynamic.property.api.source.DynamicPropertyValueNotFoundException;
+import ru.fix.dynamic.property.api.source.OptionalDefaultValue;
 import ru.fix.dynamic.property.api.source.SourcedProperty;
 
 import java.lang.reflect.Field;

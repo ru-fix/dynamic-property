@@ -41,40 +41,42 @@ import kotlin.concurrent.withLock
  * @param initializationTimeout how log to wait until all property values will be loaded
  */
 class ZkDynamicPropertySource(
-        private val curatorFramework: CuratorFramework,
-        zookeeperConfigPath: String,
-        marshaller: DynamicPropertyMarshaller,
-        initializationTimeout: Duration) : DynamicPropertySource {
+    private val curatorFramework: CuratorFramework,
+    zookeeperConfigPath: String,
+    marshaller: DynamicPropertyMarshaller,
+    initializationTimeout: Duration
+) : DynamicPropertySource {
 
     companion object : Logging
 
     private val readTreeAndProcessNotificationLock = ReentrantLock()
 
     private val propertySourcePublisher = PropertySourcePublisher(
-            propertySourceAccessor = object : PropertySourceAccessor {
-                override fun accessPropertyUnderLock(propertyName: String, accessor: (String?) -> Unit) {
-                    readTreeAndProcessNotificationLock.withLock {
-                        val path = getAbsolutePathForProperty(propertyName)
-                        val currentData = treeCache.getCurrentData(path)
-                        val currentValue = if (currentData == null)
-                            null
-                        else
-                            zkDataToStringOrNull(currentData.data, currentData.toString())
-                        accessor(currentValue)
-                    }
+        propertySourceAccessor = object : PropertySourceAccessor {
+            override fun accessPropertyUnderLock(propertyName: String, accessor: (String?) -> Unit) {
+                readTreeAndProcessNotificationLock.withLock {
+                    val path = getAbsolutePathForProperty(propertyName)
+                    val currentData = treeCache.getCurrentData(path)
+                    val currentValue = if (currentData == null)
+                        null
+                    else
+                        zkDataToStringOrNull(currentData.data, currentData.toString())
+                    accessor(currentValue)
                 }
-            },
-            marshaller = marshaller,
-            referenceCleaner = ReferenceCleaner.getInstance())
+            }
+        },
+        marshaller = marshaller,
+        referenceCleaner = ReferenceCleaner.getInstance()
+    )
 
     private val treeCache: TreeCache
 
     private val rootPath: String =
-            if (zookeeperConfigPath.endsWith('/')) {
-                zookeeperConfigPath.substring(0, zookeeperConfigPath.length - 1)
-            } else {
-                zookeeperConfigPath
-            }
+        if (zookeeperConfigPath.endsWith('/')) {
+            zookeeperConfigPath.substring(0, zookeeperConfigPath.length - 1)
+        } else {
+            zookeeperConfigPath
+        }
 
     private val rootPathPrefix = "$rootPath/"
 
@@ -94,10 +96,12 @@ class ZkDynamicPropertySource(
                 TreeCacheEvent.Type.NODE_ADDED,
                 TreeCacheEvent.Type.NODE_UPDATED -> {
                     try {
-                        onZkTreeChanged(treeCacheEvent, zkDataToStringOrNull(
+                        onZkTreeChanged(
+                            treeCacheEvent, zkDataToStringOrNull(
                                 treeCacheEvent.getData().getData(),
                                 treeCacheEvent.toString()
-                        ))
+                            )
+                        )
                     } catch (exc: Exception) {
                         logger.error("Zk property updating error for event $treeCacheEvent", exc)
                     }
@@ -150,14 +154,15 @@ class ZkDynamicPropertySource(
 
 
     private fun zkDataToStringOrNull(data: ByteArray, logDetails: String): String? =
-            try {
-                String(
-                        data,
-                        StandardCharsets.UTF_8)
-            } catch (exc: Exception) {
-                logger.error("Failed to read string value from zk node. $logDetails", exc)
-                null
-            }
+        try {
+            String(
+                data,
+                StandardCharsets.UTF_8
+            )
+        } catch (exc: Exception) {
+            logger.error("Failed to read string value from zk node. $logDetails", exc)
+            null
+        }
 
 
     private fun onZkTreeChanged(treeCacheEvent: TreeCacheEvent, newValue: String?) {
@@ -175,7 +180,6 @@ class ZkDynamicPropertySource(
     }
 
 
-
     private fun getAbsolutePathForProperty(propertyName: String): String {
         Objects.requireNonNull(propertyName)
         return "$rootPath/$propertyName"
@@ -185,7 +189,11 @@ class ZkDynamicPropertySource(
         return absolutePath.substring(rootPath.length + 1)
     }
 
-    override fun <T : Any?> createSubscription(propertyName: String, propertyType: Class<T>, defaultValue: OptionalDefaultValue<T>): DynamicPropertySource.Subscription<T> {
+    override fun <T : Any?> createSubscription(
+        propertyName: String,
+        propertyType: Class<T>,
+        defaultValue: OptionalDefaultValue<T>
+    ): DynamicPropertySource.Subscription<T> {
         return propertySourcePublisher.createSubscription(propertyName, propertyType, defaultValue)
     }
 
@@ -198,6 +206,8 @@ class ZkDynamicPropertySource(
 }
 
 class ZkDynamicPropertySourceFailedToInitializeOnTime(
-        timeout: Duration
-) : java.lang.Exception("ZkDynamicPropertySource failed to initialize on time. " +
-        "Given initialization timeout: $timeout")
+    timeout: Duration
+) : java.lang.Exception(
+    "ZkDynamicPropertySource failed to initialize on time. " +
+            "Given initialization timeout: $timeout"
+)

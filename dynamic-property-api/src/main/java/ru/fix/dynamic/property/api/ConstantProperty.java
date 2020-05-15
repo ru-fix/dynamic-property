@@ -16,7 +16,7 @@ public class ConstantProperty<T> implements DynamicProperty<T> {
 
     @Nonnull
     @Override
-    public PropertySubscription<T> createSubscription(){
+    public PropertySubscription<T> createSubscription() {
         return new PropertySubscription<T>() {
             @Override
             public PropertySubscription<T> setAndCallListener(@Nonnull PropertyListener<T> listener) {

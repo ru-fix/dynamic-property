@@ -4,8 +4,8 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.hasSize
 import org.junit.jupiter.api.Test
-import ru.fix.dynamic.property.jackson.JacksonDynamicPropertyMarshaller
 import ru.fix.dynamic.property.api.source.OptionalDefaultValue
+import ru.fix.dynamic.property.jackson.JacksonDynamicPropertyMarshaller
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -17,9 +17,9 @@ class InMemoryPropertySourceTest {
         val source = InMemoryPropertySource(JacksonDynamicPropertyMarshaller())
 
         val subscription = source.createSubscription(
-                "foo",
-                Integer::class.java,
-                OptionalDefaultValue.of(Integer(12))
+            "foo",
+            Integer::class.java,
+            OptionalDefaultValue.of(Integer(12))
         ).setAndCallListener {
             deque.add(it!!.toInt())
         }

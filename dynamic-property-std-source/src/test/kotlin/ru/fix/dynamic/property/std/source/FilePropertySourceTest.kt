@@ -1,9 +1,8 @@
 package ru.fix.dynamic.property.std.source
 
 import org.awaitility.Awaitility.await
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-
-import org.junit.jupiter.api.Assertions.*
 import ru.fix.dynamic.property.api.AtomicProperty
 import ru.fix.dynamic.property.api.DynamicProperty
 import ru.fix.dynamic.property.api.source.OptionalDefaultValue
@@ -20,30 +19,33 @@ class FilePropertySourceTest {
         val f2 = Files.createTempFile("test2", ".properties").apply { toFile().deleteOnExit() }
 
         Files.writeString(
-                f1,
-                """
+            f1,
+            """
                 |name=foo
-                """.trimMargin())
+                """.trimMargin()
+        )
 
         Files.writeString(
-                f2,
-                """
+            f2,
+            """
                 |name=bar
-                """.trimMargin())
+                """.trimMargin()
+        )
 
         val path = AtomicProperty(f1)
 
         val source = FilePropertySource(
-                sourceFilePath = path,
-                marshaller = JacksonDynamicPropertyMarshaller())
+            sourceFilePath = path,
+            marshaller = JacksonDynamicPropertyMarshaller()
+        )
 
         val property = SourcedProperty<String>(source, "name", String::class.java, OptionalDefaultValue.none())
         assertEquals("foo", property.get())
 
         val captor = AtomicReference<String>()
         val subscription = property
-                .createSubscription()
-                .setAndCallListener{ _, new -> captor.set(new)}
+            .createSubscription()
+            .setAndCallListener { _, new -> captor.set(new) }
 
         path.set(f2)
 
@@ -59,28 +61,31 @@ class FilePropertySourceTest {
         val f = Files.createTempFile("test1", ".properties").apply { toFile().deleteOnExit() }
 
         Files.writeString(
-                f,
-                """
+            f,
+            """
                 |name=foo
-                """.trimMargin())
+                """.trimMargin()
+        )
 
 
         val source = FilePropertySource(
-                sourceFilePath = DynamicProperty.of(f),
-                marshaller = JacksonDynamicPropertyMarshaller())
+            sourceFilePath = DynamicProperty.of(f),
+            marshaller = JacksonDynamicPropertyMarshaller()
+        )
 
         val property = SourcedProperty<String>(source, "name", String::class.java, OptionalDefaultValue.none())
         assertEquals("foo", property.get())
 
         val captor = AtomicReference<String>()
         val subscription = property.createSubscription()
-                .setAndCallListener{ _, new -> captor.set(new)}
+            .setAndCallListener { _, new -> captor.set(new) }
 
         Files.writeString(
-                f,
-                """
+            f,
+            """
                 |name=bar
-                """.trimMargin())
+                """.trimMargin()
+        )
 
         await().until { property.get() == "bar" }
         await().until { captor.get() == "bar" }
