@@ -5,7 +5,7 @@ plugins {
 
 dependencies {
 
-    implementation(project(":dynamic-property-api"))
+    api(project(":dynamic-property-api"))
 
     implementation(Libs.jackson_core)
     implementation(Libs.jackson_databind)
