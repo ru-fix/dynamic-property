@@ -5,12 +5,12 @@ plugins {
 
 dependencies {
 
-    compile(project(":dynamic-property-api"))
+    api(project(":dynamic-property-api"))
 
-    compile(Libs.jackson_core)
-    compile(Libs.jackson_databind)
-    compile(Libs.jackson_jsr310)
-    compile(Libs.jackson_module_kotlin)
+    implementation(Libs.jackson_core)
+    implementation(Libs.jackson_databind)
+    implementation(Libs.jackson_jsr310)
+    implementation(Libs.jackson_module_kotlin)
 
     testImplementation(Libs.junit_api)
     testRuntimeOnly(Libs.junit_engine)
