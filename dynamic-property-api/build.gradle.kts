@@ -6,6 +6,11 @@ plugins {
     kotlin("jvm")
 }
 
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
 dependencies {
     // Should depend only on slf4j, stdlib-reference and JVM
     api(Libs.slf4j_api)

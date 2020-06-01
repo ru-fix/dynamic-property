@@ -1,6 +1,3 @@
-import org.gradle.api.artifacts.dsl.DependencyHandler
-import org.gradle.kotlin.dsl.project
-
 object Vers {
     //Plugins
     const val dokkav = "0.9.18"
@@ -19,7 +16,7 @@ object Vers {
 
     const val log4j = "2.12.0"
 
-    const val jfix_stdlib = "3.0.0"
+    const val jfix_stdlib = "3.0.1"
     const val aggregating_profiler = "1.5.21"
 }
 

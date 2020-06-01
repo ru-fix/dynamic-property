@@ -26,7 +26,7 @@ class DynamicPropertyTest {
         val scheduler = mockk<ReschedulableScheduler>(relaxed = true)
         val pollingTask = slot<Runnable>()
         every {
-            scheduler.schedule(any(), any(), capture(pollingTask))
+            scheduler.schedule(any(), ofType(Long::class), capture(pollingTask))
         } returns mockk()
 
         val poller = DynamicPropertyPoller(
