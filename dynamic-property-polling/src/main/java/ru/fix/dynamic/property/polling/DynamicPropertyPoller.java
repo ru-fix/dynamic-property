@@ -77,7 +77,7 @@ public class DynamicPropertyPoller implements AutoCloseable {
         createdPolledProperties.removeIf(ref -> ref.get() == null);
 
         createdPolledProperties.forEach(ref -> {
-            var property = ref.get();
+            DynamicPropertyPoller.PolledProperty property = ref.get();
             if (property != null) {
                 property.retrieveAndUpdatePropertyValue();
             }
