@@ -83,7 +83,7 @@ public class AtomicProperty<T> implements DynamicProperty<T> {
             oldValue = valueHolder.getAndSet(newValue);
             subscriptions.forEach(ref -> {
                 try {
-                    var subscription = ref.get();
+                    Subscription<T> subscription = ref.get();
                     if (subscription != null) {
                         subscription.listener.onPropertyChanged(oldValue, newValue);
                     }
