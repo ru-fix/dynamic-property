@@ -17,7 +17,7 @@ object Vers {
     const val log4j = "2.12.0"
 
     const val jfix_stdlib = "3.0.2"
-    const val aggregating_profiler = "1.5.21"
+    const val aggregating_profiler = "1.6.5"
 }
 
 object Libs {
