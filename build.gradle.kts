@@ -183,9 +183,14 @@ subprojects {
     }
 
     tasks {
+        withType<JavaCompile> {
+            sourceCompatibility = JavaVersion.VERSION_1_8.toString()
+            targetCompatibility = JavaVersion.VERSION_1_8.toString()
+        }
+
         withType<KotlinCompile> {
             kotlinOptions {
-                jvmTarget = "1.8"
+                jvmTarget = JavaVersion.VERSION_1_8.toString()
             }
         }
         withType<Test> {
