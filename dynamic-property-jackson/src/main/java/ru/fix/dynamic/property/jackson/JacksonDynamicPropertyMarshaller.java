@@ -21,7 +21,6 @@ import java.util.Optional;
 
 /**
  * Implementation of {@link DynamicPropertyMarshaller} which provides serialization and deserialization by Jacskon.
- *
  */
 public class JacksonDynamicPropertyMarshaller implements DynamicPropertyMarshaller {
 
@@ -50,7 +49,7 @@ public class JacksonDynamicPropertyMarshaller implements DynamicPropertyMarshall
         Objects.requireNonNull(marshalledObject);
         try {
             Optional<String> result = stdSerializer.marshall(marshalledObject);
-            if(result.isPresent()){
+            if (result.isPresent()) {
                 return result.get();
             }
 

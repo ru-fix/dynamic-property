@@ -138,18 +138,18 @@ public class AtomicProperty<T> implements DynamicProperty<T> {
     }
 
     private void detachSubscription(Subscription<T> subscription) {
-        if(subscription.attachedSubscriptionReference != null) {
+        if (subscription.attachedSubscriptionReference != null) {
             subscriptions.remove(subscription.attachedSubscriptionReference);
             subscription.attachedSubscriptionReference = null;
         }
     }
 
-    private void attachSubscriptionAndCallListener(Subscription<T> subscription){
+    private void attachSubscriptionAndCallListener(Subscription<T> subscription) {
         detachSubscription(subscription);
 
         synchronized (changeValueAndAddListenerLock) {
 
-            if(subscription.attachedSubscriptionReference != null){
+            if (subscription.attachedSubscriptionReference != null) {
                 subscriptions.remove(subscription.attachedSubscriptionReference);
                 subscription.attachedSubscriptionReference.cancelCleaningOrder();
                 subscription.attachedSubscriptionReference = null;

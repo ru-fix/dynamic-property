@@ -37,7 +37,7 @@ object Libs {
     const val mockk = "io.mockk:mockk:1.9.3"
     const val awaitility = "org.awaitility:awaitility:4.0.2"
 
-    const val javax_annotation_jsr305= "com.google.code.findbugs:jsr305:3.0.2"
+    const val javax_annotation_jsr305 = "com.google.code.findbugs:jsr305:3.0.2"
 
     val jfix_stdlib_concurrency = "ru.fix:jfix-stdlib-concurrency:${Vers.jfix_stdlib}"
     val jfix_stdlib_reference = "ru.fix:jfix-stdlib-reference:${Vers.jfix_stdlib}"
@@ -56,7 +56,8 @@ object Libs {
     const val curator_test = "org.apache.curator:curator-test:${Vers.curator_test}"
 
     const val spring_beans = "org.springframework:spring-beans:${Vers.spring}"
-    const val spring_boot_auto_configure = "org.springframework.boot:spring-boot-autoconfigure:${Vers.spring_boot_auto_configure}"
+    const val spring_boot_auto_configure =
+        "org.springframework.boot:spring-boot-autoconfigure:${Vers.spring_boot_auto_configure}"
     const val spring_test = "org.springframework:spring-test:${Vers.spring}"
 
     const val jackson_core = "com.fasterxml.jackson.core:jackson-core:${Vers.jackson}"

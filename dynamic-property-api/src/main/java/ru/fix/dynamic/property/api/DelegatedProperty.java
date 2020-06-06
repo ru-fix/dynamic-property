@@ -9,8 +9,9 @@ import java.util.function.Supplier;
  * does not notify listeners through {@link PropertyListener}
  * All requests to {@link DynamicProperty#get()}
  * will be delegated to {@link Supplier#get()} method of the given supplier.
- *
+ * <p>
  * If you need a DynamicProperty with full listener support backed up by {@link Supplier} use DynamicPropertyPoller
+ *
  * @see ru.fix.dynamic.property.polling.DynamicPropertyPoller
  */
 public class DelegatedProperty<T> implements DynamicProperty<T> {

@@ -5,9 +5,9 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import ru.fix.dynamic.property.jackson.JacksonDynamicPropertyMarshaller
 import ru.fix.dynamic.property.api.source.OptionalDefaultValue
 import ru.fix.dynamic.property.api.source.SourcedProperty
+import ru.fix.dynamic.property.jackson.JacksonDynamicPropertyMarshaller
 import ru.fix.zookeeper.testing.ZKTestingServer
 import java.nio.charset.StandardCharsets
 import java.time.Duration
@@ -30,10 +30,10 @@ class ZkDynamicPropertySourceTest {
     fun beforeEach() {
         zkTestingServer = ZKTestingServer().start()
         source = ZkDynamicPropertySource(
-                zkTestingServer.client,
-                PROPERTIES_LOCATION,
-                JacksonDynamicPropertyMarshaller(),
-                Duration.of(1, ChronoUnit.MINUTES)
+            zkTestingServer.client,
+            PROPERTIES_LOCATION,
+            JacksonDynamicPropertyMarshaller(),
+            Duration.of(1, ChronoUnit.MINUTES)
         )
     }
 
@@ -50,9 +50,9 @@ class ZkDynamicPropertySourceTest {
         setServerProperty("$PROPERTIES_LOCATION/$TEST_PROP_KEY", "some Value")
 
         val subscription = source.createSubscription(
-                TEST_PROP_KEY,
-                String::class.java,
-                OptionalDefaultValue.of("zzz")
+            TEST_PROP_KEY,
+            String::class.java,
+            OptionalDefaultValue.of("zzz")
         ).setAndCallListener { slot.add(it) }
 
         assertEquals("some Value", slot.removeFirst())
@@ -66,10 +66,10 @@ class ZkDynamicPropertySourceTest {
         val valueSlot = LinkedBlockingDeque<String>()
 
         val subscription = source.createSubscription(
-                TEST_PROP_KEY,
-                String::class.java,
-                OptionalDefaultValue.of("zzz")
-        ).setAndCallListener { value -> valueSlot.add(value)}
+            TEST_PROP_KEY,
+            String::class.java,
+            OptionalDefaultValue.of("zzz")
+        ).setAndCallListener { value -> valueSlot.add(value) }
 
         assertEquals("some Value", valueSlot.removeFirst())
 
@@ -84,9 +84,9 @@ class ZkDynamicPropertySourceTest {
         val valueSlot = LinkedBlockingDeque<String>()
 
         val subscription = source.createSubscription(
-                TEST_PROP_KEY_1,
-                String::class.java,
-                OptionalDefaultValue.of("zzz")
+            TEST_PROP_KEY_1,
+            String::class.java,
+            OptionalDefaultValue.of("zzz")
         ).setAndCallListener { value ->
             valueSlot.add(value)
         }
@@ -108,9 +108,9 @@ class ZkDynamicPropertySourceTest {
         val slot = LinkedBlockingDeque<String>()
 
         val sub = source.createSubscription(
-                TEST_PROP_KEY_1,
-                String::class.java,
-                OptionalDefaultValue.of("default")
+            TEST_PROP_KEY_1,
+            String::class.java,
+            OptionalDefaultValue.of("default")
         ).setAndCallListener { value ->
             slot.add(value)
         }
@@ -123,7 +123,7 @@ class ZkDynamicPropertySourceTest {
         assertTrue(slot.isEmpty())
 
         removeServerProperty("$PROPERTIES_LOCATION/$TEST_PROP_KEY_1")
-        assertEquals("default",  slot.takeFirst())
+        assertEquals("default", slot.takeFirst())
         assertTrue(slot.isEmpty())
     }
 
@@ -150,16 +150,18 @@ class ZkDynamicPropertySourceTest {
     fun `default value of one holder does not affect default value of another holder`() {
 
         val propertyHolder = SourcedProperty(
-                source,
-                "propName1",
-                String::class.java,
-                OptionalDefaultValue.of("defaultHolderValue"))
+            source,
+            "propName1",
+            String::class.java,
+            OptionalDefaultValue.of("defaultHolderValue")
+        )
 
         val propertyHolder2 = SourcedProperty(
-                source,
-                "propName1",
-                String::class.java,
-                OptionalDefaultValue.of("defaultHolderValue2"))
+            source,
+            "propName1",
+            String::class.java,
+            OptionalDefaultValue.of("defaultHolderValue2")
+        )
 
         assertEquals("defaultHolderValue", propertyHolder.get())
 
@@ -180,10 +182,10 @@ class ZkDynamicPropertySourceTest {
     @Test
     fun shouldGetDefaultValueFromHolder() {
         val holder = SourcedProperty(
-                source,
-                "unknown.property",
-                String::class.java,
-                OptionalDefaultValue.of("default Value")
+            source,
+            "unknown.property",
+            String::class.java,
+            OptionalDefaultValue.of("default Value")
         )
         assertEquals("default Value", holder.get())
     }
@@ -197,17 +199,17 @@ class ZkDynamicPropertySourceTest {
         }
 
         val source = ZkDynamicPropertySource(
-                zkTestingServer.createClient(),
-                PROPERTIES_LOCATION,
-                JacksonDynamicPropertyMarshaller(),
-                Duration.of(1, ChronoUnit.MINUTES)
+            zkTestingServer.createClient(),
+            PROPERTIES_LOCATION,
+            JacksonDynamicPropertyMarshaller(),
+            Duration.of(1, ChronoUnit.MINUTES)
         )
 
         val subscriptions = generatedProperties.map {
             source.createSubscription(
-                    it.key,
-                    String::class.java,
-                    OptionalDefaultValue.of("default")
+                it.key,
+                String::class.java,
+                OptionalDefaultValue.of("default")
             ).setAndCallListener { value ->
                 assertNotEquals("default", value)
             }
@@ -223,14 +225,14 @@ class ZkDynamicPropertySourceTest {
     private fun setServerProperty(propertyKey: String, value: String) {
         val data = value.toByteArray(StandardCharsets.UTF_8)
         zkTestingServer.client
-                .create()
-                .creatingParentsIfNeeded()
-                .forPath(propertyKey, data)
+            .create()
+            .creatingParentsIfNeeded()
+            .forPath(propertyKey, data)
 
         await().atMost(10, TimeUnit.SECONDS).until {
             zkTestingServer.client
-                    .data
-                    .forPath(propertyKey)!!.contentEquals(data)
+                .data
+                .forPath(propertyKey)!!.contentEquals(data)
         }
     }
 

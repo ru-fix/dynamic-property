@@ -31,9 +31,10 @@ import java.util.function.Supplier;
 public class DynamicPropertyPoller implements AutoCloseable {
     private static final Logger log = LoggerFactory.getLogger(DynamicPropertyPoller.class);
 
-    private ConcurrentLinkedDeque<WeakReference<PolledProperty>> createdPolledProperties = new ConcurrentLinkedDeque<>();
-    private ReschedulableScheduler scheduler;
-    private DynamicProperty<Duration> shutdownDelay;
+    private final ConcurrentLinkedDeque<WeakReference<PolledProperty>> createdPolledProperties =
+            new ConcurrentLinkedDeque<>();
+    private final ReschedulableScheduler scheduler;
+    private final DynamicProperty<Duration> shutdownDelay;
 
     /**
      * @param scheduler

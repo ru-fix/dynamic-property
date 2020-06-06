@@ -1,6 +1,5 @@
 package ru.fix.dynamic.property.api.test
 
-
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -30,8 +29,9 @@ class DynamicPropertyTest {
         } returns mockk()
 
         val poller = DynamicPropertyPoller(
-                scheduler,
-                DynamicProperty.of(Schedule.withRate(1L)))
+            scheduler,
+            DynamicProperty.of(Schedule.withRate(1L))
+        )
 
         assertTrue(pollingTask.isCaptured)
 

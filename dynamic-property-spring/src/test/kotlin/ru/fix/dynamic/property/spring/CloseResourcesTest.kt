@@ -10,16 +10,16 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
 import ru.fix.dynamic.property.api.DynamicProperty
-import ru.fix.dynamic.property.api.source.DynamicPropertySource
 import ru.fix.dynamic.property.api.annotation.PropertyId
-import ru.fix.dynamic.property.jackson.JacksonDynamicPropertyMarshaller
+import ru.fix.dynamic.property.api.source.DynamicPropertySource
 import ru.fix.dynamic.property.api.source.OptionalDefaultValue
+import ru.fix.dynamic.property.jackson.JacksonDynamicPropertyMarshaller
 import ru.fix.dynamic.property.spring.config.DynamicPropertyConfig
 import ru.fix.dynamic.property.std.source.InMemoryPropertySource
 import java.util.concurrent.atomic.AtomicInteger
 
 class CloseResourcesTest {
-    companion object: Logging
+    companion object : Logging
 
     class ServiceConfig {
         init {
@@ -33,8 +33,8 @@ class CloseResourcesTest {
         lateinit var resource: ClosableResource
     }
 
-    class ClosableResource : AutoCloseable{
-        companion object{
+    class ClosableResource : AutoCloseable {
+        companion object {
             val closedResourceCount = AtomicInteger()
         }
 
@@ -44,7 +44,7 @@ class CloseResourcesTest {
     }
 
     @Import(DynamicPropertyConfig::class)
-    class Config{
+    class Config {
         @Bean
         fun dynamicPropertySource(): DynamicPropertySource {
             return MockedPropertySource.apply {
@@ -59,18 +59,22 @@ class CloseResourcesTest {
         fun serviceConfig() = ServiceConfig()
     }
 
-    object MockedPropertySource: InMemoryPropertySource(JacksonDynamicPropertyMarshaller()){
+    object MockedPropertySource : InMemoryPropertySource(JacksonDynamicPropertyMarshaller()) {
         val closedSubscriptions = AtomicInteger()
 
-        override fun <T> createSubscription(propertyName: String,
-                                            propertyType: Class<T>,
-                                            defaultValue: OptionalDefaultValue<T>): DynamicPropertySource.Subscription<T> {
+        override fun <T> createSubscription(
+            propertyName: String,
+            propertyType: Class<T>,
+            defaultValue: OptionalDefaultValue<T>
+        ): DynamicPropertySource.Subscription<T> {
 
 
-            val subscription =  super.createSubscription(propertyName, propertyType, defaultValue)
+            val subscription = super.createSubscription(propertyName, propertyType, defaultValue)
 
-            return object: DynamicPropertySource.Subscription<T> {
-                override fun setAndCallListener(listener: DynamicPropertySource.Listener<T>): DynamicPropertySource.Subscription<*> {
+            return object : DynamicPropertySource.Subscription<T> {
+                override fun setAndCallListener(
+                    listener: DynamicPropertySource.Listener<T>
+                ): DynamicPropertySource.Subscription<*> {
                     subscription.setAndCallListener(listener)
                     return this;
                 }

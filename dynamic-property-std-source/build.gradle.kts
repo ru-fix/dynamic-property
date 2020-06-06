@@ -1,5 +1,3 @@
-import org.gradle.kotlin.dsl.*
-
 plugins {
     java
     kotlin("jvm")
@@ -9,10 +7,10 @@ dependencies {
 
     implementation(Libs.kotlin_stdlib)
     implementation(Libs.kotlin_jdk8)
-    implementation(Libs.jfix_stdlib_concurrency){
+    implementation(Libs.jfix_stdlib_concurrency) {
         exclude("ru.fix", "dynamic-property-api")
     }
-    implementation(Libs.jfix_stdlib_files){
+    implementation(Libs.jfix_stdlib_files) {
         exclude("ru.fix", "dynamic-property-api")
     }
 
@@ -30,5 +28,3 @@ dependencies {
 
     testImplementation(project(Projs.`dynamic-property-jackson`.dependency))
 }
-
-

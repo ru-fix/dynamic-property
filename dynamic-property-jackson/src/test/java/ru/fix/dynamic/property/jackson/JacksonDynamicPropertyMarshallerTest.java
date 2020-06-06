@@ -12,8 +12,8 @@ import java.util.Arrays;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class JacksonDynamicPropertyMarshallerTest {
-    private JacksonDynamicPropertyMarshaller marshaller = new JacksonDynamicPropertyMarshaller();
 
+    private final JacksonDynamicPropertyMarshaller marshaller = new JacksonDynamicPropertyMarshaller();
 
     @Test
     public void marshallPrimitiveTypes() {
@@ -33,6 +33,7 @@ class JacksonDynamicPropertyMarshallerTest {
                 Paths.get("my-file.txt").toAbsolutePath(),
                 Paths.get("my-file.txt").toAbsolutePath().toString());
     }
+
     private void assertPrimitivesMarshalling(Object object, String target) {
         String value = marshaller.marshall(object);
         assertEquals(target, value);
@@ -54,6 +55,7 @@ class JacksonDynamicPropertyMarshallerTest {
         assertPrimitivesUnmarshalling("my-file.txt", Paths.get("my-file.txt"));
         assertPrimitivesUnmarshalling("/some/dir/my-file.txt", Paths.get("/some/dir/my-file.txt"));
     }
+
     private void assertPrimitivesUnmarshalling(String source, Object target) {
         Object value = marshaller.unmarshall(source, target.getClass());
         assertEquals(target, value);
@@ -75,15 +77,12 @@ class JacksonDynamicPropertyMarshallerTest {
         assertPrimitivesMarshallAndUnmarshall(Paths.get("my-file.txt"), Path.class);
         assertPrimitivesMarshallAndUnmarshall(Paths.get("my-file.txt").toAbsolutePath(), Path.class);
     }
+
     private <T> void assertPrimitivesMarshallAndUnmarshall(T sourceValue, Class<T> clazz) {
         String serialize = marshaller.marshall(sourceValue);
         T deserialize = marshaller.unmarshall(serialize, clazz);
         assertEquals(sourceValue, deserialize);
     }
-
-
-
-
 
 
     private static final String USER_JSON = "" +
@@ -155,7 +154,7 @@ class JacksonDynamicPropertyMarshallerTest {
     }
 
     @Test
-    public void unmarshal_object_with_unknown_field(){
+    public void unmarshal_object_with_unknown_field() {
         User deserialized = marshaller.unmarshall(USER_JSON_WITH_UNKNOWN_FIELD, User.class);
         assertEquals(USER.getName(), deserialized.getName());
         assertEquals(USER.getEmail().getValue(), deserialized.getEmail().getValue());

@@ -1,6 +1,3 @@
-import org.gradle.kotlin.dsl.*
-
-
 plugins {
     java
     kotlin("jvm")
@@ -25,5 +22,3 @@ dependencies {
     testImplementation(Libs.slf4j_simple)
     testImplementation(Libs.awaitility)
 }
-
-
