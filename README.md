@@ -3,6 +3,8 @@
 
 Provides easy way to change application configuration at runtime.
 
+## Inject properties by id
+
 ```kotlin
 class MyService{
     
@@ -34,6 +36,20 @@ class MyService {
 }
 ```
 
+## Provide default values for injected properties
+
+```kotlin
+class MyService{
+    
+    @PropertyId("my.service.rate")
+    var rate = DynamicProperty.of(12)
+    
+    @PropertyId("my.service.setting")
+    var setting = PropertySubscription.of(Setting(7, 15))
+}
+```
+
+## Inject properties explicitly through constructor
 
 ```kotlin
 class MyService(setting: DynamicProperty<Setting>) {
