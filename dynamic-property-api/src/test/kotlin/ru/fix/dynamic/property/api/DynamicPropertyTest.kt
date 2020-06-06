@@ -156,8 +156,7 @@ class DynamicPropertyTest {
      *
      * The case should be fixed via creating ~child2~ delegate (not map) dependency to ~child1~
      */
-    @Disabled("unstable, undefined behavior")
-    @RepeatedTest(20)
+    @Test
     fun `undefined behavior, mapped dynamic properties dependency graph`() {
         val root = AtomicProperty(0L)
         val child1 = root.map { it }
