@@ -77,4 +77,18 @@ public interface PropertySubscription<T> extends AutoCloseable {
      */
     @Override
     void close();
+
+    /**
+     * Subscription that returns constant value and does not invoke listener.
+     * Used for convenient configuration of injected subscriptions
+     * <pre>{@code
+     * class MyService{
+     *   @PropertyId("my.timeout")
+     *   private PropertySubscription<MySetting> timeout = PropertySubscription.of(100)
+     * }
+     * }</pre>
+     */
+    static <T> PropertySubscription<T> of(T value) {
+        return new ConstantPropertySubscription<>(value);
+    }
 }

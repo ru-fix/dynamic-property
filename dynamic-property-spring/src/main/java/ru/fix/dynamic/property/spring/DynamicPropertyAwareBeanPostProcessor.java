@@ -6,6 +6,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.DestructionAwareBeanPostProcessor;
 import org.springframework.util.ReflectionUtils;
 import ru.fix.dynamic.property.api.DynamicProperty;
+import ru.fix.dynamic.property.api.PropertySubscription;
 import ru.fix.dynamic.property.api.annotation.PropertyId;
 import ru.fix.dynamic.property.api.source.DynamicPropertySource;
 import ru.fix.dynamic.property.api.source.DynamicPropertyValueNotFoundException;
@@ -68,7 +69,7 @@ public class DynamicPropertyAwareBeanPostProcessor implements DestructionAwareBe
         final long startTime = System.currentTimeMillis();
 
         doWithAnnotatedFields(bean, (a_bean, field, annotation) -> {
-            field.set(bean, processDynamicProperty(a_bean, field, annotation, beanName));
+            field.set(bean, processAnnotatedField(a_bean, field, annotation, beanName));
         });
 
         final long currentProcessingTime = System.currentTimeMillis() - startTime;
@@ -85,24 +86,24 @@ public class DynamicPropertyAwareBeanPostProcessor implements DestructionAwareBe
         return bean;
     }
 
-    private Object processDynamicProperty(Object bean, Field field, PropertyId propertyIdAnnotation, String beanName) {
+    private Object processAnnotatedField(Object bean, Field field, PropertyId propertyIdAnnotation, String beanName) {
 
         Class<?> fieldType = field.getType();
+        String propertyId = propertyIdAnnotation.value();
+        Class propertyClass = extractPropertyClass(field);
+        OptionalDefaultValue<Object> propertyDefaultValue = extractDefaultValue(bean, field);
 
         if (fieldType.isAssignableFrom(DynamicProperty.class)) {
-
-            String propertyId = propertyIdAnnotation.value();
-
-            Class propertyClass = extractPropertyClass(field);
-            OptionalDefaultValue<Object> propertyDefaultValue = extractDefaultValue(bean, field);
-
             //noinspection unchecked
             return new SourcedProperty<>(propertySource, propertyId, propertyClass, propertyDefaultValue);
 
+        } else if (fieldType.isAssignableFrom(PropertySubscription.class)) {
+            return new SourcedProperty<>(propertySource, propertyId, propertyClass, propertyDefaultValue)
+                    .createSubscription();
         } else {
             log.warn(
                     "@PropertyId annotation is applicable only on fields " +
-                            "of DynamicProperty type, not '{}', bean '{}'",
+                            "of DynamicProperty ans PropertySubscription types, not '{}', bean '{}'",
                     fieldType, beanName
             );
             return null;
@@ -122,18 +123,25 @@ public class DynamicPropertyAwareBeanPostProcessor implements DestructionAwareBe
     }
 
     private OptionalDefaultValue<Object> extractDefaultValue(Object bean, Field field) {
-        DynamicProperty<?> dynamicProperty = null;
+        Object propertyValue = null;
         try {
-            dynamicProperty = (DynamicProperty<?>) field.get(bean);
+            propertyValue = field.get(bean);
         } catch (IllegalAccessException e) {
             log.error("Error occurred when extracting value from field {}", field.getName());
         }
 
-        if (dynamicProperty != null) {
-            return OptionalDefaultValue.of(dynamicProperty.get());
-        } else {
+        if(propertyValue == null)
             return OptionalDefaultValue.none();
+
+        if(propertyValue instanceof DynamicProperty){
+            return OptionalDefaultValue.of(((DynamicProperty<?>) propertyValue).get());
         }
+
+        if(propertyValue instanceof PropertySubscription){
+            return OptionalDefaultValue.of(((PropertySubscription<?>) propertyValue).get());
+        }
+
+        return OptionalDefaultValue.none();
     }
 
     @Override
@@ -152,10 +160,23 @@ public class DynamicPropertyAwareBeanPostProcessor implements DestructionAwareBe
             return;
         }
         doWithAnnotatedFields(bean, (a_bean, field, annotation) -> {
-            DynamicProperty property = (DynamicProperty) field.get(a_bean);
-            if (property != null) {
-                property.close();
+            Object fieldValue = field.get(a_bean);
+            if (fieldValue == null) return;
+
+            if (fieldValue instanceof DynamicProperty) {
+                ((DynamicProperty<?>) fieldValue).close();
+            } else if (fieldValue instanceof PropertySubscription) {
+                ((PropertySubscription<?>) fieldValue).close();
+            } else {
+                log.warn("Invalid field type annotated by @PropertyId." +
+                                " Expected DynamicProperty or PropertySubscription." +
+                                " Field value will not be closed during bean destruction." +
+                                " bean: {}, field {}, PropertyId {}",
+                        a_bean.getClass(),
+                        field.getName(),
+                        annotation.value());
             }
+
         });
         constructedObjects.remove(bean);
     }

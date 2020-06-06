@@ -182,4 +182,23 @@ class DynamicPropertyTest {
 
         root.set(1)
     }
+
+    @Test
+    fun `constant subscription returns constant value`(){
+        assertEquals(12, PropertySubscription.of(12).get())
+    }
+
+    @Test
+    fun `constant subscription calls listener during initialization`(){
+        val subscription = PropertySubscription.of(12)
+        val oldValueSlot = AtomicReference<Int?>()
+        val newValueSlot = AtomicReference<Int?>()
+        subscription.setAndCallListener { oldValue, newValue ->
+            oldValueSlot.set(oldValue)
+            newValueSlot.set(newValue)
+        }
+        assertEquals(null, oldValueSlot.get())
+        assertEquals(12, newValueSlot.get())
+
+    }
 }

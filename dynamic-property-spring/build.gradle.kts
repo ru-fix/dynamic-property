@@ -15,6 +15,8 @@ dependencies {
     testImplementation(Libs.junit_api)
     testImplementation(Libs.hamkrest)
     testImplementation(Libs.spring_test)
+    testImplementation(Libs.awaitility)
+
     testRuntimeOnly(Libs.junit_engine)
     testRuntimeOnly(Libs.slf4j_over_log4j)
     testRuntimeOnly(Libs.log4j_core)

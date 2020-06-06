@@ -9,26 +9,56 @@ class MyService{
     @PropertyId("my.service.rate")
     lateinit var rate: DynamicProperty<Integer>
     
-    @PropertyId("my.service.setting")
-    lateinit var setting: DynamicProperty<Setting> 
-    
-    init {
-        setting.addAndCallListener { newSetting ->
-            // initialize service
-            // or update state on settings change  
-        }
-    }
-    
     fun myMethod(){
         val rate = rate.get()
         //use current value of rate from dynamic property
-        //next time rate could be changed to another value
         calculate(rate)
     }
 }
-``` 
+```
+
+```kotlin
+class MyService {
+    
+    @PropertyId("my.service.setting")
+    lateinit var setting: PropertySubscription<Setting>
+
+    @PostConstruct
+    fun postConstructInitialization() {
+        setting.setAndCallListener{oldValue, newValue ->
+            updateState(newValue)
+        }       
+    }
+    fun updateState(setting: Setting) {}
+    fun doWork() {}
+}
+```
+
+
+```kotlin
+class MyService(setting: DynamicProperty<Setting>) {
+    val subscription = setting.createSubscription().setAndCallListener { oldSetting, newSetting ->
+        // initialize service
+        // or update state on settings change
+        updateState(newSetting)
+    }
+
+    fun updateState(setting: Setting) {}
+    fun doWork() {}
+}
+```
+
+```kotlin
+class MyService(val setting: DynamicProperty<Setting>) {
+    fun doWork() {
+        val currentSetting = setting.get()
+    }
+}
+```
 
 Support various property sources.
+ * properties files
+ * ZooKeeper
 
 ![](docs/dynamic-properties.png?raw=true)
 
@@ -63,11 +93,14 @@ second.set("42")
 ```kotlin
 //constant property that never changes
 val constantProperty = DynamicProperty.of(122)
+val myService = MyService(constantProperty)
+myService.doWork()
 
 //property that could change during test
 val atomicProperty = AtomicProperty(122)
-//... inject properties to service
+val myService = MyService(atomicProperty)
 atomicProperty.set(512)
+myService.doWork()
 ```
 
 ## Polled values
