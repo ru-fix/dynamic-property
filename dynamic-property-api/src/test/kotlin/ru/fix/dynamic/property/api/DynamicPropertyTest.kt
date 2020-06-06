@@ -1,7 +1,6 @@
 package ru.fix.dynamic.property.api
 
 import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 import ru.fix.stdlib.reference.GarbageGenerator
@@ -153,11 +152,9 @@ class DynamicPropertyTest {
      * ~child2~ ←╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╯
      *               in subscription
      * ```
-     *
-     * The case should be fixed via creating ~child2~ delegate (not map) dependency to ~child1~
      */
-    @Test
-    fun `undefined behavior, mapped dynamic properties dependency graph`() {
+    @RepeatedTest(20)
+    fun `mapped properties dependency graph`() {
         val root = AtomicProperty(0L)
         val child1 = root.map { it }
         val child2 = child1.map { it }
@@ -171,12 +168,8 @@ class DynamicPropertyTest {
         root.set(1)
     }
 
-    /**
-     * see
-     * [ru.fix.dynamic.property.api.DynamicPropertyTest.`undefined behavior, mapped dynamic properties dependency graph`]
-     */
     @RepeatedTest(20)
-    fun `dynamic properties dependency graph, delegated instead of mapped`() {
+    fun `delegated properties dependency graph`() {
         val root = AtomicProperty(0L)
         val child1 = root.map { it }
         val child2 = DynamicProperty.delegated { child1.get() }
