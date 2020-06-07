@@ -77,5 +77,4 @@ public @interface PropertyId {
      */
     @Nonnull
     String value();
-
 }

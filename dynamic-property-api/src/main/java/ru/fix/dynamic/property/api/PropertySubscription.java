@@ -79,7 +79,8 @@ public interface PropertySubscription<T> extends AutoCloseable {
     void close();
 
     /**
-     * Subscription that returns constant value and does not invoke listener.
+     * Subscription that returns constant value.
+     * Does not invoke listener on value change since value never changes.
      * Used for convenient configuration of injected subscriptions
      * <pre>{@code
      * class MyService{
