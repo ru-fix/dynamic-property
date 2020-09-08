@@ -14,7 +14,7 @@ class InMemoryPropertySourceTest {
     @Test
     fun `register listener and change property value`() {
         val deque = Collections.synchronizedList(ArrayList<Int>())
-        val source = InMemoryPropertySource(MarshallerBuilder().build())
+        val source = InMemoryPropertySource(MarshallerBuilder.newBuilder().build())
 
         val subscription = source.createSubscription(
             "foo",

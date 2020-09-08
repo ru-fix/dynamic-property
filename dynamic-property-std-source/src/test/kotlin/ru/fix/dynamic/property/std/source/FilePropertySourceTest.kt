@@ -25,7 +25,7 @@ class FilePropertySourceTest {
 
         val source = FilePropertySource(
             sourceFilePath = path,
-            marshaller = MarshallerBuilder().build()
+            marshaller = MarshallerBuilder.newBuilder().build()
         )
 
         val property = SourcedProperty(source, "name", String::class.java, OptionalDefaultValue.none())
@@ -53,7 +53,7 @@ class FilePropertySourceTest {
 
         val source = FilePropertySource(
             sourceFilePath = DynamicProperty.of(f),
-            marshaller = MarshallerBuilder().build()
+            marshaller = MarshallerBuilder.newBuilder().build()
         )
 
         val property = SourcedProperty(source, "name", String::class.java, OptionalDefaultValue.none())

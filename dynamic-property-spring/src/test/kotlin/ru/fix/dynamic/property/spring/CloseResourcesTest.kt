@@ -59,7 +59,7 @@ class CloseResourcesTest {
         fun serviceConfig() = ServiceConfig()
     }
 
-    object MockedPropertySource : InMemoryPropertySource(MarshallerBuilder().build()) {
+    object MockedPropertySource : InMemoryPropertySource(MarshallerBuilder.newBuilder().build()) {
         val closedSubscriptions = AtomicInteger()
 
         override fun <T> createSubscription(
