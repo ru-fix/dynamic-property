@@ -13,7 +13,7 @@ import ru.fix.dynamic.property.api.DynamicProperty
 import ru.fix.dynamic.property.api.annotation.PropertyId
 import ru.fix.dynamic.property.api.source.DynamicPropertySource
 import ru.fix.dynamic.property.api.source.OptionalDefaultValue
-import ru.fix.dynamic.property.jackson.JacksonDynamicPropertyMarshaller
+import ru.fix.dynamic.property.jackson.MarshallerBuilder
 import ru.fix.dynamic.property.spring.config.DynamicPropertyConfig
 import ru.fix.dynamic.property.std.source.InMemoryPropertySource
 import java.util.concurrent.atomic.AtomicInteger
@@ -59,7 +59,7 @@ class CloseResourcesTest {
         fun serviceConfig() = ServiceConfig()
     }
 
-    object MockedPropertySource : InMemoryPropertySource(JacksonDynamicPropertyMarshaller()) {
+    object MockedPropertySource : InMemoryPropertySource(MarshallerBuilder().build()) {
         val closedSubscriptions = AtomicInteger()
 
         override fun <T> createSubscription(

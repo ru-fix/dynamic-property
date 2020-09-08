@@ -1,6 +1,7 @@
 package ru.fix.dynamic.property.jackson;
 
 import org.junit.jupiter.api.Test;
+import ru.fix.dynamic.property.api.marshaller.DynamicPropertyMarshaller;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -13,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class JacksonDynamicPropertyMarshallerTest {
 
-    private final JacksonDynamicPropertyMarshaller marshaller = new JacksonDynamicPropertyMarshaller();
+    private final DynamicPropertyMarshaller marshaller = MarshallerBuilder.newBuilder().build();
 
     @Test
     public void marshallPrimitiveTypes() {

@@ -6,13 +6,11 @@ import org.junit.jupiter.api.Test;
 import ru.fix.dynamic.property.api.DynamicProperty;
 import ru.fix.dynamic.property.api.PropertySubscription;
 import ru.fix.dynamic.property.api.annotation.PropertyId;
-import ru.fix.dynamic.property.api.source.DynamicPropertySource;
 import ru.fix.dynamic.property.api.source.DynamicPropertyValueNotFoundException;
-import ru.fix.dynamic.property.jackson.JacksonDynamicPropertyMarshaller;
+import ru.fix.dynamic.property.jackson.MarshallerBuilder;
 import ru.fix.dynamic.property.std.source.InMemoryPropertySource;
 import ru.fix.stdlib.reference.ReferenceCleaner;
 
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -28,7 +26,7 @@ class DynamicPropertyAwareBeanPostProcessorTest {
     @BeforeEach
     void createSourceAndProcessor() {
         propertySource = new InMemoryPropertySource(
-                new JacksonDynamicPropertyMarshaller(),
+                MarshallerBuilder.newBuilder().build(),
                 ReferenceCleaner.getInstance()
         );
         processor = new DynamicPropertyAwareBeanPostProcessor(propertySource);

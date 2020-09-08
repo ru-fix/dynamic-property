@@ -10,11 +10,14 @@ import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import com.fasterxml.jackson.module.kotlin.KotlinModule;
 import ru.fix.dynamic.property.api.marshaller.DynamicPropertyMarshaller;
 import ru.fix.dynamic.property.api.marshaller.exception.DynamicPropertySerializationException;
+import ru.fix.dynamic.property.jackson.MarshallerBuilder.InternalMarshaller;
 
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -24,7 +27,7 @@ import java.util.Optional;
  */
 public class JacksonDynamicPropertyMarshaller implements DynamicPropertyMarshaller {
 
-    private final StdSerializer stdSerializer = new StdSerializer();
+    private final List<InternalMarshaller> marshallers;
 
     private final ObjectMapper mapper = new ObjectMapper()
             .setSerializationInclusion(JsonInclude.Include.NON_NULL)
@@ -32,7 +35,8 @@ public class JacksonDynamicPropertyMarshaller implements DynamicPropertyMarshall
             .registerModule(new KotlinModule())
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-    public JacksonDynamicPropertyMarshaller() {
+    JacksonDynamicPropertyMarshaller(List<InternalMarshaller> marshallers) {
+        this.marshallers = Collections.unmodifiableList(marshallers);
         SimpleModule localDatetimeModule = new SimpleModule();
         localDatetimeModule.addSerializer(LocalDateTime.class, new LocalDateTimeSerializer(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
         localDatetimeModule.addDeserializer(LocalDateTime.class, new LocalDateTimeDeserializer(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
@@ -48,9 +52,11 @@ public class JacksonDynamicPropertyMarshaller implements DynamicPropertyMarshall
     public String marshall(Object marshalledObject) {
         Objects.requireNonNull(marshalledObject);
         try {
-            Optional<String> result = stdSerializer.marshall(marshalledObject);
-            if (result.isPresent()) {
-                return result.get();
+            for (InternalMarshaller marshaller : marshallers) {
+                Optional<String> result = marshaller.marshall(marshalledObject);
+                if (result.isPresent()) {
+                    return result.get();
+                }
             }
 
             return mapper.writeValueAsString(marshalledObject);
@@ -65,9 +71,11 @@ public class JacksonDynamicPropertyMarshaller implements DynamicPropertyMarshall
         Objects.requireNonNull(rawString);
         Objects.requireNonNull(type);
         try {
-            Optional<Object> result = stdSerializer.unmarshall(rawString, type);
-            if (result.isPresent()) {
-                return (T) result.get();
+            for (InternalMarshaller marshaller : marshallers) {
+                Optional<T> result = marshaller.unmarshall(rawString, type);
+                if (result.isPresent()) {
+                    return result.get();
+                }
             }
 
             return mapper.readValue(rawString, type);

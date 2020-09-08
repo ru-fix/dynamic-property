@@ -1,5 +1,7 @@
 package ru.fix.dynamic.property.jackson;
 
+import ru.fix.dynamic.property.jackson.MarshallerBuilder.InternalMarshaller;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.file.Path;
@@ -12,7 +14,7 @@ import java.util.function.Predicate;
 /**
  * Provides serialization capabilities for standard JVM types
  */
-public class StdSerializer {
+public class StdSerializer implements InternalMarshaller {
     private static final HashMap<Class, Function<Object, String>> exactTypeMarshallers = new HashMap<>();
     private static final HashMap<Class, Function<String, Object>> exactTypeUnmarshallers = new HashMap<>();
 
@@ -53,6 +55,7 @@ public class StdSerializer {
     /**
      * @return empty if no suitable serializer found for given type
      */
+    @Override
     public Optional<Object> unmarshall(String rawString, Class type) {
         Function<String, Object> exact = exactTypeUnmarshallers.get(type);
         if (exact != null) {
@@ -74,6 +77,7 @@ public class StdSerializer {
     /**
      * @return empty if no suitable serializer found for given type
      */
+    @Override
     public Optional<String> marshall(Object marshalledObject) {
         Objects.requireNonNull(marshalledObject);
 
