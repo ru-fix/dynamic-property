@@ -32,7 +32,7 @@ public class CustomMarshallerTest {
     public void marshall_and_unmarshall_enum() {
         UserRole enumVal = UserRole.USER;
         String stringVal = marshaller.marshall(enumVal);
-        UserRole result = marshaller.unmarshall(stringVal, UserRole.class);
+        marshaller.unmarshall(stringVal, UserRole.class);
 
         Mockito.verify(enumMarshaller, Mockito.times(1)).marshall(enumVal);
         Mockito.verify(enumMarshaller, Mockito.times(1)).unmarshall(stringVal, UserRole.class);
