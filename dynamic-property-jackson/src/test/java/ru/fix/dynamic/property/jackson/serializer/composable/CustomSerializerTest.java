@@ -1,30 +1,29 @@
-package ru.fix.dynamic.property.jackson;
+package ru.fix.dynamic.property.jackson.serializer.composable;
 
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import ru.fix.dynamic.property.api.marshaller.DynamicPropertyMarshaller;
+import ru.fix.dynamic.property.jackson.MarshallerBuilder;
 
 import java.nio.file.Path;
 import java.util.Optional;
 
-import static ru.fix.dynamic.property.jackson.MarshallerBuilder.InternalMarshaller;
+public class CustomSerializerTest {
 
-public class CustomMarshallerTest {
-
-    private EnumMarshaller enumMarshaller;
-    private LongMarshaller longMarshaller;
+    private EnumSerializer enumSerializer;
+    private LongSerializer longSerializer;
 
     private DynamicPropertyMarshaller marshaller;
 
     @BeforeEach
     public void before() {
-        enumMarshaller = Mockito.spy(new EnumMarshaller());
-        longMarshaller = Mockito.spy(new LongMarshaller());
+        enumSerializer = Mockito.spy(new EnumSerializer());
+        longSerializer = Mockito.spy(new LongSerializer());
         marshaller = MarshallerBuilder.newBuilder()
-                .addMarshaller(enumMarshaller)
-                .addMarshaller(longMarshaller)
+                .addSerializer(enumSerializer)
+                .addSerializer(longSerializer)
                 .build();
     }
 
@@ -34,8 +33,8 @@ public class CustomMarshallerTest {
         String stringVal = marshaller.marshall(enumVal);
         marshaller.unmarshall(stringVal, UserRole.class);
 
-        Mockito.verify(enumMarshaller, Mockito.times(1)).marshall(enumVal);
-        Mockito.verify(enumMarshaller, Mockito.times(1)).unmarshall(stringVal, UserRole.class);
+        Mockito.verify(enumSerializer, Mockito.times(1)).serialize(enumVal);
+        Mockito.verify(enumSerializer, Mockito.times(1)).deserialize(stringVal, UserRole.class);
     }
 
     @Test
@@ -44,8 +43,8 @@ public class CustomMarshallerTest {
         String stringVal = marshaller.marshall(longValue);
         marshaller.unmarshall(stringVal, Long.class);
 
-        Mockito.verify(longMarshaller, Mockito.never()).marshall(longValue);
-        Mockito.verify(longMarshaller, Mockito.never()).unmarshall(stringVal, Long.class);
+        Mockito.verify(longSerializer, Mockito.never()).serialize(longValue);
+        Mockito.verify(longSerializer, Mockito.never()).deserialize(stringVal, Long.class);
     }
 
     private enum UserRole {
@@ -53,10 +52,10 @@ public class CustomMarshallerTest {
         USER
     }
 
-    private static class EnumMarshaller implements InternalMarshaller {
+    private static class EnumSerializer implements ComposableSerializer {
 
         @Override
-        public Optional<String> marshall(Object marshalledObject) {
+        public Optional<String> serialize(Object marshalledObject) {
             if (marshalledObject.getClass().isEnum()) {
                 return Optional.of(((Enum) marshalledObject).name());
             }
@@ -64,7 +63,7 @@ public class CustomMarshallerTest {
         }
 
         @Override
-        public <T> Optional<T> unmarshall(String rawString, Class<T> clazz) {
+        public <T> Optional<T> deserialize(String rawString, Class<T> clazz) {
             if (clazz.isEnum()) {
                 for (T enumConstant : clazz.getEnumConstants()) {
                     if (((Enum) enumConstant).name().equalsIgnoreCase(rawString)) {
@@ -76,10 +75,10 @@ public class CustomMarshallerTest {
         }
     }
 
-    private static class LongMarshaller implements InternalMarshaller {
+    private static class LongSerializer implements ComposableSerializer {
 
         @Override
-        public Optional<String> marshall(Object marshalledObject) {
+        public Optional<String> serialize(Object marshalledObject) {
             if (Path.class.isAssignableFrom(marshalledObject.getClass())) {
                 return Optional.of("custom long marshalling");
             }
@@ -87,7 +86,7 @@ public class CustomMarshallerTest {
         }
 
         @Override
-        public <T> Optional<T> unmarshall(String rawString, Class<T> clazz) {
+        public <T> Optional<T> deserialize(String rawString, Class<T> clazz) {
             return Optional.empty();
         }
     }

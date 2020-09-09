@@ -12,7 +12,7 @@ import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class JacksonDynamicPropertyMarshallerTest {
+class ComposableDynamicPropertyMarshallerTest {
 
     private final DynamicPropertyMarshaller marshaller = MarshallerBuilder.newBuilder().build();
 
