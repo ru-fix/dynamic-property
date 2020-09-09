@@ -42,7 +42,7 @@ public class CustomMarshallerTest {
     public void std_serializer_before_custom_marshaller() {
         Long longValue = 5L;
         String stringVal = marshaller.marshall(longValue);
-        Long result = marshaller.unmarshall(stringVal, Long.class);
+        marshaller.unmarshall(stringVal, Long.class);
 
         Mockito.verify(longMarshaller, Mockito.never()).marshall(longValue);
         Mockito.verify(longMarshaller, Mockito.never()).unmarshall(stringVal, Long.class);
