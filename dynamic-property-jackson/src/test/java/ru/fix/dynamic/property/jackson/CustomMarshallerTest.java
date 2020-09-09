@@ -1,6 +1,7 @@
 package ru.fix.dynamic.property.jackson;
 
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import ru.fix.dynamic.property.api.marshaller.DynamicPropertyMarshaller;
@@ -9,17 +10,23 @@ import java.nio.file.Path;
 import java.util.Optional;
 
 import static ru.fix.dynamic.property.jackson.MarshallerBuilder.InternalMarshaller;
-import static ru.fix.dynamic.property.jackson.MarshallerBuilder.newBuilder;
 
 public class CustomMarshallerTest {
 
-    private final EnumMarshaller enumMarshaller = Mockito.spy(new EnumMarshaller());
-    private final LongMarshaller longMarshaller = Mockito.spy(new LongMarshaller());
+    private EnumMarshaller enumMarshaller;
+    private LongMarshaller longMarshaller;
 
-    private final DynamicPropertyMarshaller marshaller = newBuilder()
-            .addMarshaller(enumMarshaller)
-            .addMarshaller(longMarshaller)
-            .build();
+    private DynamicPropertyMarshaller marshaller;
+
+    @BeforeEach
+    public void before() {
+        enumMarshaller = Mockito.spy(new EnumMarshaller());
+        longMarshaller = Mockito.spy(new LongMarshaller());
+        marshaller = MarshallerBuilder.newBuilder()
+                .addMarshaller(enumMarshaller)
+                .addMarshaller(longMarshaller)
+                .build();
+    }
 
     @Test
     public void marshall_and_unmarshall_enum() {
