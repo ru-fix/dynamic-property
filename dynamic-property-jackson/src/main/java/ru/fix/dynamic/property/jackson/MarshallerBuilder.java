@@ -8,12 +8,10 @@ import java.util.Optional;
 
 public class MarshallerBuilder {
 
-    private final StdSerializer stdSerializer = new StdSerializer();
-
-    private List<InternalMarshaller> marshallers = new LinkedList<>();
+    private final List<InternalMarshaller> marshallers = new LinkedList<>();
 
     private MarshallerBuilder() {
-        marshallers.add(stdSerializer);
+        marshallers.add(new StdSerializer());
     }
 
     public static MarshallerBuilder newBuilder() {
@@ -36,8 +34,18 @@ public class MarshallerBuilder {
 
     public interface InternalMarshaller {
 
+        /**
+         * Marshall object to string value
+         *
+         * @return empty if the current marshaller is not suitable for given type
+         */
         Optional<String> marshall(Object marshalledObject);
 
+        /**
+         * Unmarshall object from string value
+         *
+         * @return empty if the current marshaller is not suitable for given type
+         */
         <T> Optional<T> unmarshall(String rawString, Class<T> clazz);
     }
 }
