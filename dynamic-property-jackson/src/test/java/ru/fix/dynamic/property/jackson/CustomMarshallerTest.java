@@ -17,7 +17,7 @@ public class CustomMarshallerTest {
     private final LongMarshaller longMarshaller = Mockito.spy(new LongMarshaller());
 
     private final DynamicPropertyMarshaller marshaller = newBuilder()
-            .addMarshaller(Mockito.spy(new EnumMarshaller()))
+            .addMarshaller(enumMarshaller)
             .addMarshaller(longMarshaller)
             .build();
 
