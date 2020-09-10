@@ -7,7 +7,7 @@ import ru.fix.dynamic.property.api.AtomicProperty
 import ru.fix.dynamic.property.api.DynamicProperty
 import ru.fix.dynamic.property.api.source.OptionalDefaultValue
 import ru.fix.dynamic.property.api.source.SourcedProperty
-import ru.fix.dynamic.property.jackson.JacksonDynamicPropertyMarshaller
+import ru.fix.dynamic.property.jackson.MarshallerBuilder
 import java.nio.file.Files
 import java.util.concurrent.atomic.AtomicReference
 
@@ -25,7 +25,7 @@ class FilePropertySourceTest {
 
         val source = FilePropertySource(
             sourceFilePath = path,
-            marshaller = JacksonDynamicPropertyMarshaller()
+            marshaller = MarshallerBuilder.newBuilder().build()
         )
 
         val property = SourcedProperty(source, "name", String::class.java, OptionalDefaultValue.none())
@@ -53,7 +53,7 @@ class FilePropertySourceTest {
 
         val source = FilePropertySource(
             sourceFilePath = DynamicProperty.of(f),
-            marshaller = JacksonDynamicPropertyMarshaller()
+            marshaller = MarshallerBuilder.newBuilder().build()
         )
 
         val property = SourcedProperty(source, "name", String::class.java, OptionalDefaultValue.none())

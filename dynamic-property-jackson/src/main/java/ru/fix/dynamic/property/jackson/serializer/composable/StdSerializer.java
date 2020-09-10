@@ -1,4 +1,4 @@
-package ru.fix.dynamic.property.jackson;
+package ru.fix.dynamic.property.jackson.serializer.composable;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -12,7 +12,7 @@ import java.util.function.Predicate;
 /**
  * Provides serialization capabilities for standard JVM types
  */
-public class StdSerializer {
+public class StdSerializer implements ComposableSerializer {
     private static final HashMap<Class, Function<Object, String>> exactTypeMarshallers = new HashMap<>();
     private static final HashMap<Class, Function<String, Object>> exactTypeUnmarshallers = new HashMap<>();
 
@@ -53,7 +53,8 @@ public class StdSerializer {
     /**
      * @return empty if no suitable serializer found for given type
      */
-    public Optional<Object> unmarshall(String rawString, Class type) {
+    @Override
+    public Optional<Object> deserialize(String rawString, Class type) {
         Function<String, Object> exact = exactTypeUnmarshallers.get(type);
         if (exact != null) {
             return Optional.of(exact.apply(rawString));
@@ -74,7 +75,8 @@ public class StdSerializer {
     /**
      * @return empty if no suitable serializer found for given type
      */
-    public Optional<String> marshall(Object marshalledObject) {
+    @Override
+    public Optional<String> serialize(Object marshalledObject) {
         Objects.requireNonNull(marshalledObject);
 
         Function<Object, String> std = exactTypeMarshallers.get(marshalledObject.getClass());

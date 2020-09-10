@@ -7,7 +7,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import ru.fix.dynamic.property.api.source.OptionalDefaultValue
 import ru.fix.dynamic.property.api.source.SourcedProperty
-import ru.fix.dynamic.property.jackson.JacksonDynamicPropertyMarshaller
+import ru.fix.dynamic.property.jackson.MarshallerBuilder
 import ru.fix.zookeeper.testing.ZKTestingServer
 import java.nio.charset.StandardCharsets
 import java.time.Duration
@@ -32,7 +32,7 @@ class ZkDynamicPropertySourceTest {
         source = ZkDynamicPropertySource(
             zkTestingServer.client,
             PROPERTIES_LOCATION,
-            JacksonDynamicPropertyMarshaller(),
+            MarshallerBuilder.newBuilder().build(),
             Duration.of(1, ChronoUnit.MINUTES)
         )
     }
@@ -201,7 +201,7 @@ class ZkDynamicPropertySourceTest {
         val source = ZkDynamicPropertySource(
             zkTestingServer.createClient(),
             PROPERTIES_LOCATION,
-            JacksonDynamicPropertyMarshaller(),
+            MarshallerBuilder.newBuilder().build(),
             Duration.of(1, ChronoUnit.MINUTES)
         )
 

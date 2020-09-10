@@ -35,6 +35,7 @@ object Libs {
     const val kotlin_reflect = "org.jetbrains.kotlin:kotlin-reflect:${Vers.kotlin}"
 
     const val mockk = "io.mockk:mockk:1.9.3"
+    const val mockito = "org.mockito:mockito-core:1.10.19"
     const val awaitility = "org.awaitility:awaitility:4.0.2"
 
     const val javax_annotation_jsr305 = "com.google.code.findbugs:jsr305:3.0.2"

@@ -1,4 +1,4 @@
-package ru.fix.dynamic.property.jackson;
+package ru.fix.dynamic.property.jackson.serializer.std;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
