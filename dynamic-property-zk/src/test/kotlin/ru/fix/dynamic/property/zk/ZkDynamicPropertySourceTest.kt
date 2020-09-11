@@ -32,7 +32,7 @@ class ZkDynamicPropertySourceTest {
         source = ZkDynamicPropertySource(
             zkTestingServer.client,
             PROPERTIES_LOCATION,
-            MarshallerBuilder.newBuilder().build(),
+            MarshallerBuilder.createDefault(),
             Duration.of(1, ChronoUnit.MINUTES)
         )
     }
@@ -201,7 +201,7 @@ class ZkDynamicPropertySourceTest {
         val source = ZkDynamicPropertySource(
             zkTestingServer.createClient(),
             PROPERTIES_LOCATION,
-            MarshallerBuilder.newBuilder().build(),
+            MarshallerBuilder.createDefault(),
             Duration.of(1, ChronoUnit.MINUTES)
         )
 

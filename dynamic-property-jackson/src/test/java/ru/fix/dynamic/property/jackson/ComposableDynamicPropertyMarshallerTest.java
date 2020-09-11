@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ComposableDynamicPropertyMarshallerTest {
 
-    private final DynamicPropertyMarshaller marshaller = MarshallerBuilder.newBuilder().build();
+    private final DynamicPropertyMarshaller marshaller = MarshallerBuilder.createDefault();
 
     @Test
     public void marshallPrimitiveTypes() {

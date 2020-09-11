@@ -3,11 +3,9 @@ package ru.fix.dynamic.property.jackson;
 import ru.fix.dynamic.property.api.marshaller.DynamicPropertyMarshaller;
 import ru.fix.dynamic.property.api.marshaller.exception.DynamicPropertySerializationException;
 import ru.fix.dynamic.property.jackson.serializer.composable.ComposableSerializer;
+import ru.fix.dynamic.property.jackson.serializer.composable.exception.NotFoundSerializerException;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 
 /**
@@ -15,13 +13,10 @@ import java.util.Optional;
  */
 public class ComposableDynamicPropertyMarshaller implements DynamicPropertyMarshaller {
 
-    private final List<ComposableSerializer> serializers;
-    private final ComposableSerializer defaultSerializer;
+    private final Set<ComposableSerializer> serializers;
 
-    ComposableDynamicPropertyMarshaller(List<ComposableSerializer> serializers,
-                                        ComposableSerializer defaultSerializer) {
-        this.serializers = Collections.unmodifiableList(serializers);
-        this.defaultSerializer = defaultSerializer;
+    ComposableDynamicPropertyMarshaller(Set<ComposableSerializer> serializers) {
+        this.serializers = Collections.unmodifiableSet(serializers);
     }
 
     @Override
@@ -34,11 +29,13 @@ public class ComposableDynamicPropertyMarshaller implements DynamicPropertyMarsh
                     return result.get();
                 }
             }
-            return defaultSerializer.serialize(marshalledObject).get();
         } catch (Exception e) {
             throw new DynamicPropertySerializationException(
                     "Failed to serialize. Type: " + marshalledObject.getClass() + ". Instance: " + marshalledObject, e);
         }
+        throw new NotFoundSerializerException(
+                "Not found serializer for object. Type: " + marshalledObject.getClass() + ". Instance: "
+                        + marshalledObject);
     }
 
     @Override
@@ -52,10 +49,11 @@ public class ComposableDynamicPropertyMarshaller implements DynamicPropertyMarsh
                     return result.get();
                 }
             }
-            return defaultSerializer.deserialize(rawString, type).get();
         } catch (Exception e) {
             throw new DynamicPropertySerializationException(
                     "Failed to deserialize. Type: " + type + ". From " + rawString, e);
         }
+        throw new NotFoundSerializerException(
+                "Not found serializer for object. Type: " + type + ". From " + rawString);
     }
 }
