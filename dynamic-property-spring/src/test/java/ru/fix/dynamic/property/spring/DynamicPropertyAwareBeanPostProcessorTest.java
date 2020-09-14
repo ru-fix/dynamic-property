@@ -26,7 +26,7 @@ class DynamicPropertyAwareBeanPostProcessorTest {
     @BeforeEach
     void createSourceAndProcessor() {
         propertySource = new InMemoryPropertySource(
-                MarshallerBuilder.newBuilder().build(),
+                MarshallerBuilder.createDefault(),
                 ReferenceCleaner.getInstance()
         );
         processor = new DynamicPropertyAwareBeanPostProcessor(propertySource);

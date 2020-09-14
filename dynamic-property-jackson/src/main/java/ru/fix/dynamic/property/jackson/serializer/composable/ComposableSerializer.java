@@ -1,6 +1,5 @@
 package ru.fix.dynamic.property.jackson.serializer.composable;
 
-import java.io.IOException;
 import java.util.Optional;
 
 public interface ComposableSerializer {
@@ -10,12 +9,12 @@ public interface ComposableSerializer {
      *
      * @return empty if the current serializer is not suitable for given type
      */
-    Optional<String> serialize(Object marshalledObject) throws IOException;
+    Optional<String> serialize(Object marshalledObject);
 
     /**
      * Deserialize object from string value
      *
      * @return empty if the current serializer is not suitable for given type
      */
-    <T> Optional<T> deserialize(String rawString, Class<T> clazz) throws IOException;
+    <T> Optional<T> deserialize(String rawString, Class<T> clazz);
 }

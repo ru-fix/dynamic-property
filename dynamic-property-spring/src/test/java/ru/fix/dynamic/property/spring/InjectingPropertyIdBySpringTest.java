@@ -53,7 +53,7 @@ public class InjectingPropertyIdBySpringTest {
         @Bean
         public DynamicPropertySource dynamicPropertySource() {
             InMemoryPropertySource source = new InMemoryPropertySource(
-                    MarshallerBuilder.newBuilder().build(),
+                    MarshallerBuilder.createDefault(),
                     ReferenceCleaner.getInstance());
             source.set("property.city", "Biribidjan");
             return source;

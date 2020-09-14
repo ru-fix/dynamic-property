@@ -1,6 +1,7 @@
 package ru.fix.dynamic.property.jackson.serializer.composable;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
@@ -8,6 +9,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import com.fasterxml.jackson.module.kotlin.KotlinModule;
+import ru.fix.dynamic.property.jackson.serializer.composable.exception.JacksonSerializeException;
 import ru.fix.dynamic.property.jackson.serializer.std.DurationSerializer;
 import ru.fix.dynamic.property.jackson.serializer.std.PathSerializer;
 
@@ -16,8 +18,12 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Objects;
 import java.util.Optional;
 
+/**
+ * Provides serialization by {@link ObjectMapper}
+ */
 public class JacksonSerializer implements ComposableSerializer {
 
     private final ObjectMapper mapper = new ObjectMapper()
@@ -38,13 +44,32 @@ public class JacksonSerializer implements ComposableSerializer {
         mapper.registerModules(localDatetimeModule, durationModule);
     }
 
+    /**
+     * @return serialized object by ObjectMapper
+     * @throws JacksonSerializeException when ObjectMapper throws {@link JsonProcessingException}
+     */
     @Override
-    public Optional<String> serialize(Object marshalledObject) throws IOException {
-        return Optional.ofNullable(mapper.writeValueAsString(marshalledObject));
+    public Optional<String> serialize(Object marshalledObject) {
+        Objects.requireNonNull(marshalledObject);
+        try {
+            return Optional.ofNullable(mapper.writeValueAsString(marshalledObject));
+        } catch (JsonProcessingException e) {
+            throw new JacksonSerializeException("Failed to serialize object. Type: " + marshalledObject.getClass()
+                    + "Value :" + marshalledObject, e);
+        }
     }
 
+    /**
+     * @return deserialized object by ObjectMapper
+     * @throws JacksonSerializeException when ObjectMapper throws {@link JsonProcessingException}
+     */
     @Override
-    public <T> Optional<T> deserialize(String rawString, Class<T> clazz) throws IOException {
-        return Optional.ofNullable(mapper.readValue(rawString, clazz));
+    public <T> Optional<T> deserialize(String rawString, Class<T> clazz) {
+        try {
+            return Optional.ofNullable(mapper.readValue(rawString, clazz));
+        } catch (IOException e) {
+            throw new JacksonSerializeException("Failed to deserialize json text to type: " + clazz + ". Json: "
+                    + rawString, e);
+        }
     }
 }

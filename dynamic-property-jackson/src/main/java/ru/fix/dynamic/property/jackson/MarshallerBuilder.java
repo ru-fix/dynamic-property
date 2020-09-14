@@ -5,12 +5,17 @@ import ru.fix.dynamic.property.jackson.serializer.composable.ComposableSerialize
 import ru.fix.dynamic.property.jackson.serializer.composable.JacksonSerializer;
 import ru.fix.dynamic.property.jackson.serializer.composable.StdSerializer;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
+/**
+ * Builder of {@link ComposableDynamicPropertyMarshaller} that allows to add custom serializers/
+ * Builder add {@link StdSerializer} as the first serializer and {@link JacksonSerializer} as the last serializer.
+ */
 public class MarshallerBuilder {
 
-    private final List<ComposableSerializer> serializers = new LinkedList<>();
+    private final Set<ComposableSerializer> serializers = new LinkedHashSet<>();
 
     private MarshallerBuilder() {
         serializers.add(new StdSerializer());
@@ -20,17 +25,26 @@ public class MarshallerBuilder {
         return new MarshallerBuilder();
     }
 
+    /**
+     * @return marshaller without custom serializers
+     */
+    public static DynamicPropertyMarshaller createDefault() {
+        return newBuilder().build();
+    }
+
     public MarshallerBuilder addSerializer(ComposableSerializer marshaller) {
         serializers.add(marshaller);
         return this;
     }
 
-    public MarshallerBuilder addSerializers(List<ComposableSerializer> marshallerList) {
+    public MarshallerBuilder addSerializers(Collection<ComposableSerializer> marshallerList) {
         serializers.addAll(marshallerList);
         return this;
     }
 
     public DynamicPropertyMarshaller build() {
-        return new ComposableDynamicPropertyMarshaller(serializers, new JacksonSerializer());
+        serializers.add(new JacksonSerializer());
+        return new ComposableDynamicPropertyMarshaller(serializers);
     }
+
 }
