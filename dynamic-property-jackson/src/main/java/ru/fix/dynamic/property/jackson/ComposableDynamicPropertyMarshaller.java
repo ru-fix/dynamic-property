@@ -9,7 +9,7 @@ import java.util.*;
 
 
 /**
- * Implementation of {@link DynamicPropertyMarshaller} which provides serialization and deserialization by Jacskon.
+ * Implementation of {@link DynamicPropertyMarshaller} which provides serialization and deserialization by Jackson.
  */
 public class ComposableDynamicPropertyMarshaller implements DynamicPropertyMarshaller {
 
