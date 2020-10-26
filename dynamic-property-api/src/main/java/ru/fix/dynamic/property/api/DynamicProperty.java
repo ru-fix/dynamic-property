@@ -115,13 +115,13 @@ public interface DynamicProperty<T> extends AutoCloseable {
     T get();
 
     /**
-     * Creates {@link PropertySubscription} that allows to subscribe a listener for dynamic property updates.
+     * Creates {@link PropertySubscription} instance that allows to subscribe a listener for dynamic property updates.
      * Listener will continue to receive events as long as {@link PropertySubscription} instance
      * stays strongly reachable.
      * <pre>{@code
      * final PropertySubscription mySize;
      * MyService(DynamicProperty<String> mySize){
-     *     this.mySize = mySize.callAndSubscribe{ oldSize, newSize ->
+     *     this.mySize = mySize.createSubscription().setAndCallListener{ oldSize, newSize ->
      *          // initialisation or reconfiguration logic
      *          // will be invoked first time with current value of the property
      *          // and then each time on property change
@@ -135,10 +135,12 @@ public interface DynamicProperty<T> extends AutoCloseable {
      * }</pre>
      *
      * @return Subscription instance that keeps listener active.
-     * As soon as {@link PropertySubscription} garbage collected, the listener stops receiving events. <br>
+     * As soon as {@link PropertySubscription} instance garbage collected, the listener stops receiving events. <br>
      * You can unsubscribe listener from events via {@link PropertySubscription#close()} <br>
      * {@link PropertySubscription} gives an access to current {@link DynamicProperty} value via
      * {@link PropertySubscription#get()}.
+     *
+     * @see DynamicProperty
      */
     @Nonnull
     PropertySubscription<T> createSubscription();
